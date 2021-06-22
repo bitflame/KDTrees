@@ -23,15 +23,17 @@ public class KdTree {
          * not the other way around */
         @Override
         public int compareTo(Node o) {
-            if (o.coordinate == false) {
-                if (this.p.x() < o.p.x()) return -1;
-                else return 1;
-            }
-            if (o.coordinate == true) {
-                if (this.p.y() < o.p.y()) return -1;
-                else return 1;
-            }
-            return 0;
+//            if (o.coordinate == false) {
+//                if (this.p.x() < o.p.x()) return -1;
+//                else return 1;
+//            }
+//            if (o.coordinate == true) {
+//                if (this.p.y() < o.p.y()) return -1;
+//                else return 1;
+//            }
+            if (this.p.x() < o.p.x()) return -1;
+            else return 1;
+            // return 0;
         }
     }
 
@@ -61,6 +63,7 @@ public class KdTree {
                 StdDraw.point(n.p.x(), n.p.y());
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.BLUE);
+                //StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
                 StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
             }
             /* If n is horizontal and it is smaller than its parent */
@@ -79,7 +82,7 @@ public class KdTree {
                 StdDraw.point(n.p.x(), n.p.y());
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
-                StdDraw.line(n.p.x(), n.parent.p.y(), n.p.x(),1.0 );
+                StdDraw.line(n.p.x(), n.parent.p.y(), n.p.x(), 1.0);
             }
         }
     }
@@ -121,11 +124,20 @@ public class KdTree {
         return x.coordinate == false;
     }
 
+    private boolean isVertical(Node x) {
+        if (x == null) return false;
+        return x.coordinate == true;
+    }
+
     private void makeVertical(Node x) {
         if (x == null) return;
         x.coordinate = true;
     }
 
+    private void makeHorizontal(Node x) {
+        if (x == null) return;
+        x.coordinate = false;
+    }
 
     public int size() {
         return size(root);
@@ -142,20 +154,32 @@ public class KdTree {
 
     private Node insert(Node h, Point2D p) {
         if (h == null) {
-            return new Node(p, 0, false, null);
+            return new Node(p, 1, false, null);
         }
-        int cmp = p.compareTo(h.p);
-        if (cmp < 0) {
+        if (p.x() < h.p.x() || p.y() < h.p.y()) {
             h.left = insert(h.left, p);
             h.left.parent = h;
-        } else if (cmp > 0) {
+        } else {
             h.right = insert(h.right, p);
             h.right.parent = h;
-        } else h.p = p;
+        }
+//        int cmp = p.compareTo(h.p);
+//        if (cmp < 0) {
+//            h.left = insert(h.left, p);
+//            h.left.parent = h;
+//        } else if (cmp > 0) {
+//            h.right = insert(h.right, p);
+//            h.right.parent = h;
+//        } else h.p = p;
         /* Test to make sure the line below is all you need to flip coordinates */
-        if (isHorizontal(h)) makeVertical(h.right);
-        if (isHorizontal(h)) makeVertical(h.left);
-        h.N = size(h.left) + size(h.right);
+        if (isVertical(h)) {
+            makeHorizontal(h.right);
+            makeHorizontal(h.left);
+        } else if (isHorizontal(h)) {
+            makeVertical(h.left);
+            makeVertical(h.right);
+        }
+        h.N = size(h.left) + size(h.right) + 1;
         return h;
     }
 
@@ -182,19 +206,18 @@ public class KdTree {
             k.insert(p);
         }
         k.draw();
-        for (int i = 0; i < 20; i++) {
-            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
-            k.insert(p);
-            //StdOut.println(p);
-        }
-        StdOut.println("Finished w/o errors.");
-        int index = 1;
-        for (Node n : k.keys()) {
-            if (n.coordinate == true) {
-                StdOut.println(index + "-" + n.p);
-                index++;
-            }
-        }
+//        for (int i = 0; i < 20; i++) {
+//            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
+//            k.insert(p);
+//        }
+//        StdOut.println("Finished w/o errors.");
+//        int index = 1;
+//        for (Node n : k.keys()) {
+//            if (n.coordinate == true) {
+//                StdOut.println(index + "-" + n.p);
+//                index++;
+//            }
+//        }
 
     }
 }
