@@ -37,38 +37,47 @@ public class KdTree {
 
     public void draw() {
         StdDraw.clear();
-        StdDraw.setPenRadius(0.005);
+        StdDraw.setPenRadius(0.008);
         for (Node n : this.keys()) {
             if (n.parent == null) {
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), 0, n.p.x(), 1.0);
                 /* If n is vertical and it is smaller than its parent */
             } else if (n.coordinate && n.compareTo(n.parent) < 0) {
+                StdDraw.setPenRadius(0.008);
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.BLUE);
                 StdDraw.line(0, n.p.y(), n.parent.p.x(), n.p.y());
             }
             /* If n is vertical and it is larger than its parent */
             else if (n.coordinate && n.compareTo(n.parent) > 0) {
+                StdDraw.setPenRadius(0.008);
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.BLUE);
                 StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
             }
             /* If n is horizontal and it is smaller than its parent */
             else if (!n.coordinate && n.compareTo(n.parent) < 0) {
+                StdDraw.setPenRadius(0.008);
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), 0, n.p.x(), n.parent.p.y());
             }
             /* If n is horizontal and it is larger than its parent */
             else {
+                StdDraw.setPenRadius(0.006);
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), n.parent.p.y(), n.p.x(),1.0 );
             }
@@ -172,6 +181,7 @@ public class KdTree {
         for (Point2D p : s) {
             k.insert(p);
         }
+        k.draw();
         for (int i = 0; i < 20; i++) {
             Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
             k.insert(p);
