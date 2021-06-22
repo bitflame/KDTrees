@@ -32,8 +32,8 @@ public class PointSET {
             if (this.p.x() > o.p.x() && this.p.y() > o.p.y()) return 1;
             if (this.p.x() < o.p.x() && this.p.x() < o.p.x()) return -1;
             else {
-                StdOut.println("Have another look at breaking a tie. Put a break point or print the" +
-                        "objects and see if they are equal, and if not, why they get here. ");
+//                StdOut.println("Have another look at breaking a tie. Put a break point or print the" +
+//                        "objects and see if they are equal, and if not, why they get here. ");
                 return 0;
             }
 
@@ -63,7 +63,11 @@ public class PointSET {
         }
         return false;
     }
-
+    public Point2D nearest(Point2D p) {
+        ///todo - Implement
+        Point2D point = new Point2D(0,0);
+        return p;
+    }
     void draw() {
         StdDraw.clear();
         StdDraw.setPenRadius(0.005);
@@ -88,7 +92,7 @@ public class PointSET {
     }
 
     private static double insertTime(int n) {
-        /* See how long it takes to push 100 points */
+        /* See how long it takes to push 100000 points */
         PointSET pSet = new PointSET();
         Stack<Point2D> s = new Stack<>();
         for (int i =0; i < 100000; i++){
@@ -108,16 +112,23 @@ public class PointSET {
     }
 
     private static double containsTime(int n) {
+        /* See how long it takes to push 100000 points */
         PointSET pSet = new PointSET();
-        Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
-        RectHV r = new RectHV(0.08, 0.3, 0.12, 0.5);
+        Stack<Point2D> s = new Stack<>();
+        for (int i =0; i < 1000000; i++){
+            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
+            s.push(p);
+        }
+        // RectHV r = new RectHV(0.08, 0.3, 0.12, 0.5);
         Stopwatch timer2 = new Stopwatch();
-        pSet.contains(p);
+        for (Point2D p: s) {
+            pSet.contains(p);
+        }
         double time2 = timer2.elapsedTime();
         double timerPerContains = (time2 / (n));
         double logOfPoints = Math.log(n);
-        StdOut.printf("Log of %d nodes is: %4f, and contains() takes %4f for this set size.", n,
-                logOfPoints, time2);
+        StdOut.printf("Log of %d nodes is: %4f, and contains() takes %4f to push 100000 nodes into %d " +
+                        "nodes.", n, logOfPoints, time2, n);
         return time2;
     }
 
@@ -169,7 +180,7 @@ public class PointSET {
         StdDraw.setPenColor(StdDraw.RED);
         StdDraw.text(0.15, .98, "Insertion Times");
         double interval = 0.001;
-        for (int i = 100; i < 10000001; i *= 2) {
+        for (int i = 100; i < 10000001; i +=1000) {
             double logOfNodes = Math.log(i);
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.text(0.15, 0.95, "Log of N multiplied");
@@ -185,7 +196,7 @@ public class PointSET {
             StdDraw.setPenColor(StdDraw.CYAN);
             StdDraw.text(0.15, 0.87, "Range Times");
             StdDraw.point(interval, rTime);
-            interval += .05;
+            interval += .015;
         }
         StdOut.printf("Done!");
 
