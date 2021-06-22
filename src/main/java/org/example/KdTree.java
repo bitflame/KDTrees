@@ -36,7 +36,6 @@ public class KdTree {
     }
 
     public void draw() {
-        ///todo - if child is less than parent go to parent as limit, and if more go from
         StdDraw.clear();
         StdDraw.setPenRadius(0.005);
         for (Node n : this.keys()) {
@@ -133,7 +132,6 @@ public class KdTree {
     }
 
     private Node insert(Node h, Point2D p) {
-        ///todo--See if you can just put the parent in the constructor instead of this below
         if (h == null) {
             return new Node(p, 0, false, null);
         }
