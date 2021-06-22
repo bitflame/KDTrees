@@ -8,15 +8,15 @@ public class KdTree {
 
     private class Node implements Comparable<Node> {
         Point2D p; // key
-        Node left, right; // subtrees
+        Node left, right, parent; // subtrees
         int N; // # nodes in this subtree
         boolean coordinate;// 0 means horizontal
 
-        public Node(Point2D p, int N, boolean coordinate) {
+        public Node(Point2D p, int N, boolean coordinate, Node parent) {
             this.p = p;
-
             this.N = N;
             this.coordinate = coordinate;
+            this.parent = parent;
         }
 
         /* Check to make sure this method checks the coordinate of what is already on the org.example.KDTree with the new node
@@ -36,12 +36,43 @@ public class KdTree {
     }
 
     public void draw() {
-        ///todo - Implement; it is not done yet
+        ///todo - if child is less than parent go to parent as limit, and if more go from
         StdDraw.clear();
         StdDraw.setPenRadius(0.005);
         for (Node n : this.keys()) {
-            StdDraw.point(n.p.x(), n.p.y());
-            StdDraw.setPenColor(StdDraw.RED);
+            if (n.parent == null) {
+                StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenColor(StdDraw.RED);
+                StdDraw.line(n.p.x(), 0, n.p.x(), 1.0);
+                /* If n is vertical and it is smaller than its parent */
+            } else if (n.coordinate && n.compareTo(n.parent) < 0) {
+                StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenColor(StdDraw.BLUE);
+                StdDraw.line(0, n.p.y(), n.parent.p.x(), n.p.y());
+            }
+            /* If n is vertical and it is larger than its parent */
+            else if (n.coordinate && n.compareTo(n.parent) > 0) {
+                StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenColor(StdDraw.BLUE);
+                StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
+            }
+            /* If n is horizontal and it is smaller than its parent */
+            else if (!n.coordinate && n.compareTo(n.parent) < 0) {
+                StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenColor(StdDraw.RED);
+                StdDraw.line(n.p.x(), 0, n.p.x(), n.parent.p.y());
+            }
+            /* If n is horizontal and it is larger than its parent */
+            else {
+                StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenColor(StdDraw.RED);
+                StdDraw.line(n.p.x(), n.parent.p.y(), n.p.x(),1.0 );
+            }
         }
     }
 
@@ -102,13 +133,18 @@ public class KdTree {
     }
 
     private Node insert(Node h, Point2D p) {
+        ///todo--See if you can just put the parent in the constructor instead of this below
         if (h == null) {
-            return new Node(p, 0, false);
+            return new Node(p, 0, false, null);
         }
         int cmp = p.compareTo(h.p);
-        if (cmp < 0) h.left = insert(h.left, p);
-        else if (cmp > 0) h.right = insert(h.right, p);
-        else h.p = p;
+        if (cmp < 0) {
+            h.left = insert(h.left, p);
+            h.left.parent = h;
+        } else if (cmp > 0) {
+            h.right = insert(h.right, p);
+            h.right.parent = h;
+        } else h.p = p;
         /* Test to make sure the line below is all you need to flip coordinates */
         if (isHorizontal(h)) makeVertical(h.right);
         if (isHorizontal(h)) makeVertical(h.left);
@@ -118,12 +154,26 @@ public class KdTree {
 
     public Point2D nearest(Point2D p) {
         ///todo - Implement
-        Point2D point = new Point2D(0,0);
+        Point2D point = new Point2D(0, 0);
         return p;
     }
 
     public static void main(String[] args) {
         KdTree k = new KdTree();
+        Queue<Point2D> s = new Queue<>();
+        Point2D p1 = new Point2D(0.7, 0.2);
+        s.enqueue(p1);
+        Point2D p2 = new Point2D(0.5, 0.4);
+        s.enqueue(p2);
+        Point2D p3 = new Point2D(0.2, 0.3);
+        s.enqueue(p3);
+        Point2D p4 = new Point2D(0.4, 0.7);
+        s.enqueue(p4);
+        Point2D p5 = new Point2D(0.9, 0.6);
+        s.enqueue(p5);
+        for (Point2D p : s) {
+            k.insert(p);
+        }
         for (int i = 0; i < 20; i++) {
             Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
             k.insert(p);
