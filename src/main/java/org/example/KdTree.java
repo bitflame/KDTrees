@@ -31,9 +31,13 @@ public class KdTree {
 //                if (this.p.y() < o.p.y()) return -1;
 //                else return 1;
 //            }
-            if (this.p.x() < o.p.x()) return -1;
-            else return 1;
-            // return 0;
+            if (isHorizontal(this)) {
+                if (this.p.x() < o.p.x()) return -1;
+                else return 1;
+            } else if (isVertical(this)) {
+                if (this.p.y() < o.p.y()) return -1;
+                else return 1;
+            } else return 0;
         }
     }
 
@@ -41,48 +45,46 @@ public class KdTree {
         StdDraw.clear();
         StdDraw.setPenRadius(0.008);
         for (Node n : this.keys()) {
-            if (n.parent == null) {
+            if (n.parent == null) {  // Horizontal Devide
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), 0, n.p.x(), 1.0);
                 /* If n is vertical and it is smaller than its parent */
-            } else if (n.coordinate && n.compareTo(n.parent) < 0) {
-                StdDraw.setPenRadius(0.008);
-                StdDraw.setPenColor(StdDraw.BLACK);
-                StdDraw.point(n.p.x(), n.p.y());
-                StdDraw.setPenRadius(0.003);
-                StdDraw.setPenColor(StdDraw.BLUE);
-                StdDraw.line(0, n.p.y(), n.parent.p.x(), n.p.y());
             }
-            /* If n is vertical and it is larger than its parent */
-            else if (n.coordinate && n.compareTo(n.parent) > 0) {
-                StdDraw.setPenRadius(0.008);
-                StdDraw.setPenColor(StdDraw.BLACK);
-                StdDraw.point(n.p.x(), n.p.y());
-                StdDraw.setPenRadius(0.003);
-                StdDraw.setPenColor(StdDraw.BLUE);
-                //StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
-                StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
-            }
-            /* If n is horizontal and it is smaller than its parent */
-            else if (!n.coordinate && n.compareTo(n.parent) < 0) {
-                StdDraw.setPenRadius(0.008);
-                StdDraw.setPenColor(StdDraw.BLACK);
-                StdDraw.point(n.p.x(), n.p.y());
-                StdDraw.setPenRadius(0.003);
-                StdDraw.setPenColor(StdDraw.RED);
-                StdDraw.line(n.p.x(), 0, n.p.x(), n.parent.p.y());
-            }
-            /* If n is horizontal and it is larger than its parent */
-            else {
-                StdDraw.setPenRadius(0.006);
-                StdDraw.setPenColor(StdDraw.BLACK);
-                StdDraw.point(n.p.x(), n.p.y());
-                StdDraw.setPenRadius(0.003);
-                StdDraw.setPenColor(StdDraw.RED);
-                StdDraw.line(n.p.x(), n.parent.p.y(), n.p.x(), 1.0);
+            if (isVertical(n.parent)) {  // Vertical devide
+                if (n.parent.compareTo(n) > 0) {
+                    StdDraw.setPenRadius(0.008);
+                    StdDraw.setPenColor(StdDraw.BLACK);
+                    StdDraw.point(n.p.x(), n.p.y());
+                    StdDraw.setPenRadius(0.003);
+                    StdDraw.setPenColor(StdDraw.RED);
+                    StdDraw.line(n.p.x(), 0, n.p.x(), n.parent.p.y());
+                } else if (n.parent.compareTo(n) < 0) {
+                    StdDraw.setPenRadius(0.008);
+                    StdDraw.setPenColor(StdDraw.BLACK);
+                    StdDraw.point(n.p.x(), n.p.y());
+                    StdDraw.setPenRadius(0.003);
+                    StdDraw.setPenColor(StdDraw.RED);
+                    StdDraw.line(n.p.x(), n.parent.p.y(), n.p.x(), 1.0);
+                }
+            } else if (isHorizontal(n.parent)) {
+                if (n.parent.compareTo(n) > 0) {
+                    StdDraw.setPenRadius(0.008);
+                    StdDraw.setPenColor(StdDraw.BLACK);
+                    StdDraw.point(n.p.x(), n.p.y());
+                    StdDraw.setPenRadius(0.003);
+                    StdDraw.setPenColor(StdDraw.BLUE);
+                    StdDraw.line(0, n.p.y(), n.parent.p.x(), n.p.y());
+                } else if (n.parent.compareTo(n) < 0) {
+                    StdDraw.setPenRadius(0.008);
+                    StdDraw.setPenColor(StdDraw.BLACK);
+                    StdDraw.point(n.p.x(), n.p.y());
+                    StdDraw.setPenRadius(0.003);
+                    StdDraw.setPenColor(StdDraw.BLUE);
+                    StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
+                }
             }
         }
     }
@@ -156,13 +158,24 @@ public class KdTree {
         if (h == null) {
             return new Node(p, 1, false, null);
         }
-        if (p.x() < h.p.x() || p.y() < h.p.y()) {
+        if (isHorizontal(h) && p.x() < h.p.x()) {
             h.left = insert(h.left, p);
             h.left.parent = h;
-        } else {
+            makeVertical(h.left);
+        } else if (isHorizontal(h) && p.x() > h.p.x()) {
             h.right = insert(h.right, p);
             h.right.parent = h;
+            makeVertical(h.right);
+        } else if (isVertical(h) && p.y() < h.p.y()) {
+            h.left = insert(h.left, p);
+            h.left.parent = h;
+            makeHorizontal(h.left);
+        } else if (isVertical(h) && p.y() > h.p.y()) {
+            h.right = insert(h.right, p);
+            h.right.parent = h;
+            makeHorizontal(h.right);
         }
+
 //        int cmp = p.compareTo(h.p);
 //        if (cmp < 0) {
 //            h.left = insert(h.left, p);
@@ -171,14 +184,13 @@ public class KdTree {
 //            h.right = insert(h.right, p);
 //            h.right.parent = h;
 //        } else h.p = p;
-        /* Test to make sure the line below is all you need to flip coordinates */
-        if (isVertical(h)) {
-            makeHorizontal(h.right);
-            makeHorizontal(h.left);
-        } else if (isHorizontal(h)) {
-            makeVertical(h.left);
-            makeVertical(h.right);
-        }
+//        if (isVertical(h)) {
+//            makeHorizontal(h.right);
+//            makeHorizontal(h.left);
+//        } else if (isHorizontal(h)) {
+//            makeVertical(h.left);
+//            makeVertical(h.right);
+//        }
         h.N = size(h.left) + size(h.right) + 1;
         return h;
     }
@@ -218,6 +230,5 @@ public class KdTree {
 //                index++;
 //            }
 //        }
-
     }
 }
