@@ -11,6 +11,7 @@ public class KdTree {
         Node left, right, parent; // subtrees
         int N; // # nodes in this subtree
         boolean coordinate;// 0 means horizontal
+        private RectHV rect; // the axis-aligned rectangle corresponding to this node
 
         public Node(Point2D p, int N, boolean coordinate, Node parent) {
             this.p = p;
@@ -89,7 +90,7 @@ public class KdTree {
         }
     }
 
-    private Point2D get(Point2D p) {
+    public Point2D get(Point2D p) {
         return get(root, p);
     }
 
@@ -117,7 +118,20 @@ public class KdTree {
         return q;
     }
 
+    ///todo - implement the node's rectangle
     public Iterable<Point2D> range(RectHV rect) {
+        range(root, rect);
+        return q;
+    }
+
+    private Iterable<Point2D> range(Node h, RectHV rect) {
+        if (h.rect.intersects(rect)) {
+            if (rect.contains(h.p)) q.enqueue(h.p);
+            /* only look at the left and right children's rectangles if the root's rectangle intersects with the desired
+             * rectangle area */
+            range(h.left, rect);
+            range(h.right, rect);
+        }
         return q;
     }
 
@@ -141,14 +155,6 @@ public class KdTree {
         x.coordinate = false;
     }
 
-    public int size() {
-        return size(root);
-    }
-
-    private int size(Node x) {
-        if (x == null) return 0;
-        else return x.N;
-    }
 
     public void insert(Point2D p) {
         root = insert(root, p);
@@ -191,14 +197,24 @@ public class KdTree {
 //            makeVertical(h.left);
 //            makeVertical(h.right);
 //        }
-        h.N = size(h.left) + size(h.right) + 1;
         return h;
     }
 
     public Point2D nearest(Point2D p) {
         ///todo - Implement
-        Point2D point = new Point2D(0, 0);
+        /*if the closest point discovered so far is closer than the distance between the query point and the rectangle
+        corresponding to a node, there is no need to explore that node (or its subtrees).*/
+        Point2D nearestNeig = root.p;
+        if (root.left.rect.distanceTo(p) < p.distanceTo(nearestNeig)) nearest(root.left, p, nearestNeig);
+        if (root.right.rect.distanceTo(p) < p.distanceTo(nearestNeig)) nearest(root.right, p, nearestNeig);
         return p;
+    }
+
+    private Point2D nearest(Node n, Point2D p, Point2D nearstP) {
+        if (n.p.distanceTo(p) < p.distanceTo(nearstP)) nearstP = n.p;
+        if (n.left.rect.distanceTo(p) < p.distanceTo(nearstP)) nearest(n.left, p, nearstP);
+        if (n.right.rect.distanceTo(p) < p.distanceTo(nearstP)) nearest(n.right, p, nearstP);
+        return nearstP;
     }
 
     public static void main(String[] args) {
