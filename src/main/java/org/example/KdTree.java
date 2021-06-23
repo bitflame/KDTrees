@@ -17,6 +17,7 @@ public class KdTree {
             this.p = p;
             this.coordinate = coordinate;
             this.parent = parent;
+            this.rect = new RectHV(0.0, 0.0, 1.0, 1.0);
         }
 
         /* Check to make sure this method checks the coordinate of what is already on the org.example.KDTree with the new node
@@ -42,7 +43,7 @@ public class KdTree {
     }
 
     public void draw() {
-        StdDraw.clear();
+        /*StdDraw.clear();
         StdDraw.setPenRadius(0.008);
         for (Node n : this.keys()) {
             if (n.parent == null) {  // Horizontal Devide
@@ -51,7 +52,7 @@ public class KdTree {
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), 0, n.p.x(), 1.0);
-                /* If n is vertical and it is smaller than its parent */
+                *//* If n is vertical and it is smaller than its parent *//*
             }
             if (isVertical(n.parent)) {  // Vertical devide
                 if (n.parent.compareTo(n) > 0) {
@@ -86,7 +87,9 @@ public class KdTree {
                     StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
                 }
             }
-        }
+        }*/
+        /* Drawing the rectangles now. The old code is in the commented section above. */
+
     }
 
     public Point2D get(Point2D p) {
@@ -159,25 +162,32 @@ public class KdTree {
         root = insert(root, p);
     }
 
+    private void addRect(Node n, Node parent) {
+        n.rect = new RectHV(0.0, 0.0, parent.p.x(), 1.0);
+    }
+
     private Node insert(Node h, Point2D p) {
         if (h == null) {
-            RectHV r = new RectHV(0,0,1,1);
             return new Node(p, 1, false, null);
         }
         if (isHorizontal(h) && p.x() < h.p.x()) {
             h.left = insert(h.left, p);
+            h.left.rect = new RectHV(h.rect.xmin(), h.rect.ymin(), h.p.x(), h.rect.ymax());
             h.left.parent = h;
             makeVertical(h.left);
         } else if (isHorizontal(h) && p.x() > h.p.x()) {
             h.right = insert(h.right, p);
+            h.right.rect = new RectHV(h.p.x(), h.rect.ymin(), h.rect.xmax(), h.rect.ymax());
             h.right.parent = h;
             makeVertical(h.right);
         } else if (isVertical(h) && p.y() < h.p.y()) {
             h.left = insert(h.left, p);
+            h.left.rect = new RectHV(h.rect.xmin(), h.rect.ymin(), h.rect.xmax(), h.p.y());
             h.left.parent = h;
             makeHorizontal(h.left);
         } else if (isVertical(h) && p.y() > h.p.y()) {
             h.right = insert(h.right, p);
+            h.right.rect = new RectHV(h.rect.xmin(), h.p.y(),h.rect.xmax(),h.rect.ymax());
             h.right.parent = h;
             makeHorizontal(h.right);
         }
