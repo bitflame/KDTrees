@@ -202,6 +202,7 @@ public class KdTree {
     }
 
     public static void main(String[] args) {
+        StdOut.println("Changed something for testing.");
         KdTree k = new KdTree();
         Queue<Point2D> s = new Queue<>();
         Point2D p1 = new Point2D(0.7, 0.2);
