@@ -89,7 +89,22 @@ public class KdTree {
             }
         }*/
         /* Drawing the rectangles now. The old code is in the commented section above. */
-
+        StdDraw.setPenRadius(0.008);
+        for (Node n : this.keys()) {
+            if (isHorizontal(n)){
+                StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenRadius(0.003);
+                StdDraw.setPenColor(StdDraw.RED);
+                StdDraw.line(n.p.x(), n.rect.ymin(), n.p.x(), n.rect.ymax());
+            } else if (isVertical(n)){
+                StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.point(n.p.x(), n.p.y());
+                StdDraw.setPenRadius(0.003);
+                StdDraw.setPenColor(StdDraw.BLUE);
+                StdDraw.line(n.rect.xmin(), n.p.y(), n.rect.xmax(), n.p.y());
+            }
+        }
     }
 
     public Point2D get(Point2D p) {
@@ -187,7 +202,7 @@ public class KdTree {
             makeHorizontal(h.left);
         } else if (isVertical(h) && p.y() > h.p.y()) {
             h.right = insert(h.right, p);
-            h.right.rect = new RectHV(h.rect.xmin(), h.p.y(),h.rect.xmax(),h.rect.ymax());
+            h.right.rect = new RectHV(h.rect.xmin(), h.p.y(), h.rect.xmax(), h.rect.ymax());
             h.right.parent = h;
             makeHorizontal(h.right);
         }
