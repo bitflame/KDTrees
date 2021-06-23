@@ -91,13 +91,13 @@ public class KdTree {
         /* Drawing the rectangles now. The old code is in the commented section above. */
         StdDraw.setPenRadius(0.008);
         for (Node n : this.keys()) {
-            if (isHorizontal(n)){
+            if (isHorizontal(n)) {
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), n.rect.ymin(), n.p.x(), n.rect.ymax());
-            } else if (isVertical(n)){
+            } else if (isVertical(n)) {
                 StdDraw.setPenColor(StdDraw.BLACK);
                 StdDraw.point(n.p.x(), n.p.y());
                 StdDraw.setPenRadius(0.003);
@@ -135,7 +135,6 @@ public class KdTree {
         return q;
     }
 
-    ///todo - implement the node's rectangle
     public Iterable<Point2D> range(RectHV rect) {
         range(root, rect);
         return q;
@@ -226,7 +225,6 @@ public class KdTree {
     }
 
     public Point2D nearest(Point2D p) {
-        ///todo - Implement
         /*if the closest point discovered so far is closer than the distance between the query point and the rectangle
         corresponding to a node, there is no need to explore that node (or its subtrees).*/
         Point2D nearestNeig = root.p;

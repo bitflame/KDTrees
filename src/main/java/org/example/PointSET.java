@@ -198,7 +198,6 @@ public class PointSET {
             StdDraw.point(interval, rTime);
             interval += .015;
         }
-        StdOut.printf("Done!");
 
 //            StdDraw.rectangle(.10, .4, .02, .1);
 //
