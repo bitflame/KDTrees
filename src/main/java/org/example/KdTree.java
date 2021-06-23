@@ -6,7 +6,7 @@ public class KdTree {
     private Node root;
     private Queue q = new Queue();
 
-    private class Node implements Comparable<Node> {
+    private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
         int N; // # nodes in this subtree
@@ -15,7 +15,6 @@ public class KdTree {
 
         public Node(Point2D p, int N, boolean coordinate, Node parent) {
             this.p = p;
-            this.N = N;
             this.coordinate = coordinate;
             this.parent = parent;
         }
@@ -135,12 +134,12 @@ public class KdTree {
         return q;
     }
 
-    private boolean isHorizontal(Node x) {
+    private static boolean isHorizontal(Node x) {
         if (x == null) return false;
         return x.coordinate == false;
     }
 
-    private boolean isVertical(Node x) {
+    private static boolean isVertical(Node x) {
         if (x == null) return false;
         return x.coordinate == true;
     }
@@ -162,6 +161,7 @@ public class KdTree {
 
     private Node insert(Node h, Point2D p) {
         if (h == null) {
+            RectHV r = new RectHV(0,0,1,1);
             return new Node(p, 1, false, null);
         }
         if (isHorizontal(h) && p.x() < h.p.x()) {
