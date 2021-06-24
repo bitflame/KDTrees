@@ -6,11 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="KDTrees" />
+        <module name="kdtrees" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="KDTrees" target="1.7" />
-    </bytecodeTargetLevel>
   </component>
 </project>
