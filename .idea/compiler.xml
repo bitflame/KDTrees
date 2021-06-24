@@ -9,5 +9,8 @@
         <module name="KDTrees" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="KDTrees" target="1.7" />
+    </bytecodeTargetLevel>
   </component>
 </project>
