@@ -1,17 +1,13 @@
-package org.example;
 
-import edu.princeton.cs.algs4.SET;
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.Stack;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdRandom;
-import edu.princeton.cs.algs4.Stopwatch;
-import edu.princeton.cs.algs4.StdOut;
+
+import edu.princeton.cs.algs4.*;
+
+import java.awt.*;
+import java.util.TreeSet;
 
 public class PointSET {
-    private SET<Node> treeSet;
-    private Stack<Point2D> interaPoints = new Stack<>();
+    SET<Node> treeSet;
+    Stack<Point2D> interaPoints = new Stack<>();
 
     private static class Node implements Comparable<Node> {
         private final Point2D p;
@@ -26,6 +22,7 @@ public class PointSET {
             this.rt = rt;
         }
 
+        /* Points are alreday compared; maybe compare the rectangles here? */
         @Override
         public int compareTo(Node o) {
             if (this.rect.xmin() < o.rect.xmin() && this.rect.xmax() < o.rect.xmax()) return -1;
@@ -35,6 +32,8 @@ public class PointSET {
             if (this.p.x() > o.p.x() && this.p.y() > o.p.y()) return 1;
             if (this.p.x() < o.p.x() && this.p.x() < o.p.x()) return -1;
             else {
+//                StdOut.println("Have another look at breaking a tie. Put a break point or print the" +
+//                        "objects and see if they are equal, and if not, why they get here. ");
                 return 0;
             }
 
@@ -50,8 +49,7 @@ public class PointSET {
     }
 
     public void insert(Point2D p) {
-        if (p == null) throw new IllegalArgumentException("Can not send a null to " +
-                "insert() ");
+        if (p == null) throw new IllegalArgumentException("Can not send a null to insert() ");
         RectHV newRecHV = new RectHV(p.x() - 0.02, p.y() - 0.02, p.x() +
                 0.02, p.y() + 0.02);
         Node n = new Node(p, newRecHV, null, null);
@@ -59,8 +57,7 @@ public class PointSET {
     }
 
     public boolean contains(Point2D p) {
-        if (p == null) throw new IllegalArgumentException("Can not send a null to " +
-                "contains() ");
+        if (p == null) throw new IllegalArgumentException("Can not send a null to contains() ");
         for (Node n : treeSet) {
             if (n.rect.contains(p)) {
                 if (n.p.equals(p)) return true;
@@ -69,13 +66,8 @@ public class PointSET {
         return false;
     }
 
-    public int size() {
-        return treeSet.size();
-    }
-
     public Point2D nearest(Point2D p) {
-        if (p == null) throw new IllegalArgumentException("Can not send a null to " +
-                "nearest() ");
+        if (p == null) throw new IllegalArgumentException("Can not send a null to nearest() ");
         Point2D nearestP = new Point2D(0, 0);
         nearestP = treeSet.min().p;
         for (Node n : treeSet) {
@@ -84,7 +76,7 @@ public class PointSET {
         return p;
     }
 
-    public void draw() {
+    void draw() {
         StdDraw.clear();
         StdDraw.setPenRadius(0.005);
         StdDraw.setPenColor(StdDraw.BLACK);
@@ -95,8 +87,7 @@ public class PointSET {
     }
 
     public Iterable<Point2D> range(RectHV rect) {
-        if (rect.equals(null)) throw new IllegalArgumentException("Can not pass null to " +
-                "range().");
+        if (rect.equals(null)) throw new IllegalArgumentException("Can not pass null to range().");
         /* Use the tree and eliminate as much of it as you avoid searching. */
         for (Node n : treeSet) {
             if (n.rect.intersects(rect)) {

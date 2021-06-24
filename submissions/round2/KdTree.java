@@ -1,10 +1,5 @@
-package org.example;
 
-import edu.princeton.cs.algs4.Queue;
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.*;
 
 public class KdTree {
     private Node root;
@@ -14,7 +9,7 @@ public class KdTree {
     private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
-        int n; // # nodes in this subtree
+        int N; // # nodes in this subtree
         boolean coordinate;// 0 means horizontal
         private RectHV rect; // the axis-aligned rectangle corresponding to this node
 
@@ -25,8 +20,8 @@ public class KdTree {
             this.rect = new RectHV(0.0, 0.0, 1.0, 1.0);
         }
 
-        /* Check to make sure this method checks the coordinate of what is already on the org.example.KDTree with
-        the new node not the other way around */
+        /* Check to make sure this method checks the coordinate of what is already on the org.example.KDTree with the new node
+         * not the other way around */
         @Override
         public int compareTo(Node o) {
 //            if (o.coordinate == false) {
@@ -112,12 +107,8 @@ public class KdTree {
         }
     }
 
-    private Point2D get(Point2D p) {
+    public Point2D get(Point2D p) {
         return get(root, p);
-    }
-
-    public boolean isEmpty() {
-        return keys() == null;
     }
 
     private Point2D get(Node h, Point2D p) {
@@ -128,7 +119,7 @@ public class KdTree {
         else return h.p;
     }
 
-    private Iterable<Node> keys() {
+    public Iterable<Node> keys() {
         return keys(root);
     }
 
@@ -148,11 +139,6 @@ public class KdTree {
         range(root, rect);
         return pq;
     }
-
-    public boolean contains(Point2D p) {
-        return get(p) != null;
-    }
-
 
     private Iterable<Point2D> range(Node h, RectHV rect) {
         if (h.rect.intersects(rect)) {
@@ -189,6 +175,10 @@ public class KdTree {
 
     public void insert(Point2D p) {
         root = insert(root, p);
+    }
+
+    private void addRect(Node n, Node parent) {
+        n.rect = new RectHV(0.0, 0.0, parent.p.x(), 1.0);
     }
 
     private Node insert(Node h, Point2D p) {
@@ -232,12 +222,7 @@ public class KdTree {
 //            makeVertical(h.left);
 //            makeVertical(h.right);
 //        }
-        h.n = h.left.n + h.right.n + 1;
         return h;
-    }
-
-    public int size() {
-        return root.n;
     }
 
     public Point2D nearest(Point2D p) {

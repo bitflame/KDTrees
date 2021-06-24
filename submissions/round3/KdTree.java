@@ -1,10 +1,6 @@
-package org.example;
 
-import edu.princeton.cs.algs4.Queue;
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.StdDraw;
+
+import edu.princeton.cs.algs4.*;
 
 public class KdTree {
     private Node root;
@@ -14,7 +10,7 @@ public class KdTree {
     private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
-        int n; // # nodes in this subtree
+        int N; // # nodes in this subtree
         boolean coordinate;// 0 means horizontal
         private RectHV rect; // the axis-aligned rectangle corresponding to this node
 
@@ -191,6 +187,10 @@ public class KdTree {
         root = insert(root, p);
     }
 
+    private void addRect(Node n, Node parent) {
+        n.rect = new RectHV(0.0, 0.0, parent.p.x(), 1.0);
+    }
+
     private Node insert(Node h, Point2D p) {
         if (h == null) {
             return new Node(p, 1, false, null);
@@ -232,12 +232,12 @@ public class KdTree {
 //            makeVertical(h.left);
 //            makeVertical(h.right);
 //        }
-        h.n = h.left.n + h.right.n + 1;
+        h.N = h.left.N + h.right.N + 1;
         return h;
     }
 
     public int size() {
-        return root.n;
+        return root.N;
     }
 
     public Point2D nearest(Point2D p) {
