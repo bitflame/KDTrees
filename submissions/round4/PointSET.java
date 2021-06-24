@@ -1,4 +1,4 @@
-package org.example;
+
 
 import edu.princeton.cs.algs4.SET;
 import edu.princeton.cs.algs4.Point2D;
@@ -10,8 +10,8 @@ import edu.princeton.cs.algs4.Stopwatch;
 import edu.princeton.cs.algs4.StdOut;
 
 public class PointSET {
-    private final SET<Point2D> treeSet;
-    private final Stack<Point2D> interaPoints = new Stack<>();
+    private SET<Point2D> treeSet;
+    private Stack<Point2D> interaPoints = new Stack<>();
 
 
     public PointSET() {
@@ -47,7 +47,7 @@ public class PointSET {
         Point2D nearestP = new Point2D(0, 0);
         nearestP = treeSet.min();
         for (Point2D point : treeSet) {
-            if (point.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p)) nearestP = point;
+            if (point.distanceTo(p) < nearestP.distanceTo(p)) nearestP = point;
         }
         return p;
     }
@@ -63,7 +63,7 @@ public class PointSET {
     }
 
     public Iterable<Point2D> range(RectHV rect) {
-        if (rect == null) throw new IllegalArgumentException("Can not pass null to " +
+        if (rect.equals(null)) throw new IllegalArgumentException("Can not pass null to " +
                 "range().");
         /* Use the tree and eliminate as much of it as you avoid searching. */
         for (Point2D point : treeSet) {
@@ -108,6 +108,7 @@ public class PointSET {
             pSet.contains(p);
         }
         double time2 = timer2.elapsedTime();
+        double timerPerContains = (time2 / (n));
         double logOfPoints = Math.log(n);
         StdOut.printf("Log of %d nodes is: %4f, and contains() takes %4f to push 100000 nodes into %d " +
                 "nodes.", n, logOfPoints, time2, n);
@@ -116,7 +117,7 @@ public class PointSET {
 
     private static double rangeTimes(int n) {
         PointSET pSet = new PointSET();
-        //Stack<Point2D> s = new Stack<>();
+        Stack<Point2D> s = new Stack<>();
         for (int i = 1; i < n; i++) {
             Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0),
                     StdRandom.uniform(0.0, 1.0));

@@ -1,4 +1,4 @@
-package org.example;
+
 
 import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.Point2D;
@@ -8,28 +8,27 @@ import edu.princeton.cs.algs4.StdDraw;
 
 public class KdTree {
     private Node root;
-    private final Queue<Node> q = new Queue<>();
-    private final Queue<Point2D> pq = new Queue<>();
+    private Queue<Node> q = new Queue<>();
+    private Queue<Point2D> pq = new Queue<>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
         int n; // # nodes in this subtree
-        boolean coordinate; // 0 means horizontal
+        boolean coordinate;// 0 means horizontal
         private RectHV rect; // the axis-aligned rectangle corresponding to this node
 
-        public Node(Point2D p, int n, boolean coordinate, Node parent) {
+        public Node(Point2D p, int N, boolean coordinate, Node parent) {
             this.p = p;
             this.coordinate = coordinate;
             this.parent = parent;
             this.rect = new RectHV(0.0, 0.0, 1.0, 1.0);
-            this.n = n;
         }
 
         /* Check to make sure this method checks the coordinate of what is already on the org.example.KDTree with
         the new node not the other way around */
         @Override
-        public int compareTo(Node h) {
+        public int compareTo(Node o) {
 //            if (o.coordinate == false) {
 //                if (this.p.x() < o.p.x()) return -1;
 //                else return 1;
@@ -39,17 +38,17 @@ public class KdTree {
 //                else return 1;
 //            }
             if (isHorizontal(this)) {
-                if (this.p.x() < h.p.x()) return -1;
+                if (this.p.x() < o.p.x()) return -1;
                 else return 1;
             } else if (isVertical(this)) {
-                if (this.p.y() < h.p.y()) return -1;
+                if (this.p.y() < o.p.y()) return -1;
                 else return 1;
             } else return 0;
         }
     }
 
     public void draw() {
-        /* StdDraw.clear();
+        /*StdDraw.clear();
         StdDraw.setPenRadius(0.008);
         for (Node n : this.keys()) {
             if (n.parent == null) {  // Horizontal Devide
@@ -58,7 +57,7 @@ public class KdTree {
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), 0, n.p.x(), 1.0);
-                 */ /* If n is vertical and it is smaller than its parent */ /*
+                *//* If n is vertical and it is smaller than its parent *//*
             }
             if (isVertical(n.parent)) {  // Vertical devide
                 if (n.parent.compareTo(n) > 0) {
@@ -93,7 +92,7 @@ public class KdTree {
                     StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
                 }
             }
-        } */
+        }*/
         /* Drawing the rectangles now. The old code is in the commented section above. */
         StdDraw.setPenRadius(0.008);
         for (Node n : this.keys()) {
@@ -158,8 +157,8 @@ public class KdTree {
     private Iterable<Point2D> range(Node h, RectHV rect) {
         if (h.rect.intersects(rect)) {
             if (rect.contains(h.p)) pq.enqueue(h.p);
-            /* only look at the left and right children's rectangles if the root's rectangle intersects with the
-             * desired rectangle area */
+            /* only look at the left and right children's rectangles if the root's rectangle intersects with the desired
+             * rectangle area */
             if (h.left != null) range(h.left, rect);
             if (h.right != null) range(h.right, rect);
 
@@ -217,7 +216,23 @@ public class KdTree {
             h.right.parent = h;
             makeHorizontal(h.right);
         }
-        h.n = h.n + 1;
+
+//        int cmp = p.compareTo(h.p);
+//        if (cmp < 0) {
+//            h.left = insert(h.left, p);
+//            h.left.parent = h;
+//        } else if (cmp > 0) {
+//            h.right = insert(h.right, p);
+//            h.right.parent = h;
+//        } else h.p = p;
+//        if (isVertical(h)) {
+//            makeHorizontal(h.right);
+//            makeHorizontal(h.left);
+//        } else if (isHorizontal(h)) {
+//            makeVertical(h.left);
+//            makeVertical(h.right);
+//        }
+        h.n = h.left.n + h.right.n + 1;
         return h;
     }
 
@@ -228,25 +243,25 @@ public class KdTree {
     public Point2D nearest(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Data passed to nearest() can not be null.");
         if (root == null) throw new IllegalArgumentException("The tree is empty.");
-        /* if the closest point discovered so far is closer than the distance between the query point and the rectangle
-        corresponding to a node, there is no need to explore that node (or its subtrees). */
+        /*if the closest point discovered so far is closer than the distance between the query point and the rectangle
+        corresponding to a node, there is no need to explore that node (or its subtrees).*/
         Point2D nearestNeig = root.p;
         if (root.left != null) {
-            if (root.left.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearestNeig)) nearest(root.left, p, nearestNeig);
+            if (root.left.rect.distanceTo(p) < p.distanceTo(nearestNeig)) nearest(root.left, p, nearestNeig);
         }
         if (root.right != null) {
-            if (root.right.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearestNeig)) nearest(root.right, p, nearestNeig);
+            if (root.right.rect.distanceTo(p) < p.distanceTo(nearestNeig)) nearest(root.right, p, nearestNeig);
         }
         return p;
     }
 
     private Point2D nearest(Node n, Point2D p, Point2D nearstP) {
-        if (n.p.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) nearstP = n.p;
+        if (n.p.distanceTo(p) < p.distanceTo(nearstP)) nearstP = n.p;
         if (n.left != null) {
-            if (n.left.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) nearest(n.left, p, nearstP);
+            if (n.left.rect.distanceTo(p) < p.distanceTo(nearstP)) nearest(n.left, p, nearstP);
         }
         if (n.right != null) {
-            if (n.right.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) nearest(n.right, p, nearstP);
+            if (n.right.rect.distanceTo(p) < p.distanceTo(nearstP)) nearest(n.right, p, nearstP);
         }
         return nearstP;
     }
