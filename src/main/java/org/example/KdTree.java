@@ -237,7 +237,7 @@ public class KdTree {
         if (root.right != null) {
             if (root.right.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearestNeig)) nearest(root.right, p, nearestNeig);
         }
-        return p;
+        return nearestNeig;
     }
 
     private Point2D nearest(Node n, Point2D p, Point2D nearstP) {
@@ -252,23 +252,46 @@ public class KdTree {
     }
 
     public static void main(String[] args) {
-        StdOut.println("Changed something for testing.");
-        KdTree k = new KdTree();
-        Queue<Point2D> s = new Queue<>();
-        Point2D p1 = new Point2D(0.7, 0.2);
-        s.enqueue(p1);
-        Point2D p2 = new Point2D(0.5, 0.4);
-        s.enqueue(p2);
-        Point2D p3 = new Point2D(0.2, 0.3);
-        s.enqueue(p3);
-        Point2D p4 = new Point2D(0.4, 0.7);
-        s.enqueue(p4);
-        Point2D p5 = new Point2D(0.9, 0.6);
-        s.enqueue(p5);
-        for (Point2D p : s) {
-            k.insert(p);
-        }
-        k.draw();
+        KdTree kt = new KdTree();
+        Point2D p1 = new Point2D(0.5,0.25);
+        kt.insert(p1);
+        Point2D p2 = new Point2D(0.0,0.5);
+        kt.insert(p2);
+        Point2D p3 = new Point2D(0.5,0.0);
+        kt.insert(p3);
+        Point2D p4 = new Point2D(0.25,0.0);
+        kt.insert(p4);
+        Point2D p5 = new Point2D(0.0,1.0);
+        kt.insert(p5);
+        Point2D p6 = new Point2D(1.0,0.5);
+        kt.insert(p6);
+        Point2D p7 = new Point2D(0.25,0.0);
+        kt.insert(p7);
+        Point2D p8 = new Point2D(0.0,0.25);
+        kt.insert(p8);
+        Point2D p9 = new Point2D(0.25,0.0);
+        kt.insert(p9);
+        Point2D p10 = new Point2D(0.25,0.5);
+        kt.insert(p10);
+        Point2D queryPoint = new Point2D(0.75, 0.75);
+        StdOut.println("Distance Squared to Query Point: "+kt.nearest(queryPoint).distanceSquaredTo(queryPoint));
+//        StdOut.println("Changed something for testing.");
+//        KdTree k = new KdTree();
+//        Queue<Point2D> s = new Queue<>();
+//        Point2D p1 = new Point2D(0.7, 0.2);
+//        s.enqueue(p1);
+//        Point2D p2 = new Point2D(0.5, 0.4);
+//        s.enqueue(p2);
+//        Point2D p3 = new Point2D(0.2, 0.3);
+//        s.enqueue(p3);
+//        Point2D p4 = new Point2D(0.4, 0.7);
+//        s.enqueue(p4);
+//        Point2D p5 = new Point2D(0.9, 0.6);
+//        s.enqueue(p5);
+//        for (Point2D p : s) {
+//            k.insert(p);
+//        }
+//        k.draw();
 //        for (int i = 0; i < 20; i++) {
 //            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
 //            k.insert(p);
