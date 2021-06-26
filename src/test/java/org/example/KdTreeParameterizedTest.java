@@ -36,6 +36,7 @@ class KdTreeParameterizedTest {
         assertFalse(kt.contains(queryPoint));
         assertFalse(queryPoint.equals(kt.nearest(queryPoint)));
     }
+    @Disabled
     @Test
     void myTest() {
         Point2D p1 = new Point2D(0.5,0.25);
@@ -58,9 +59,15 @@ class KdTreeParameterizedTest {
         kt.insert(p9);
         Point2D p10 = new Point2D(0.25,0.5);
         kt.insert(p10);
-        Point2D queryPoint = new Point2D(0.75, 0.75);
+        //Point2D queryPoint = new Point2D(0.75, 0.75);
+        assertEquals(kt.size(),10);
         //assertFalse(kt.contains(queryPoint));
         //assertFalse(queryPoint.equals(kt.nearest(queryPoint)));
         //assertEquals(kt.nearest(queryPoint).distanceSquaredTo(queryPoint),0.125);
     }
+    @Test
+    void isEmpty() {
+        assertTrue(kt.isEmpty());
+    }
+
 }

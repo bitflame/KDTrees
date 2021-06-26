@@ -5,16 +5,17 @@ import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.In;
 
 public class KdTree {
     private Node root;
-    private final Queue<Node> q = new Queue<>();
-    private final Queue<Point2D> pq = new Queue<>();
+    private Queue<Node> q = new Queue<>();
+    private Queue<Point2D> pq = new Queue<>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
-        int n; // # nodes in this subtree
+        int n = 0; // # nodes in this subtree
         boolean coordinate; // 0 means horizontal
         private RectHV rect; // the axis-aligned rectangle corresponding to this node
 
@@ -49,62 +50,18 @@ public class KdTree {
     }
 
     public void draw() {
-        /* StdDraw.clear();
-        StdDraw.setPenRadius(0.008);
-        for (Node n : this.keys()) {
-            if (n.parent == null) {  // Horizontal Devide
-                StdDraw.setPenColor(StdDraw.BLACK);
-                StdDraw.point(n.p.x(), n.p.y());
-                StdDraw.setPenRadius(0.003);
-                StdDraw.setPenColor(StdDraw.RED);
-                StdDraw.line(n.p.x(), 0, n.p.x(), 1.0);
-                 */ /* If n is vertical and it is smaller than its parent */ /*
-            }
-            if (isVertical(n.parent)) {  // Vertical devide
-                if (n.parent.compareTo(n) > 0) {
-                    StdDraw.setPenRadius(0.008);
-                    StdDraw.setPenColor(StdDraw.BLACK);
-                    StdDraw.point(n.p.x(), n.p.y());
-                    StdDraw.setPenRadius(0.003);
-                    StdDraw.setPenColor(StdDraw.RED);
-                    StdDraw.line(n.p.x(), 0, n.p.x(), n.parent.p.y());
-                } else if (n.parent.compareTo(n) < 0) {
-                    StdDraw.setPenRadius(0.008);
-                    StdDraw.setPenColor(StdDraw.BLACK);
-                    StdDraw.point(n.p.x(), n.p.y());
-                    StdDraw.setPenRadius(0.003);
-                    StdDraw.setPenColor(StdDraw.RED);
-                    StdDraw.line(n.p.x(), n.parent.p.y(), n.p.x(), 1.0);
-                }
-            } else if (isHorizontal(n.parent)) {
-                if (n.parent.compareTo(n) > 0) {
-                    StdDraw.setPenRadius(0.008);
-                    StdDraw.setPenColor(StdDraw.BLACK);
-                    StdDraw.point(n.p.x(), n.p.y());
-                    StdDraw.setPenRadius(0.003);
-                    StdDraw.setPenColor(StdDraw.BLUE);
-                    StdDraw.line(0, n.p.y(), n.parent.p.x(), n.p.y());
-                } else if (n.parent.compareTo(n) < 0) {
-                    StdDraw.setPenRadius(0.008);
-                    StdDraw.setPenColor(StdDraw.BLACK);
-                    StdDraw.point(n.p.x(), n.p.y());
-                    StdDraw.setPenRadius(0.003);
-                    StdDraw.setPenColor(StdDraw.BLUE);
-                    StdDraw.line(n.parent.p.x(), n.p.y(), 1.0, n.p.y());
-                }
-            }
-        } */
-        /* Drawing the rectangles now. The old code is in the commented section above. */
-        StdDraw.setPenRadius(0.008);
+        StdDraw.setPenRadius(0.012);
         for (Node n : this.keys()) {
             if (isHorizontal(n)) {
                 StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.setPenRadius(0.012);
                 StdDraw.point(n.p.x(), n.p.y());
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.RED);
                 StdDraw.line(n.p.x(), n.rect.ymin(), n.p.x(), n.rect.ymax());
             } else if (isVertical(n)) {
                 StdDraw.setPenColor(StdDraw.BLACK);
+                StdDraw.setPenRadius(0.012);
                 StdDraw.point(n.p.x(), n.p.y());
                 StdDraw.setPenRadius(0.003);
                 StdDraw.setPenColor(StdDraw.BLUE);
@@ -130,11 +87,12 @@ public class KdTree {
     }
 
     private Iterable<Node> keys() {
+        q = new Queue<>();
         return keys(root);
     }
 
     private Queue<Node> keys(Node h) {
-
+        if (h == null) return null;
         if (h != null) q.enqueue(h);
         if (h.left != null) {
             keys(h.left);
@@ -146,6 +104,7 @@ public class KdTree {
     }
 
     public Iterable<Point2D> range(RectHV rect) {
+        pq = new Queue<>();
         range(root, rect);
         return pq;
     }
@@ -201,7 +160,7 @@ public class KdTree {
             h.left.rect = new RectHV(h.rect.xmin(), h.rect.ymin(), h.p.x(), h.rect.ymax());
             h.left.parent = h;
             makeVertical(h.left);
-        } else if (isHorizontal(h) && p.x() > h.p.x()) {
+        } else if (isHorizontal(h) && p.x() >= h.p.x()) {
             h.right = insert(h.right, p);
             h.right.rect = new RectHV(h.p.x(), h.rect.ymin(), h.rect.xmax(), h.rect.ymax());
             h.right.parent = h;
@@ -211,18 +170,27 @@ public class KdTree {
             h.left.rect = new RectHV(h.rect.xmin(), h.rect.ymin(), h.rect.xmax(), h.p.y());
             h.left.parent = h;
             makeHorizontal(h.left);
-        } else if (isVertical(h) && p.y() > h.p.y()) {
+        } else if (isVertical(h) && p.y() >= h.p.y()) {
             h.right = insert(h.right, p);
             h.right.rect = new RectHV(h.rect.xmin(), h.p.y(), h.rect.xmax(), h.rect.ymax());
             h.right.parent = h;
             makeHorizontal(h.right);
         }
-        h.n = h.n + 1;
+        int leftN = 0;
+        if (h.left != null) {
+            leftN = h.left.n;
+        }
+        int rightN = 0;
+        if (h.right != null) {
+            rightN = h.right.n;
+        }
+        h.n = leftN + rightN + 1;
         return h;
     }
 
     public int size() {
-        return root.n;
+        if (root == null) return 0;
+        else return root.n;
     }
 
     public Point2D nearest(Point2D p) {
@@ -231,50 +199,72 @@ public class KdTree {
         /* if the closest point discovered so far is closer than the distance between the query point and the rectangle
         corresponding to a node, there is no need to explore that node (or its subtrees). */
         Point2D nearestNeig = root.p;
-        if (root.left != null) {
-            if (root.left.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearestNeig)) nearest(root.left, p, nearestNeig);
-        }
-        if (root.right != null) {
-            if (root.right.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearestNeig)) nearest(root.right, p, nearestNeig);
-        }
-        return nearestNeig;
+        return nearest(root, p, nearestNeig);
     }
 
     private Point2D nearest(Node n, Point2D p, Point2D nearstP) {
-        if (n.p.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) nearstP = n.p;
         if (n.left != null) {
-            if (n.left.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) nearest(n.left, p, nearstP);
+            if (n.left.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
+                if (n.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
+                    nearstP = n.left.p;
+                }
+            }
+            nearstP = nearest(n.left, p, nearstP);
         }
         if (n.right != null) {
-            if (n.right.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) nearest(n.right, p, nearstP);
+            if (n.right.rect.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
+                if (n.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
+                    nearstP = n.right.p;
+                }
+            }
+            nearstP = nearest(n.right, p, nearstP);
         }
         return nearstP;
     }
 
     public static void main(String[] args) {
-        KdTree kt = new KdTree();
-        Point2D p1 = new Point2D(0.5,0.25);
-        kt.insert(p1);
-        Point2D p2 = new Point2D(0.0,0.5);
-        kt.insert(p2);
-        Point2D p3 = new Point2D(0.5,0.0);
-        kt.insert(p3);
-        Point2D p4 = new Point2D(0.25,0.0);
-        kt.insert(p4);
-        Point2D p5 = new Point2D(0.0,1.0);
-        kt.insert(p5);
-        Point2D p6 = new Point2D(1.0,0.5);
-        kt.insert(p6);
-        Point2D p7 = new Point2D(0.25,0.0);
-        kt.insert(p7);
-        Point2D p8 = new Point2D(0.0,0.25);
-        kt.insert(p8);
-        Point2D p9 = new Point2D(0.25,0.0);
-        kt.insert(p9);
-        Point2D p10 = new Point2D(0.25,0.5);
-        kt.insert(p10);
-        Point2D queryPoint = new Point2D(0.75, 0.75);
-        StdOut.println("Distance Squared to Query Point: "+kt.nearest(queryPoint).distanceSquaredTo(queryPoint));
+        String filename = args[0];
+        In in = new In(filename);
+        PointSET brute = new PointSET();
+        KdTree kdtree = new KdTree();
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            kdtree.insert(p);
+            brute.insert(p);
+        }
+        StdOut.println("Should be 10 " + kdtree.size());
+        StdOut.println("Should be 10 " + brute.size());
+        StdOut.println("Should be false " + kdtree.isEmpty());
+        StdOut.println("Should be false " + brute.isEmpty());
+        kdtree.draw();
+
+//        KdTree kt = new KdTree();
+//        Point2D p1 = new Point2D(0.5, 0.25);
+//        kt.insert(p1);
+//        Point2D p2 = new Point2D(0.0, 0.5);
+//        kt.insert(p2);
+//        Point2D p3 = new Point2D(0.5, 0.0);
+//        kt.insert(p3);
+//        Point2D p4 = new Point2D(0.25, 0.0);
+//        kt.insert(p4);
+//        Point2D p5 = new Point2D(0.0, 1.0);
+//        kt.insert(p5);
+//        Point2D p6 = new Point2D(1.0, 0.5);
+//        kt.insert(p6);
+//        Point2D p7 = new Point2D(0.25, 0.0);
+//        kt.insert(p7);
+//        Point2D p8 = new Point2D(0.0, 0.25);
+//        kt.insert(p8);
+//        Point2D p9 = new Point2D(0.25, 0.0);
+//        kt.insert(p9);
+//        Point2D p10 = new Point2D(0.25, 0.5);
+//        kt.insert(p10);
+//        Point2D queryPoint = new Point2D(0.75, 0.75);
+        // kt.draw();
+        // StdOut.println("Distance Squared to Query Point: " + kt.nearest(queryPoint).distanceSquaredTo(queryPoint));
+        // StdOut.println(kt.nearest(queryPoint));
 //        StdOut.println("Changed something for testing.");
 //        KdTree k = new KdTree();
 //        Queue<Point2D> s = new Queue<>();
