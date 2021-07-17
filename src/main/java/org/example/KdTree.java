@@ -589,7 +589,7 @@ public class KdTree {
 //        StdOut.println("Rectangle: " + r + "Contains points: " + kdtree.range(r));
         //StdOut.println("Here are the points in the above rectangle: ");
         kdtree.range(r);
-        StdOut.println("Here are the points in the rectangle: ");
+        StdOut.println("Here are the points in above rectangle: ");
         for (Point2D p: kdtree.points){
             StdOut.println(p);
         }
