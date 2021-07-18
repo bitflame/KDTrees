@@ -1,24 +1,37 @@
 package org.example;
 
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.Point2D;
+import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.BST;
+
 import java.util.ArrayList;
-import java.util.Comparator;
+
 import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.StdOut;
 
 public class KdTree {
+    /*
+    todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
+     for the length and 4 bytes for padding plus the memory needed to store the values. An array of objects uses 24 bytes
+     of overhead plus 8N for each object; plus the object size
+    */
     private Node root;
-    Queue<Point2D> queue = new Queue<Point2D>();
+    private Queue<Point2D> queue = new Queue<Point2D>();
     private Queue<Node> q = new Queue<>();
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
     private MinPQ<Double> xCoordinates = new MinPQ<>();
-    IntervalST<Double, Double> intervalSearchTree = new IntervalST();
+    // private IntervalST<Double, Double> intervalSearchTree = new IntervalST();
 
-    private class IntervalST<Key extends Comparable<Key>, Value> extends BST {
+    /* private class IntervalST<Key extends Comparable<Key>, Value> extends BST {
         Node root;
         Queue<Value> q = new Queue<>();
 
+         todo: node memory: 8 bytes for each key and value, 8 * 4 = 32, 4 bytes for N, and 16 bytes of Object overhead,
+            plus 2*8=16 bytes for the two left and right objects that are null by default, plus 8 bytes of extra overhead for a
+            total of 76 bytes. The rest are as follows: boolean: 1, byte: 1, char: 2, int 4, float 4, long 8, double 8
         private class Node {
             Key lo;
             Key hi;
@@ -27,11 +40,11 @@ public class KdTree {
             Node left, right;
             int N;
 
-            public Node(Key low, Key high, Value value,int N) {
+            public Node(Key low, Key high, Value value, int N) {
                 lo = low;
                 hi = high;
                 val = value;
-                this.N=N;
+                this.N = N;
             }
         }
 
@@ -41,7 +54,7 @@ public class KdTree {
 
         void put(Key low, Key high, Value value) {
 // val is the max value
-            if (low == null) throw new IllegalArgumentException("calls put(0 with a null key");
+            if (low == null) throw new IllegalArgumentException("calls put() with a null key");
             if (value == null) {
                 delete(low);
                 return;
@@ -51,7 +64,7 @@ public class KdTree {
 
         private Node put(Node h, Key low, Key high, Value value) {
             if (h == null) {
-                Node n = new Node(low, high, value,1);
+                Node n = new Node(low, high, value, 1);
                 n.maximum = high;
                 return n;
             }
@@ -59,13 +72,13 @@ public class KdTree {
             if (cmp < 0) {
                 h.left = put(h.left, low, high, value);
                 //h.left = new Node(low, high, value);
-                h.left.maximum=high;
+                h.left.maximum = high;
                 h.maximum = (h.maximum.compareTo(high) > 0) ? h.maximum : high;
 
             } else if (cmp > 0) {
                 h.right = put(h.right, low, high, value);
                 //h.right = new Node(low, high, value);
-                h.right.maximum=high;
+                h.right.maximum = high;
                 h.maximum = (h.maximum.compareTo(high) > 0) ? h.maximum : high;
             } else h.val = value;
             h.N = 1 + size(h.left) + size(h.right);
@@ -110,7 +123,7 @@ public class KdTree {
             }
             return h;
         }
-    }
+    }*/
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -213,6 +226,20 @@ public class KdTree {
         return keys() == null;
     }
 
+    private Iterable<Point2D> KDintersects(double lo, double hi) {
+        double currentX;
+        while (!xCoordinates.isEmpty()) {
+            currentX = xCoordinates.delMin();
+            // Get me all the points with this x coordinate and y between lo and hi
+            Point2D start = new Point2D(currentX, lo);
+            Point2D end = new Point2D(currentX, hi);
+            for (Point2D p : keys(start, end)) {
+                if (!points.contains(p)) points.add(p);
+            }
+        }
+        return points;
+    }
+
     private Point2D get(Node h, Point2D p) {
         if (h == null) return null;
         int cmp = p.compareTo(h.p);
@@ -248,7 +275,7 @@ public class KdTree {
         int cmplo = lo.compareTo(x.p);
         int cmphi = hi.compareTo(x.p);
         if (cmplo < 0) keys(x.left, queue, lo, hi);
-        if (cmplo <= 0 && cmphi >=0) queue.enqueue(x.p);
+        if (cmplo <= 0 && cmphi >= 0) queue.enqueue(x.p);
         if (cmphi > 0) keys(x.right, queue, lo, hi);
     }
 
@@ -293,38 +320,47 @@ public class KdTree {
         if (t != null) return t;
         else return x;
     }
+
     public Iterable<Point2D> range(RectHV rect) {
 
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
-        range(root, rect);
+        double currentX;
+        while (!xCoordinates.isEmpty()) {
+            currentX = xCoordinates.delMin();
+            // Get me all the points with this x coordinate and y between lo and hi
+            Point2D start = new Point2D(currentX, rect.ymin());
+            Point2D end = new Point2D(currentX, rect.ymax());
+            for (Point2D p : keys(start, end)) {
+                if (rect.contains(p) && (!points.contains(p))) points.add(p);
+            }
+        }
         return points;
     }
 
     private Iterable<Point2D> range(Node h, RectHV rect) {
         /* Maybe interval search refers to the rectangle's interval i.e. first you find all the rectangles that intersect
-        with rect, then you do an sliding interval search for points that are between its minx,miny, maxx, & maxy */
+        with rect, then you do an sliding interval search for points that are between its minx,miny, maxx, & maxy
         double lo = rect.ymin();
         double hi = rect.ymax();
         double currentX;
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
-            if (currentX >= lo) {
-                /* I did not see how this next line would work out until I wrote the code! Kept thinking how to get
-                 * the y coordinate if I only had x's and vise versa ! wow */
+            if (currentX >= h.minXInter) {
                 intervalSearchTree.put(h.minYInter, h.maxYInter, currentX);
                 for (Double d : intervalSearchTree.intersects(lo, hi)) {
                     Point2D start = new Point2D(currentX, lo);
                     Point2D end = new Point2D(currentX, hi);
-                    for (Point2D p: keys(start, end)){
+                    for (Point2D p : keys(start, end)) {
                         if ((!points.contains(p)) && rect.contains(p)) points.add(p);
                     }
                 }
-            } else if (currentX >= hi) {
+            } else if (currentX >= h.maximumX) {
                 intervalSearchTree.delete(h.minYInter, h.maxXInter);
             }
         }
-        return points;
+        return points; */
+        return KDintersects(rect.ymin(), rect.ymax());
     }
 
     private void setLeftRectIntervals(Node x) {
@@ -382,7 +418,7 @@ public class KdTree {
 
     private Node insert(Node h, Node newNode) {
         if (h == null) {
-            intervalSearchTree.put(0.0, 1.0, 1.0);
+            // intervalSearchTree.put(0.0, 1.0, 1.0);
             return newNode;
         } else {
             newNode.orientation = !h.orientation;
@@ -428,7 +464,7 @@ public class KdTree {
     }
 
     private int size(Node x) {
-        return size(x.left) + size(x.right) + 1;
+        return x.N;
     }
 
     public Point2D nearest(Point2D p) {
@@ -562,7 +598,6 @@ public class KdTree {
 
     public static void main(String[] args) {
         /* Test all the files to see if they load ok, and seem to produce the right rectangles and etc. */
-
         KdTree kdtree = new KdTree();
         // kdtree.testRectangles();
         // kdtree.draw();
@@ -573,8 +608,11 @@ public class KdTree {
             double y = in.readDouble();
             Point2D p = new Point2D(x, y);
             kdtree.insert(p);
+            // kdtree.size();
+            // kdtree.isEmpty();
         }
-        RectHV r = new RectHV(0.0, 0.48, 0.02, 0.52);
+        // StdOut.println(kdtree.size());
+        RectHV r = new RectHV(0.0, 0.48, 0.1, 0.9);
 
 //        for (Point2D p : kdtree.range(r)) {
 //            StdOut.println(" : " + p);
@@ -587,10 +625,10 @@ public class KdTree {
 //        }
 //        RectHV r = new RectHV(0.1, 0.1, 0.8, 0.6);
 //        StdOut.println("Rectangle: " + r + "Contains points: " + kdtree.range(r));
-        //StdOut.println("Here are the points in the above rectangle: ");
+        // StdOut.println("Here are the points in the above rectangle: ");
         kdtree.range(r);
         StdOut.println("Here are the points in the above rectangle: ");
-        for (Point2D p: kdtree.points){
+        for (Point2D p : kdtree.points) {
             StdOut.println(p);
         }
 //        PointSET brute = new PointSET();
