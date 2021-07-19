@@ -9,13 +9,17 @@ import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.Stopwatch;
 import edu.princeton.cs.algs4.StdOut;
 
-public class PointSET {
-    private final SET<Point2D> treeSet;
+public class PointSET extends SET {
+    SET treeSet;
     private Stack<Point2D> interaPoints = new Stack<>();
 
 
     public PointSET() {
-        treeSet = new SET<Point2D>();
+        treeSet = new SET();
+    }
+
+    private static class Node {
+
     }
 
     public boolean isEmpty() {
@@ -44,9 +48,11 @@ public class PointSET {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "nearest() ");
         else if (treeSet.isEmpty()) return null;
-        Point2D nearestP=treeSet.min();
-        for (Point2D point : treeSet) {
-            if (point.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p)) nearestP = point;
+        Point2D nearestP = null;
+        Point2D point;
+        for (Object obj : treeSet) {
+            point = (Point2D) obj;
+            if (nearestP == null || point.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p)) nearestP = point;
         }
         return nearestP;
     }
@@ -54,7 +60,9 @@ public class PointSET {
     public void draw() {
         StdDraw.clear();
         StdDraw.setPenColor(StdDraw.BLACK);
-        for (Point2D point : treeSet) {
+        Point2D point;
+        for (Object obj : treeSet) {
+            point = (Point2D) obj;
             StdDraw.point(point.x(), point.y());
             StdDraw.setPenColor(StdDraw.RED);
         }
@@ -66,7 +74,9 @@ public class PointSET {
         else if (isEmpty()) return null;
         interaPoints = new Stack<>();
         /* Use the tree and eliminate as much of it as you avoid searching. */
-        for (Point2D point : treeSet) {
+        Point2D point;
+        for (Object obj : treeSet) {
+            point = (Point2D) obj;
             if (rect.contains(point)) {
                 interaPoints.push(point);
             }
