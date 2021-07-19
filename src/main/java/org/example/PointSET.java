@@ -19,7 +19,10 @@ public class PointSET extends SET {
     }
 
     private static class Node {
-
+        private Point2D p;
+        private RectHV rect;
+        private Node lb;
+        private Node rt;
     }
 
     public boolean isEmpty() {
@@ -29,7 +32,7 @@ public class PointSET extends SET {
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "insert() ");
-        treeSet.add(p);
+        if (!treeSet.contains(p)) treeSet.add(p);
     }
 
     public boolean contains(Point2D p) {
