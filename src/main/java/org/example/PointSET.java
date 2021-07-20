@@ -20,42 +20,58 @@ public class PointSET {
 
     private class Cell {
         private List<Point2D> content = new ArrayList<Point2D>();
+
         private void add(Point2D p) {
             content.add(p);
         }
     }
 
-    Cell[][] matrix = new Cell[10][10];
+    int matrixSize = 20;
+    Cell[][] matrix = new Cell[matrixSize][matrixSize];
 
     public PointSET() {
         treeSet = new SET<Node>();
         Cell currentCell = new Cell();
-        for (int i =0; i < 10;i++) {
-            Point2D p = new Point2D(StdRandom.uniform(0.0,1.0),StdRandom.uniform(0.0,1.0));
+        int multFactor = matrixSize / 10;
+        for (int i = 0; i < matrixSize; i++) {
+            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
             currentCell.add(p);
             /* Here is another way of converting double coordinates to int matrix address
-            * String numberStr = Double.toString(number);
-            * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
-            * int fractional = Integer.valueOf(fractionalStr);
-        * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691 */
-            int decimals=1;
-            BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);;
+             * String numberStr = Double.toString(number);
+             * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
+             * int fractional = Integer.valueOf(fractionalStr);
+             * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
+             * Note you should increase the decimals as the number of points and Grid cells increase */
+            int decimals = 1;
+            BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);
             BigInteger XINTEGER = xvalue.abs().toBigInteger();
-            BigInteger XDECIMAL =(xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);;
+            // BigInteger XDECIMAL =(xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);
             BigInteger YINTEGER = yvalue.abs().toBigInteger();
-            BigInteger YDECIMAL =(yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            if (matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()]!=null) {
-                currentCell=matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()];
+            // BigInteger YDECIMAL =(yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            /* lines 53 - 61 are new and replacement for 63 - 68. The later was tested successfully in case you need to
+            * role back
+            int xResult = Integer.parseInt(Integer.toString(XDECIMAL.intValueExact(),matrixSize));
+            int yResult = Integer.parseInt(Integer.toString(YDECIMAL.intValueExact(),matrixSize));
+            if (matrix[xResult][yResult]!=null){
+                currentCell=matrix[xResult][yResult];
                 currentCell.add(p);
-                matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()]=currentCell;
+                matrix[xResult][yResult]=currentCell;
             } else {
-                matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()]=currentCell;
+                matrix[xResult][yResult]=currentCell;
+            }*/
+            if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
+                currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
+                currentCell.add(p);
+                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+            } else {
+                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
             }
-            currentCell= new Cell();
+            currentCell = new Cell();
         }
 
-        matrix[0][1]=currentCell;
     }
 
     private static class Node implements Comparable<Node> {
