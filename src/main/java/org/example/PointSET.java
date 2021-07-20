@@ -1,28 +1,84 @@
 package org.example;
 
-import edu.princeton.cs.algs4.SET;
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.Stack;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdRandom;
-import edu.princeton.cs.algs4.Stopwatch;
-import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.*;
 
-public class PointSET extends SET {
-    SET treeSet;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+
+public class PointSET {
+    SET<Node> treeSet;
     private Stack<Point2D> interaPoints = new Stack<>();
+    /* lets start with a grid size of 10 */
+    int gridLength = 10;
+    private Point2D[][] grid = new Point2D[gridLength][gridLength];
 
 
-    public PointSET() {
-        treeSet = new SET();
+    private class Cell {
+        private List<Point2D> content = new ArrayList<Point2D>();
+        private void add(Point2D p) {
+            content.add(p);
+        }
     }
 
-    private static class Node {
+    Cell[][] matrix = new Cell[10][10];
+
+    public PointSET() {
+        treeSet = new SET<Node>();
+        Cell currentCell = new Cell();
+        for (int i =0; i < 10;i++) {
+            Point2D p = new Point2D(StdRandom.uniform(0.0,1.0),StdRandom.uniform(0.0,1.0));
+            currentCell.add(p);
+            /* Here is another way of converting double coordinates to int matrix address
+            * String numberStr = Double.toString(number);
+            * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
+            * int fractional = Integer.valueOf(fractionalStr);
+        * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691 */
+            int decimals=1;
+            BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);;
+            BigInteger XINTEGER = xvalue.abs().toBigInteger();
+            BigInteger XDECIMAL =(xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);;
+            BigInteger YINTEGER = yvalue.abs().toBigInteger();
+            BigInteger YDECIMAL =(yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            if (matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()]!=null) {
+                currentCell=matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()];
+                currentCell.add(p);
+                matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()]=currentCell;
+            } else {
+                matrix[XDECIMAL.intValueExact()][YDECIMAL.intValueExact()]=currentCell;
+            }
+            currentCell= new Cell();
+        }
+
+        matrix[0][1]=currentCell;
+    }
+
+    private static class Node implements Comparable<Node> {
         private Point2D p;
-        private RectHV rect;
+        private double gridX;
+        private double gridY;
         private Node lb;
         private Node rt;
+
+        Node(Point2D point, int gridX, int gridY, Node leftBranch, Node rightBranch) {
+            p = point;
+            this.gridX = gridX;
+            this.gridY = gridY;
+            lb = leftBranch;
+            rt = rightBranch;
+        }
+
+        @Override
+        public int compareTo(Node obj) {
+            if (this.p.compareTo(obj.p) < 0) return -1;
+            else if (this.p.compareTo(obj.p) > 0) return 1;
+            return 0;
+        }
     }
 
     public boolean isEmpty() {
@@ -32,13 +88,21 @@ public class PointSET extends SET {
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "insert() ");
-        if (!treeSet.contains(p)) treeSet.add(p);
+
+        Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);
+        if (!treeSet.contains(n)) treeSet.add(n);
+    }
+
+    private RectHV buildRect(Point2D p) {
+        RectHV r;
+        return r = new RectHV(p.x() - 0.01, p.y() - 0.01, p.x() + 0.01, p.y() + 0.01);
     }
 
     public boolean contains(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "contains() ");
-        return treeSet.contains(p);
+        Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);
+        return treeSet.contains(n);
 
     }
 
@@ -47,27 +111,34 @@ public class PointSET extends SET {
         return treeSet.size();
     }
 
-    public Point2D nearest(Point2D p) {
+    /*public Point2D nearest(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "nearest() ");
         else if (treeSet.isEmpty()) return null;
         Point2D nearestP = null;
         Point2D point;
-        for (Object obj : treeSet) {
-            point = (Point2D) obj;
-            if (nearestP == null || point.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p)) nearestP = point;
+        Node n = new Node(p, (int)p.x(),(int)p.y(), null, null);
+        if (treeSet.contains(n)) nearestP = p;
+        for (Node node : treeSet) {
+            if (nearestP != null && node.rect.distanceTo(p) > nearestP.distanceTo(p)) continue;
+            else if ((nearestP == null) || node.p.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p))
+                nearestP = node.p;
         }
         return nearestP;
-    }
+    }*/
 
     public void draw() {
         StdDraw.clear();
         StdDraw.setPenColor(StdDraw.BLACK);
-        Point2D point;
-        for (Object obj : treeSet) {
-            point = (Point2D) obj;
-            StdDraw.point(point.x(), point.y());
-            StdDraw.setPenColor(StdDraw.RED);
+        StdDraw.setPenRadius(0.001);
+        double counter;
+        for (int i = 0; i < grid.length; i++) {
+            counter = i;
+            StdDraw.line(0.0, (1.0 - (counter / gridLength)), 1.0, (1.0 - (counter / gridLength)));
+            // StdDraw.line(0.0, 0.9, 1.0, 0.9);
+            for (int j = 0; j < gridLength; j++) {
+                StdDraw.line((1.0 - (counter / gridLength)), 0.0, (1.0 - (counter / gridLength)), 1.0);
+            }
         }
     }
 
@@ -168,8 +239,20 @@ public class PointSET extends SET {
     }
 
     public static void main(String[] args) {
-        /* Measure how long it takes to insert() and contains() - should be logarithm. nearest() and
-         * range should be linear(N). */
+        String filename = args[0];
+        In in = new In(filename);
+        PointSET pSet = new PointSET();
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            pSet.insert(p);
+        }
+        pSet.draw();
+        /* Point2D inquiryPoint = new Point2D(0.500000, 1.000000);
+        StdOut.println(" Here is the nearest point to 0.5,1.0 :" + pSet.nearest(inquiryPoint));
+         Measure how long it takes to insert() and contains() - should be logarithm. nearest() and
+         * range should be linear(N).
         StdDraw.setPenRadius(0.01);
         StdDraw.setPenColor(StdDraw.RED);
         StdDraw.text(0.15, 0.98, "Insertion Times");
@@ -192,7 +275,7 @@ public class PointSET extends SET {
             StdDraw.point(interval, rTime);
             interval += 0.015;
         }
-
+*/
 //            StdDraw.rectangle(.10, .4, .02, .1);
 //
 //            for (Point2D p : s) {
