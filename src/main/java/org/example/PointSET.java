@@ -123,74 +123,33 @@ public class PointSET {
         }
     }
 
+    /*Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);*/
     public Iterable<Point2D> range(RectHV rect) {
         if (rect == null)
             throw new IllegalArgumentException("You can not pass a null value as the rectangle parameter");
         if (treeSet.isEmpty()) return null;
+        interaPoints = new Stack<>();
+        /* Why not add the rectangle coordinates to the SET and use intersects() method between its nodes(minx, miny)
+        and (maxx, maxy) and what is already in the tree? intersects() works on two sets, and I do not have two sets;
+        just one. And it does not make sense to create a second set made of two points. I do not see it now at least.
+        Or ask for all the keys in between these nodes?  */
+        double rectMinX = rect.xmin();
+        double rectMinY = rect.ymin();
+        Point2D minP = new Point2D(rectMinX, rectMinY);
+        double rectMaxX = rect.xmax();
+        double rectMaxY = rect.ymax();
+        Point2D maxP = new Point2D(rectMaxX, rectMaxY);
+        Node minNode = new Node(minP, (int) rectMinX, (int) rectMinY, null, null);
+        Node maxNode = new Node(maxP, (int) rectMaxX, (int) rectMaxY, null, null);
         for (Iterator<Node> it = treeSet.iterator(); it.hasNext(); ) {
             Node n = it.next();
-            /* find the rectangles that intersect with rect. If root intersects return it and stop. If not check the left
-            branch and right branch
-            Do I use the matrix or the tree with rectangles ?
-            I can address the issue of matrix size by moving the code to the range method. After all the points are
-            already in the tree. The same is true for the rectangle size. Here is why I think I need to use the matrix;
-            The procedure I use to create rectangles may not cover all the space, and more importantly the specs say to
-            do it via brute force.
-            1- Create a matrix for all the points
-            2- Create a method the finds all the matrix squares/tiles/rectangles that intersect with the rectangle.
-            3- Check to see if rect contains those points */
-            /* If matrix contains the */
-            Point2D p = n.p;
-            double pXcor = p.x();
-            double pYcor = p.y();
-            Cell currentCell = new Cell();
-            matrixSize = (int) Math.sqrt((treeSet.size()));
-            int multFactor = matrixSize / 10;
-            /* create rectangles for potential nodes only and process them */
-            currentCell.add(p);
-            /* Here is another way of converting double coordinates to int matrix address
-             * String numberStr = Double.toString(number);
-             * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
-             * int fractional = Integer.valueOf(fractionalStr);
-             * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
-             * Note you should increase the decimals as the number of points and Grid cells increase */
-            int decimals = 1;
-            BigDecimal xvalue = new BigDecimal(pXcor).setScale(decimals, RoundingMode.DOWN);
-            BigInteger XINTEGER = xvalue.abs().toBigInteger();
-            BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).
-                    pow(decimals)).toBigInteger();
-            BigDecimal yvalue = new BigDecimal(pYcor).setScale(decimals, RoundingMode.DOWN);
-            BigInteger YINTEGER = yvalue.abs().toBigInteger();
-            BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).
-                    pow(decimals)).toBigInteger();
-            if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
-                currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
-                currentCell.add(p);
-                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
-            } else {
-                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
-            }
-            currentCell = new Cell();
-        }
-
-        if (rect == null) throw new IllegalArgumentException("Can not pass " +
-                "null to range().");
-        else if (isEmpty()) return null;
-        interaPoints = new Stack<>();
-        /* Use the tree and eliminate as much of it as you avoid searching. */
-        Point2D point;
-        for (Object obj : treeSet) {
-            point = (Point2D) obj;
-            if (rect.contains(point)) {
-                interaPoints.push(point);
-            }
+            if ((n.compareTo(maxNode)<0)&&(n.compareTo(minNode)>0)&&(rect.contains(n.p))) interaPoints.push(n.p);
+            /* If you get redundant points replace the stack with something that you can check to see if the point
+            * is already in there like ArrayList or something */
         }
         return interaPoints;
     }
 
-    private Iterable<Point2D> range(Node x, RectHV rect) {
-
-    }
 
     private static double insertTime(int n) {
         /* See how long it takes to push 100000 points */
