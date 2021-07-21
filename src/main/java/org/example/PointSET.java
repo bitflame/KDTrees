@@ -139,37 +139,40 @@ public class PointSET {
             1- Create a matrix for all the points
             2- Create a method the finds all the matrix squares/tiles/rectangles that intersect with the rectangle.
             3- Check to see if rect contains those points */
-            n.rectangle = buildRect(n.p);
             /* If matrix contains the */
-
-        }
-        Cell currentCell = new Cell();
-        matrixSize = (int) Math.sqrt((treeSet.size()));
-        int multFactor = matrixSize / 10;
-        /* create rectangles for potential nodes only and process them */
-        return range(treeSet.intersects(), rect);
-        currentCell.add(p);
-        /* Here is another way of converting double coordinates to int matrix address
-         * String numberStr = Double.toString(number);
-         * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
-         * int fractional = Integer.valueOf(fractionalStr);
-         * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
-         * Note you should increase the decimals as the number of points and Grid cells increase */
-        int decimals = 1;
-        BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);
-        BigInteger XINTEGER = xvalue.abs().toBigInteger();
-        BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-        BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);
-        BigInteger YINTEGER = yvalue.abs().toBigInteger();
-        BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-        if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
-            currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
+            Point2D p = n.p;
+            double pXcor = p.x();
+            double pYcor = p.y();
+            Cell currentCell = new Cell();
+            matrixSize = (int) Math.sqrt((treeSet.size()));
+            int multFactor = matrixSize / 10;
+            /* create rectangles for potential nodes only and process them */
             currentCell.add(p);
-            matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
-        } else {
-            matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+            /* Here is another way of converting double coordinates to int matrix address
+             * String numberStr = Double.toString(number);
+             * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
+             * int fractional = Integer.valueOf(fractionalStr);
+             * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
+             * Note you should increase the decimals as the number of points and Grid cells increase */
+            int decimals = 1;
+            BigDecimal xvalue = new BigDecimal(pXcor).setScale(decimals, RoundingMode.DOWN);
+            BigInteger XINTEGER = xvalue.abs().toBigInteger();
+            BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).
+                    pow(decimals)).toBigInteger();
+            BigDecimal yvalue = new BigDecimal(pYcor).setScale(decimals, RoundingMode.DOWN);
+            BigInteger YINTEGER = yvalue.abs().toBigInteger();
+            BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).
+                    pow(decimals)).toBigInteger();
+            if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
+                currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
+                currentCell.add(p);
+                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+            } else {
+                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+            }
+            currentCell = new Cell();
         }
-        currentCell = new Cell();
+
         if (rect == null) throw new IllegalArgumentException("Can not pass " +
                 "null to range().");
         else if (isEmpty()) return null;
