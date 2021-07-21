@@ -1,6 +1,14 @@
 package org.example;
 
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.SET;
+import edu.princeton.cs.algs4.Stack;
+import edu.princeton.cs.algs4.Point2D;
+import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdRandom;
+import edu.princeton.cs.algs4.Stopwatch;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.In;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -12,14 +20,14 @@ import java.util.List;
 
 
 public class PointSET {
-    SET<Node> treeSet;
+    private SET<Node> treeSet;
     private Stack<Point2D> interaPoints = new Stack<>();
     /* lets start with a grid size of 10 */
-    int gridLength = 10;
-    private Point2D[][] grid = new Point2D[gridLength][gridLength];
+    // private int gridLength = 10;
+    // private Point2D[][] grid = new Point2D[gridLength][gridLength];
 
 
-    private class Cell {
+    /*private class Cell {
         private List<Point2D> content = new ArrayList<Point2D>();
 
         private void add(Point2D p) {
@@ -27,9 +35,9 @@ public class PointSET {
         }
     }
 
-    int matrixSize;
+    int matrixSize;*/
     // int matrixSize = 20;
-    Cell[][] matrix = new Cell[matrixSize][matrixSize];
+    // Cell[][] matrix = new Cell[matrixSize][matrixSize];
 
     public PointSET() {
         treeSet = new SET<Node>();
@@ -113,14 +121,14 @@ public class PointSET {
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.setPenRadius(0.001);
         double counter;
-        for (int i = 0; i < grid.length; i++) {
+        /*for (int i = 0; i < grid.length; i++) {
             counter = i;
             StdDraw.line(0.0, (1.0 - (counter / gridLength)), 1.0, (1.0 - (counter / gridLength)));
             // StdDraw.line(0.0, 0.9, 1.0, 0.9);
             for (int j = 0; j < gridLength; j++) {
                 StdDraw.line((1.0 - (counter / gridLength)), 0.0, (1.0 - (counter / gridLength)), 1.0);
             }
-        }
+        }*/
     }
 
     /*Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);*/
