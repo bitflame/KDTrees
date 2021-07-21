@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -26,7 +27,7 @@ public class PointSET {
         }
     }
 
-    int matrixSize = (int) Math.sqrt((treeSet.size()));
+    int matrixSize;
     // int matrixSize = 20;
     Cell[][] matrix = new Cell[matrixSize][matrixSize];
 
@@ -40,6 +41,7 @@ public class PointSET {
         private Point2D p;
         private double gridX;
         private double gridY;
+        private RectHV rectangle;
         private Node lb;
         private Node rt;
 
@@ -63,36 +65,12 @@ public class PointSET {
         return treeSet.isEmpty();
     }
 
+
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "insert() ");
         Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);
-        if (!treeSet.contains(n)) treeSet.add(n);
-        Cell currentCell = new Cell();
-        int multFactor = matrixSize / 10;
-
-            currentCell.add(p);
-            /* Here is another way of converting double coordinates to int matrix address
-             * String numberStr = Double.toString(number);
-             * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
-             * int fractional = Integer.valueOf(fractionalStr);
-             * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
-             * Note you should increase the decimals as the number of points and Grid cells increase */
-            int decimals = 1;
-            BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);
-            BigInteger XINTEGER = xvalue.abs().toBigInteger();
-            BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);
-            BigInteger YINTEGER = yvalue.abs().toBigInteger();
-            BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
-                currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
-                currentCell.add(p);
-                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
-            } else {
-                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
-            }
-            currentCell = new Cell();
+        treeSet.add(n);
 
     }
 
@@ -114,7 +92,7 @@ public class PointSET {
         return treeSet.size();
     }
 
-    public Point2D nearest(Point2D p) {
+    /*public Point2D nearest(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "nearest() ");
         else if (treeSet.isEmpty()) return null;
@@ -128,7 +106,7 @@ public class PointSET {
                 nearestP = node.p;
         }
         return nearestP;
-    }
+    }*/
 
     public void draw() {
         StdDraw.clear();
@@ -146,6 +124,52 @@ public class PointSET {
     }
 
     public Iterable<Point2D> range(RectHV rect) {
+        if (rect == null)
+            throw new IllegalArgumentException("You can not pass a null value as the rectangle parameter");
+        if (treeSet.isEmpty()) return null;
+        for (Iterator<Node> it = treeSet.iterator(); it.hasNext(); ) {
+            Node n = it.next();
+            /* find the rectangles that intersect with rect. If root intersects return it and stop. If not check the left
+            branch and right branch
+            Do I use the matrix or the tree with rectangles ?
+            I can address the issue of matrix size by moving the code to the range method. After all the points are
+            already in the tree. The same is true for the rectangle size. Here is why I think I need to use the matrix;
+            The procedure I use to create rectangles may not cover all the space, and more importantly the specs say to
+            do it via brute force.
+            1- Create a matrix for all the points
+            2- Create a method the finds all the matrix squares/tiles/rectangles that intersect with the rectangle.
+            3- Check to see if rect contains those points */
+            n.rectangle = buildRect(n.p);
+            /* If matrix contains the */
+
+        }
+        Cell currentCell = new Cell();
+        matrixSize = (int) Math.sqrt((treeSet.size()));
+        int multFactor = matrixSize / 10;
+        /* create rectangles for potential nodes only and process them */
+        return range(treeSet.intersects(), rect);
+        currentCell.add(p);
+        /* Here is another way of converting double coordinates to int matrix address
+         * String numberStr = Double.toString(number);
+         * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
+         * int fractional = Integer.valueOf(fractionalStr);
+         * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
+         * Note you should increase the decimals as the number of points and Grid cells increase */
+        int decimals = 1;
+        BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);
+        BigInteger XINTEGER = xvalue.abs().toBigInteger();
+        BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+        BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);
+        BigInteger YINTEGER = yvalue.abs().toBigInteger();
+        BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+        if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
+            currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
+            currentCell.add(p);
+            matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+        } else {
+            matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+        }
+        currentCell = new Cell();
         if (rect == null) throw new IllegalArgumentException("Can not pass " +
                 "null to range().");
         else if (isEmpty()) return null;
@@ -159,6 +183,10 @@ public class PointSET {
             }
         }
         return interaPoints;
+    }
+
+    private Iterable<Point2D> range(Node x, RectHV rect) {
+
     }
 
     private static double insertTime(int n) {
