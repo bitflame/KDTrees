@@ -242,6 +242,12 @@ public class PointSET {
             pSet.insert(p);
         }
         pSet.draw();
+        RectHV r = new RectHV(0.0, 0.48, 0.1, 0.9);
+        StdOut.println("Here are the points in rectangle "+r.toString());
+        for (Point2D p: pSet.range(r)){
+            StdOut.println(p);
+        }
+
         /* Point2D inquiryPoint = new Point2D(0.500000, 1.000000);
         StdOut.println(" Here is the nearest point to 0.5,1.0 :" + pSet.nearest(inquiryPoint));
          Measure how long it takes to insert() and contains() - should be logarithm. nearest() and
