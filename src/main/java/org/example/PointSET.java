@@ -26,51 +26,13 @@ public class PointSET {
         }
     }
 
-    int matrixSize = 20;
+    int matrixSize = (int) Math.sqrt((treeSet.size()));
+    // int matrixSize = 20;
     Cell[][] matrix = new Cell[matrixSize][matrixSize];
 
     public PointSET() {
         treeSet = new SET<Node>();
-        Cell currentCell = new Cell();
-        int multFactor = matrixSize / 10;
-        for (int i = 0; i < matrixSize; i++) {
-            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
-            currentCell.add(p);
-            /* Here is another way of converting double coordinates to int matrix address
-             * String numberStr = Double.toString(number);
-             * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
-             * int fractional = Integer.valueOf(fractionalStr);
-             * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
-             * Note you should increase the decimals as the number of points and Grid cells increase */
-            int decimals = 1;
-            BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);
-            BigInteger XINTEGER = xvalue.abs().toBigInteger();
-            // BigInteger XDECIMAL =(xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);
-            BigInteger YINTEGER = yvalue.abs().toBigInteger();
-            // BigInteger YDECIMAL =(yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
-            /* lines 53 - 61 are new and replacement for 63 - 68. The later was tested successfully in case you need to
-            * role back
-            int xResult = Integer.parseInt(Integer.toString(XDECIMAL.intValueExact(),matrixSize));
-            int yResult = Integer.parseInt(Integer.toString(YDECIMAL.intValueExact(),matrixSize));
-            if (matrix[xResult][yResult]!=null){
-                currentCell=matrix[xResult][yResult];
-                currentCell.add(p);
-                matrix[xResult][yResult]=currentCell;
-            } else {
-                matrix[xResult][yResult]=currentCell;
-            }*/
-            if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
-                currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
-                currentCell.add(p);
-                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
-            } else {
-                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
-            }
-            currentCell = new Cell();
-        }
+
 
     }
 
@@ -104,9 +66,34 @@ public class PointSET {
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "insert() ");
-
         Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);
         if (!treeSet.contains(n)) treeSet.add(n);
+        Cell currentCell = new Cell();
+        int multFactor = matrixSize / 10;
+
+            currentCell.add(p);
+            /* Here is another way of converting double coordinates to int matrix address
+             * String numberStr = Double.toString(number);
+             * String fractionalStr = numberStr.substring(numberStr.indexOf('.')+1);
+             * int fractional = Integer.valueOf(fractionalStr);
+             * from: https://stackoverflow.com/questions/11495565/how-to-extract-fractional-digits-of-double-bigdecimal#11495691
+             * Note you should increase the decimals as the number of points and Grid cells increase */
+            int decimals = 1;
+            BigDecimal xvalue = new BigDecimal(p.x()).setScale(decimals, RoundingMode.DOWN);
+            BigInteger XINTEGER = xvalue.abs().toBigInteger();
+            BigInteger XDECIMAL = (xvalue.subtract(new BigDecimal(XINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            BigDecimal yvalue = new BigDecimal(p.y()).setScale(decimals, RoundingMode.DOWN);
+            BigInteger YINTEGER = yvalue.abs().toBigInteger();
+            BigInteger YDECIMAL = (yvalue.subtract(new BigDecimal(YINTEGER))).multiply(new BigDecimal(10).pow(decimals)).toBigInteger();
+            if (matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] != null) {
+                currentCell = matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()];
+                currentCell.add(p);
+                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+            } else {
+                matrix[multFactor * XDECIMAL.intValueExact()][multFactor * YDECIMAL.intValueExact()] = currentCell;
+            }
+            currentCell = new Cell();
+
     }
 
     private RectHV buildRect(Point2D p) {
@@ -127,7 +114,7 @@ public class PointSET {
         return treeSet.size();
     }
 
-    /*public Point2D nearest(Point2D p) {
+    public Point2D nearest(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "nearest() ");
         else if (treeSet.isEmpty()) return null;
@@ -141,7 +128,7 @@ public class PointSET {
                 nearestP = node.p;
         }
         return nearestP;
-    }*/
+    }
 
     public void draw() {
         StdDraw.clear();
