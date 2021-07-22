@@ -10,19 +10,14 @@ import edu.princeton.cs.algs4.Stopwatch;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 
 
 public class PointSET {
     private SET<Node> treeSet;
     private Stack<Point2D> interaPoints = new Stack<>();
-    /* lets start with a grid size of 10 */
+    /* lets start with a grid size of 10. Not allowed to use bigDecimal, BigInteger, and rounding mode. So I have to
+       try to use the other method if I need a grid */
     // private int gridLength = 10;
     // private Point2D[][] grid = new Point2D[gridLength][gridLength];
 
@@ -47,18 +42,12 @@ public class PointSET {
 
     private static class Node implements Comparable<Node> {
         private Point2D p;
-        private double gridX;
-        private double gridY;
-        private RectHV rectangle;
-        private Node lb;
-        private Node rt;
+        private RectHV rect;
 
-        Node(Point2D point, int gridX, int gridY, Node leftBranch, Node rightBranch) {
+
+        Node(Point2D point, RectHV rect) {
             p = point;
-            this.gridX = gridX;
-            this.gridY = gridY;
-            lb = leftBranch;
-            rt = rightBranch;
+            this.rect = rect;
         }
 
         @Override
@@ -77,7 +66,8 @@ public class PointSET {
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "insert() ");
-        Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);
+        RectHV rect = buildRect(p);
+        Node n = new Node(p, rect);
         treeSet.add(n);
 
     }
@@ -90,7 +80,8 @@ public class PointSET {
     public boolean contains(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "contains() ");
-        Node n = new Node(p, (int) p.x(), (int) p.y(), null, null);
+        RectHV rect = buildRect(p);
+        Node n = new Node(p, rect);
         return treeSet.contains(n);
 
     }
@@ -100,21 +91,36 @@ public class PointSET {
         return treeSet.size();
     }
 
-    /*public Point2D nearest(Point2D p) {
+    public Point2D nearest(Point2D p) {
+        /* Why not build the rectangles here? after I know how many points I am dealing with? */
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "nearest() ");
         else if (treeSet.isEmpty()) return null;
         Point2D nearestP = null;
         Point2D point;
-        Node n = new Node(p, (int)p.x(),(int)p.y(), null, null);
+
+        RectHV rect = buildRect(p);
+        Node n = new Node(p, rect);
         if (treeSet.contains(n)) nearestP = p;
-        for (Node node : treeSet) {
+        /*for (Node node : treeSet) {
             if (nearestP != null && node.rect.distanceTo(p) > nearestP.distanceTo(p)) continue;
             else if ((nearestP == null) || node.p.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p))
                 nearestP = node.p;
+        } */
+
+        for (Iterator<Node> it = treeSet.iterator(); it.hasNext(); ) {
+            Node node = it.next();
+            /*todo -- I do not choose sides. I think I can move building node rectangles here, and save a bunch of space.
+               Plus Ido not think I need a node for this class. I can get by with the Point2D */
+            if (nearestP != null && node.rect.distanceTo(p) > nearestP.distanceTo(p) && it.hasNext()) {
+                node = it.next();
+                point = node.p;
+            }
+            if ((nearestP == null) || node.p.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p))
+                nearestP = node.p;
         }
         return nearestP;
-    }*/
+    }
 
     public void draw() {
         StdDraw.clear();
@@ -144,16 +150,21 @@ public class PointSET {
         double rectMinX = rect.xmin();
         double rectMinY = rect.ymin();
         Point2D minP = new Point2D(rectMinX, rectMinY);
+        RectHV minRect = buildRect(minP);
         double rectMaxX = rect.xmax();
         double rectMaxY = rect.ymax();
         Point2D maxP = new Point2D(rectMaxX, rectMaxY);
-        Node minNode = new Node(minP, (int) rectMinX, (int) rectMinY, null, null);
-        Node maxNode = new Node(maxP, (int) rectMaxX, (int) rectMaxY, null, null);
+        RectHV maxRect = buildRect(maxP);
+        Node minNode = new Node(minP, minRect);
+        Node maxNode = new Node(maxP, maxRect);
         for (Iterator<Node> it = treeSet.iterator(); it.hasNext(); ) {
             Node n = it.next();
-            if ((n.compareTo(maxNode)<0)&&(n.compareTo(minNode)>0)&&(rect.contains(n.p))) interaPoints.push(n.p);
+            if ((n.compareTo(maxNode) <= 0) && (n.compareTo(minNode) >= 0) && (rect.contains(n.p)))
+                interaPoints.push(n.p);
+            // if ((n.p.compareTo(maxP) <= 0) && (n.p.compareTo(minP) >= 0) && (rect.contains(n.p))) interaPoints.push(n.p);
+            // if ((n.p.x() >= rectMinX) && (n.p.y() >= rectMinY)&&(n.p.x()<=rectMaxX)&&(n.p.y()<=rectMaxY)) interaPoints.push(n.p);
             /* If you get redundant points replace the stack with something that you can check to see if the point
-            * is already in there like ArrayList or something */
+             * is already in there like ArrayList or something */
         }
         return interaPoints;
     }
@@ -249,13 +260,15 @@ public class PointSET {
             Point2D p = new Point2D(x, y);
             pSet.insert(p);
         }
-        pSet.draw();
-        RectHV r = new RectHV(0.0, 0.48, 0.1, 0.9);
-        StdOut.println("Here are the points in rectangle "+r.toString());
-        for (Point2D p: pSet.range(r)){
+        // pSet.draw();
+        /*RectHV r = new RectHV(0.0, 0.0, 0.0078125, 0.0078125);
+        StdOut.println("Here are the points in rectangle " + r.toString());
+        for (Point2D p : pSet.range(r)) {
             StdOut.println(p);
-        }
-
+        }*/
+        // Point2D p = new Point2D(StdRandom.uniform(0.0,1.0),StdRandom.uniform(0.0,1.0));
+        Point2D p2 = new Point2D(1.0, 0.5);
+        StdOut.println(pSet.nearest(p2));
         /* Point2D inquiryPoint = new Point2D(0.500000, 1.000000);
         StdOut.println(" Here is the nearest point to 0.5,1.0 :" + pSet.nearest(inquiryPoint));
          Measure how long it takes to insert() and contains() - should be logarithm. nearest() and
