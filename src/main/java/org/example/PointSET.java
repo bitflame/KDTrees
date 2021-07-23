@@ -14,8 +14,9 @@ import java.util.Iterator;
 
 
 public class PointSET {
-    private SET<Node> treeSet;
+    private SET<Point2D> treeSet;
     private Stack<Point2D> interaPoints = new Stack<>();
+    private Point2D point = null;
     /* lets start with a grid size of 10. Not allowed to use bigDecimal, BigInteger, and rounding mode. So I have to
        try to use the other method if I need a grid */
     // private int gridLength = 10;
@@ -35,19 +36,20 @@ public class PointSET {
     // Cell[][] matrix = new Cell[matrixSize][matrixSize];
 
     public PointSET() {
-        treeSet = new SET<Node>();
+        treeSet = new SET<Point2D>();
 
 
     }
 
-    private static class Node implements Comparable<Node> {
+    /*private static class Node implements Comparable<Node> {
         private Point2D p;
         private RectHV rect;
 
 
-        Node(Point2D point, RectHV rect) {
+        // Node(Point2D point, RectHV rect) {
+        Node(Point2D point) {
             p = point;
-            this.rect = rect;
+            //this.rect = rect;
         }
 
         @Override
@@ -56,7 +58,7 @@ public class PointSET {
             else if (this.p.compareTo(obj.p) > 0) return 1;
             return 0;
         }
-    }
+    }*/
 
     public boolean isEmpty() {
         return treeSet.isEmpty();
@@ -66,9 +68,10 @@ public class PointSET {
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "insert() ");
-        RectHV rect = buildRect(p);
-        Node n = new Node(p, rect);
-        treeSet.add(n);
+        // RectHV rect = buildRect(p);
+        // Node n = new Node(p, rect);
+        // Node n = new Node(p);
+        treeSet.add(p);
 
     }
 
@@ -81,8 +84,9 @@ public class PointSET {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "contains() ");
         RectHV rect = buildRect(p);
-        Node n = new Node(p, rect);
-        return treeSet.contains(n);
+        // Node n = new Node(p, rect);
+        // Node n = new Node(p);
+        return treeSet.contains(p);
 
     }
 
@@ -93,31 +97,34 @@ public class PointSET {
 
     public Point2D nearest(Point2D p) {
         /* Why not build the rectangles here? after I know how many points I am dealing with? */
+
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "nearest() ");
         else if (treeSet.isEmpty()) return null;
         Point2D nearestP = null;
-        Point2D point;
-
-        RectHV rect = buildRect(p);
-        Node n = new Node(p, rect);
-        if (treeSet.contains(n)) nearestP = p;
+        // RectHV rect = buildRect(p);
+        // Node n = new Node(p, rect);
+        // Node n = new Node(p);
+        if (treeSet.contains(p)) nearestP = p;
         /*for (Node node : treeSet) {
             if (nearestP != null && node.rect.distanceTo(p) > nearestP.distanceTo(p)) continue;
             else if ((nearestP == null) || node.p.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p))
                 nearestP = node.p;
         } */
 
-        for (Iterator<Node> it = treeSet.iterator(); it.hasNext(); ) {
-            Node node = it.next();
+        for (Iterator<Point2D> it = treeSet.iterator(); it.hasNext(); ) {
+            // Node node = it.next();
+            // point = node.p;
+            // node.rect=buildRect(point);
             /*todo -- I do not choose sides. I think I can move building node rectangles here, and save a bunch of space.
                Plus Ido not think I need a node for this class. I can get by with the Point2D */
-            if (nearestP != null && node.rect.distanceTo(p) > nearestP.distanceTo(p) && it.hasNext()) {
+            /*if (nearestP != null && node.rect.distanceTo(p) > nearestP.distanceTo(p) && it.hasNext()) {
                 node = it.next();
                 point = node.p;
-            }
-            if ((nearestP == null) || node.p.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p))
-                nearestP = node.p;
+            }*/
+            point = it.next();
+            if ((nearestP == null) || point.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p))
+                nearestP = point;
         }
         return nearestP;
     }
@@ -155,12 +162,15 @@ public class PointSET {
         double rectMaxY = rect.ymax();
         Point2D maxP = new Point2D(rectMaxX, rectMaxY);
         RectHV maxRect = buildRect(maxP);
-        Node minNode = new Node(minP, minRect);
-        Node maxNode = new Node(maxP, maxRect);
-        for (Iterator<Node> it = treeSet.iterator(); it.hasNext(); ) {
-            Node n = it.next();
-            if ((n.compareTo(maxNode) <= 0) && (n.compareTo(minNode) >= 0) && (rect.contains(n.p)))
-                interaPoints.push(n.p);
+        // Node minNode = new Node(minP, minRect);
+        // Node minNode = new Node(minP);
+        // Node maxNode = new Node(maxP, maxRect);
+        // Node maxNode = new Node(maxP);
+        for (Iterator<Point2D> it = treeSet.iterator(); it.hasNext(); ) {
+            // Node n = it.next();
+            point=it.next();
+            if ((point.compareTo(maxP) <= 0) && (point.compareTo(minP) >= 0) && (rect.contains(point)))
+                interaPoints.push(point);
             // if ((n.p.compareTo(maxP) <= 0) && (n.p.compareTo(minP) >= 0) && (rect.contains(n.p))) interaPoints.push(n.p);
             // if ((n.p.x() >= rectMinX) && (n.p.y() >= rectMinY)&&(n.p.x()<=rectMaxX)&&(n.p.y()<=rectMaxY)) interaPoints.push(n.p);
             /* If you get redundant points replace the stack with something that you can check to see if the point
@@ -261,11 +271,11 @@ public class PointSET {
             pSet.insert(p);
         }
         // pSet.draw();
-        /*RectHV r = new RectHV(0.0, 0.0, 0.0078125, 0.0078125);
+        RectHV r = new RectHV(0.0, 0.0, 0.8, 0.8125);
         StdOut.println("Here are the points in rectangle " + r.toString());
         for (Point2D p : pSet.range(r)) {
             StdOut.println(p);
-        }*/
+        }
         // Point2D p = new Point2D(StdRandom.uniform(0.0,1.0),StdRandom.uniform(0.0,1.0));
         Point2D p2 = new Point2D(1.0, 0.5);
         StdOut.println(pSet.nearest(p2));

@@ -241,11 +241,12 @@ public class KdTree {
     }
 
     private Point2D get(Node h, Point2D p) {
+        Point2D point = h.p;
         if (h == null) return null;
-        int cmp = p.compareTo(h.p);
-        if (cmp < 0) return get(h.left, h.p);
-        else if (cmp > 0) return get(h.right, h.p);
-        else return h.p;
+        int cmp = p.compareTo(point);
+        if (cmp < 0) return get(h.left, point);
+        else if (cmp > 0) return get(h.right, point);
+        else return point;
     }
 
     private Iterable<Node> keys() {
@@ -479,20 +480,23 @@ public class KdTree {
     }
 
     /* I may have to change this method also, and the fix might very well the fact that we have to go towards the query
-     * point first. */
+     * point first. todo: I need to replace rectangles code below with the methods setRightRectInterval and
+     *               setLeftRectInterval. */
     private Point2D nearest(Node h, Point2D p, Point2D nearstP) {
         RectHV rHl = null;
         RectHV rHr = null;
+        h.xCoord=h.p.x();
+        h.yCoord=h.p.y();
         if (h == null) return nearstP;
         if (!h.orientation) {
             if (h.parent == null) {
-                rHl = new RectHV(0.0, 0.0, h.p.x(), 1.0);
-                rHr = new RectHV(h.p.x(), 0.0, 1.0, 1.0);
+                rHl = new RectHV(0.0, 0.0, h.xCoord, 1.0);
+                rHr = new RectHV(h.xCoord, 0.0, 1.0, 1.0);
             } else if (h.parent != null) {
                 // I have to rebuild the h rectangle here or save it in the node from previous round.
                 // How should I handle points like 0.0,0.5? there is no left rectangle if (h.x() == 0) do what?
-                rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.p.x(), h.nodeRect.ymax());
-                rHr = new RectHV(h.p.x(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
+                rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
+                rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
             }
             if (h.left != null) {
                 if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
@@ -517,8 +521,8 @@ public class KdTree {
 
         }
         if (h.orientation) {
-            rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.p.y());
-            rHr = new RectHV(h.nodeRect.xmin(), h.p.y(), h.nodeRect.xmax(), h.nodeRect.ymax());
+            rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
+            rHr = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
             // rHr = new RectHV(h.p.x(),h.nodeRect.ymin(),h.nodeRect.xmax(),h.nodeRect.ymax());
             if (h.left != null) {
                 if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
@@ -540,7 +544,6 @@ public class KdTree {
         }
         return nearstP;
     }
-
     private int height(Node root) {
         if (root == null)
             return 0;
