@@ -124,7 +124,8 @@ public class KdTree {
             return h;
         }
     }*/
-
+/* I need to fix insert to put a point with same x on the right branch and fix the compare to return a 0 for equal values
+* of x and y coordinate so methods like contains work fine.*/
     private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
@@ -170,7 +171,7 @@ public class KdTree {
                     return 1;
                 }
             }
-            return 1;
+            return 0;
         }
     }
 
@@ -218,9 +219,6 @@ public class KdTree {
 
     }
 
-    private Point2D get(Point2D p) {
-        return get(root, p);
-    }
 
     public boolean isEmpty() {
         return keys() == null;
@@ -238,15 +236,6 @@ public class KdTree {
             }
         }
         return points;
-    }
-
-    private Point2D get(Node h, Point2D p) {
-        Point2D point = h.p;
-        if (h == null) return null;
-        int cmp = p.compareTo(point);
-        if (cmp < 0) return get(h.left, point);
-        else if (cmp > 0) return get(h.right, point);
-        else return point;
     }
 
     private Iterable<Node> keys() {
@@ -305,7 +294,25 @@ public class KdTree {
     }
 
     public boolean contains(Point2D p) {
-        return get(p) != null;
+        //return get(p) != null;
+        if (p.equals(null)) throw new IllegalArgumentException("You have to pass a valid point object");
+        if (isEmpty()) return false;
+        if (root.p.equals(p)) return true;
+        Node n = new Node(p, 1, false, null);
+        n.xCoord = p.x();
+        n.yCoord = p.y();
+        return contains(root, n) != null;
+    }
+
+    private Node contains(Node h, Node newNode) {
+        /* if maximum x of a branch is less than newNode's x, then you can scape it. */
+        while (h != null) {
+            int cmp = h.compareTo(newNode);
+            if (h.left != null && cmp < 0) contains(h.left, newNode);
+            else if (h.right != null && cmp > 0) contains(h.right, newNode);
+            else return h;
+        }
+        return h;
     }
 
     private Node floor(Point2D p) {
@@ -473,9 +480,10 @@ public class KdTree {
         if (root == null) throw new IllegalArgumentException("The tree is empty.");
         /* if the closest point discovered so far is closer than the distance between the query point and the rectangle
         corresponding to a node, there is no need to explore that node (or its subtrees). */
-        RectHV initialRec = new RectHV(0.0, 0.0, 1.0, 1.0);
+        // RectHV initialRec = new RectHV(0.0, 0.0, 1.0, 1.0);
+        if (contains(p)) return p;
         Point2D nearestNeig = root.p;
-        root.nodeRect = initialRec;
+        // root.nodeRect = initialRec;
         return nearest(root, p, nearestNeig);
     }
 
@@ -485,8 +493,8 @@ public class KdTree {
     private Point2D nearest(Node h, Point2D p, Point2D nearstP) {
         RectHV rHl = null;
         RectHV rHr = null;
-        h.xCoord=h.p.x();
-        h.yCoord=h.p.y();
+        h.xCoord = h.p.x();
+        h.yCoord = h.p.y();
         if (h == null) return nearstP;
         if (!h.orientation) {
             if (h.parent == null) {
@@ -495,8 +503,10 @@ public class KdTree {
             } else if (h.parent != null) {
                 // I have to rebuild the h rectangle here or save it in the node from previous round.
                 // How should I handle points like 0.0,0.5? there is no left rectangle if (h.x() == 0) do what?
-                rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
-                rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
+                // rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
+                // setLeftRectIntervals(h);
+                // rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
+                // setRightRectIntervals(h);
             }
             if (h.left != null) {
                 if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
@@ -544,6 +554,7 @@ public class KdTree {
         }
         return nearstP;
     }
+
     private int height(Node root) {
         if (root == null)
             return 0;
@@ -614,8 +625,20 @@ public class KdTree {
             // kdtree.size();
             // kdtree.isEmpty();
         }
+        Point2D p1 = new Point2D(0.0000000, 0.500000);
+        // Point2D p2 = new Point2D(0.6100000, 0.300000);
+//        StdOut.println(p1 == p2);
+//        StdOut.println(p1.equals(p2));
+        StdOut.println("Expect to be true : " + kdtree.contains(p1));
+        //p = new Point2D(0.6100000, 0.3100000);
+        //StdOut.println("Expect to be false : " + kdtree.contains(p));
         // StdOut.println(kdtree.size());
-        RectHV r = new RectHV(0.0, 0.48, 0.1, 0.9);
+        /*RectHV r = new RectHV(0.0, 0.48, 0.1, 0.9);
+        kdtree.range(r);
+        StdOut.println("Here are the points in the above rectangle: ");
+        for (Point2D p : kdtree.points) {
+            StdOut.println(p);
+        }*/
 
 //        for (Point2D p : kdtree.range(r)) {
 //            StdOut.println(" : " + p);
@@ -629,11 +652,7 @@ public class KdTree {
 //        RectHV r = new RectHV(0.1, 0.1, 0.8, 0.6);
 //        StdOut.println("Rectangle: " + r + "Contains points: " + kdtree.range(r));
         // StdOut.println("Here are the points in the above rectangle: ");
-        kdtree.range(r);
-        StdOut.println("Here are the points in the above rectangle: ");
-        for (Point2D p : kdtree.points) {
-            StdOut.println(p);
-        }
+
 //        PointSET brute = new PointSET();
 //
 //        int counter = 0;

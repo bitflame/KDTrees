@@ -15,7 +15,7 @@ import java.util.Iterator;
 
 public class PointSET {
     private SET<Point2D> treeSet;
-    private Stack<Point2D> interaPoints = new Stack<>();
+    // private Stack<Point2D> interaPoints = new Stack<>();
     private Point2D point = null;
     /* lets start with a grid size of 10. Not allowed to use bigDecimal, BigInteger, and rounding mode. So I have to
        try to use the other method if I need a grid */
@@ -37,8 +37,6 @@ public class PointSET {
 
     public PointSET() {
         treeSet = new SET<Point2D>();
-
-
     }
 
     /*private static class Node implements Comparable<Node> {
@@ -75,15 +73,15 @@ public class PointSET {
 
     }
 
-    private RectHV buildRect(Point2D p) {
+    /*private RectHV buildRect(Point2D p) {
         RectHV r;
         return r = new RectHV(p.x() - 0.01, p.y() - 0.01, p.x() + 0.01, p.y() + 0.01);
-    }
+    }*/
 
     public boolean contains(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Can not send a null to " +
                 "contains() ");
-        RectHV rect = buildRect(p);
+        // RectHV rect = buildRect(p);
         // Node n = new Node(p, rect);
         // Node n = new Node(p);
         return treeSet.contains(p);
@@ -133,8 +131,8 @@ public class PointSET {
         StdDraw.clear();
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.setPenRadius(0.001);
-        double counter;
-        /*for (int i = 0; i < grid.length; i++) {
+       /* double counter;
+        for (int i = 0; i < grid.length; i++) {
             counter = i;
             StdDraw.line(0.0, (1.0 - (counter / gridLength)), 1.0, (1.0 - (counter / gridLength)));
             // StdDraw.line(0.0, 0.9, 1.0, 0.9);
@@ -149,19 +147,19 @@ public class PointSET {
         if (rect == null)
             throw new IllegalArgumentException("You can not pass a null value as the rectangle parameter");
         if (treeSet.isEmpty()) return null;
-        interaPoints = new Stack<>();
+        Stack<Point2D> interaPoints = new Stack<>();
         /* Why not add the rectangle coordinates to the SET and use intersects() method between its nodes(minx, miny)
         and (maxx, maxy) and what is already in the tree? intersects() works on two sets, and I do not have two sets;
         just one. And it does not make sense to create a second set made of two points. I do not see it now at least.
         Or ask for all the keys in between these nodes?  */
-        double rectMinX = rect.xmin();
-        double rectMinY = rect.ymin();
-        Point2D minP = new Point2D(rectMinX, rectMinY);
-        RectHV minRect = buildRect(minP);
-        double rectMaxX = rect.xmax();
-        double rectMaxY = rect.ymax();
+         double rectMinX = rect.xmin();
+         double rectMinY = rect.ymin();
+         Point2D minP = new Point2D(rectMinX, rectMinY);
+         // RectHV minRect = buildRect(minP);
+         double rectMaxX = rect.xmax();
+         double rectMaxY = rect.ymax();
         Point2D maxP = new Point2D(rectMaxX, rectMaxY);
-        RectHV maxRect = buildRect(maxP);
+        // RectHV maxRect = buildRect(maxP);
         // Node minNode = new Node(minP, minRect);
         // Node minNode = new Node(minP);
         // Node maxNode = new Node(maxP, maxRect);
