@@ -17,115 +17,19 @@ public class KdTree {
     todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
      for the length and 4 bytes for padding plus the memory needed to store the values. An array of objects uses 24 bytes
      of overhead plus 8N for each object; plus the object size
+     todo: node memory: 8 bytes for each key and value, 8 * 4 = 32, 4 bytes for N, and 16 bytes of Object overhead,
+     plus 2*8=16 bytes for the two left and right objects that are null by default, plus 8 bytes of extra overhead for a
+     total of 76 bytes. The rest are as follows: boolean: 1, byte: 1, char: 2, int 4, float 4, long 8, double 8
     */
     private Node root;
     private Queue<Point2D> queue = new Queue<Point2D>();
     private Queue<Node> q = new Queue<>();
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
     private MinPQ<Double> xCoordinates = new MinPQ<>();
-    // private IntervalST<Double, Double> intervalSearchTree = new IntervalST();
+    private boolean result = false;
 
-    /* private class IntervalST<Key extends Comparable<Key>, Value> extends BST {
-        Node root;
-        Queue<Value> q = new Queue<>();
-
-         todo: node memory: 8 bytes for each key and value, 8 * 4 = 32, 4 bytes for N, and 16 bytes of Object overhead,
-            plus 2*8=16 bytes for the two left and right objects that are null by default, plus 8 bytes of extra overhead for a
-            total of 76 bytes. The rest are as follows: boolean: 1, byte: 1, char: 2, int 4, float 4, long 8, double 8
-        private class Node {
-            Key lo;
-            Key hi;
-            Key maximum;
-            Value val;
-            Node left, right;
-            int N;
-
-            public Node(Key low, Key high, Value value, int N) {
-                lo = low;
-                hi = high;
-                val = value;
-                this.N = N;
-            }
-        }
-
-        void delete(Key low, Key high) {
-            delete(low);
-        }
-
-        void put(Key low, Key high, Value value) {
-// val is the max value
-            if (low == null) throw new IllegalArgumentException("calls put() with a null key");
-            if (value == null) {
-                delete(low);
-                return;
-            }
-            root = put(root, low, high, value);
-        }
-
-        private Node put(Node h, Key low, Key high, Value value) {
-            if (h == null) {
-                Node n = new Node(low, high, value, 1);
-                n.maximum = high;
-                return n;
-            }
-            int cmp = low.compareTo(h.lo);
-            if (cmp < 0) {
-                h.left = put(h.left, low, high, value);
-                //h.left = new Node(low, high, value);
-                h.left.maximum = high;
-                h.maximum = (h.maximum.compareTo(high) > 0) ? h.maximum : high;
-
-            } else if (cmp > 0) {
-                h.right = put(h.right, low, high, value);
-                //h.right = new Node(low, high, value);
-                h.right.maximum = high;
-                h.maximum = (h.maximum.compareTo(high) > 0) ? h.maximum : high;
-            } else h.val = value;
-            h.N = 1 + size(h.left) + size(h.right);
-            return h;
-        }
-
-        Key getMaximum() {
-            return root.maximum;
-        }
-
-        @Override
-        public int size() {
-            return size(root);
-        }
-
-        private int size(Node x) {
-            if (x == null) return 0;
-            else return x.N;
-        }
-
-        Iterable<Value> intersects(Key low, Key high) {
-            intersects(root, low, high);
-            return q;
-        }
-
-        private Node intersects(Node h, Key low, Key high) {
-            while (h != null) {
-                if (((h.lo.compareTo(low) <= 0 && (h.hi.compareTo(low) >= 0))) ||
-                        ((h.hi.compareTo(high) >= 0 && h.lo.compareTo(low) >= 0)) ||
-                        ((h.lo.compareTo(low) >= 0) && (h.hi.compareTo(high) <= 0)) || ((h.lo.compareTo(low) <= 0) &&
-                        (h.hi.compareTo(high) >= 0))) q.enqueue(h.val);
-                if (h.left == null) {
-                    h.right = intersects(h.right, low, high);
-                    return h.right;
-                }
-                if (h.left.maximum.compareTo(low) < 0) {
-                    h.right = intersects(h.right, low, high);
-                    return h.right;
-                }
-                h.left = intersects(h.left, low, high);
-                h.right = intersects(h.right, low, high);
-            }
-            return h;
-        }
-    }*/
-/* I need to fix insert to put a point with same x on the right branch and fix the compare to return a 0 for equal values
-* of x and y coordinate so methods like contains work fine.*/
+    /* I need to fix insert to put a point with same x on the right branch and fix the compare to return a 0 for equal values
+     * of x and y coordinate so methods like contains work fine.*/
     private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
@@ -160,14 +64,16 @@ public class KdTree {
             if (!this.orientation) {
                 if (thisX < hX) {
                     return -1;
-                } else {
+                }
+                if (thisX > hX) {
                     return 1;
                 }
             }
             if (this.orientation) {
                 if (thisY < hY) {
                     return -1;
-                } else {
+                }
+                if (thisY > hY) {
                     return 1;
                 }
             }
@@ -301,18 +207,17 @@ public class KdTree {
         Node n = new Node(p, 1, false, null);
         n.xCoord = p.x();
         n.yCoord = p.y();
-        return contains(root, n) != null;
+        return contains(root, n, p);
     }
 
-    private Node contains(Node h, Node newNode) {
+    private boolean contains(Node h, Node n, Point2D p) {
         /* if maximum x of a branch is less than newNode's x, then you can scape it. */
-        while (h != null) {
-            int cmp = h.compareTo(newNode);
-            if (h.left != null && cmp < 0) contains(h.left, newNode);
-            else if (h.right != null && cmp > 0) contains(h.right, newNode);
-            else return h;
-        }
-        return h;
+        if (h == null) result = false;
+        if (h.p.equals(p)) result = true;
+        int cmp = h.compareTo(n);
+        if (h.left != null && cmp > 0) contains(h.left, n, p);
+        if (h.right != null && cmp <= 0) contains(h.right, n, p);
+        return result;
     }
 
     private Node floor(Point2D p) {
@@ -431,7 +336,7 @@ public class KdTree {
         } else {
             newNode.orientation = !h.orientation;
             int cmp = h.compareTo(newNode);
-            if (cmp < 0) {  // It means root is smaller than the new node
+            if (cmp <= 0) {  // It means root is smaller than the new node
                 newNode.parent = h;
                 setRightRectIntervals(newNode);
                 setLeftRectIntervals(newNode);
@@ -625,159 +530,160 @@ public class KdTree {
             // kdtree.size();
             // kdtree.isEmpty();
         }
-        Point2D p1 = new Point2D(0.0000000, 0.500000);
-        // Point2D p2 = new Point2D(0.6100000, 0.300000);
-//        StdOut.println(p1 == p2);
-//        StdOut.println(p1.equals(p2));
+        Point2D p1 = new Point2D(0.6100000, 0.310000);
         StdOut.println("Expect to be true : " + kdtree.contains(p1));
-        //p = new Point2D(0.6100000, 0.3100000);
-        //StdOut.println("Expect to be false : " + kdtree.contains(p));
-        // StdOut.println(kdtree.size());
-        /*RectHV r = new RectHV(0.0, 0.48, 0.1, 0.9);
+
+        /* Point2D p2 = new Point2D(0.6100000, 0.300000);
+        StdOut.println(p1 == p2);
+        StdOut.println(p1.equals(p2));
+        p = new Point2D(0.6100000, 0.3100000);
+        StdOut.println("Expect to be false : " + kdtree.contains(p));
+        StdOut.println(kdtree.size());
+        RectHV r = new RectHV(0.0, 0.48, 0.1, 0.9);
         kdtree.range(r);
         StdOut.println("Here are the points in the above rectangle: ");
         for (Point2D p : kdtree.points) {
             StdOut.println(p);
+        }
+
+        for (Point2D p : kdtree.range(r)) {
+            StdOut.println(" : " + p);
+        }
+        int increment = 3;
+        Point2D p = null;
+        for (int i = 0; i < 100; i++) {
+            p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
+            kdtree.insert(p);
+        }
+        RectHV r = new RectHV(0.1, 0.1, 0.8, 0.6);
+        StdOut.println("Rectangle: " + r + "Contains points: " + kdtree.range(r));
+        StdOut.println("Here are the points in the above rectangle: ");
+
+        PointSET brute = new PointSET();
+
+        int counter = 0;
+        for (int i = 0; i < 4; i++) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            kdtree.insert(p);
+        }
+        for (Node node : kdtree.keys()) {
+            //StdOut.printf("%2.2f%n",node.maximumX);
+            StdOut.println("Here is the point: " + node.p + "Here is its maximum x: " + node.maximumX);
+        }
+
+        StdOut.println(kdtree.root + "" + kdtree.root.maximumX);
+        brute.insert(p);
+        counter++;
+        StdOut.println(counter + " th number was just inserted.");
+        StdOut.println();
+        kdtree.printLevelOrder();
+
+
+        kdtree.ensureOrder();
+        RectHV r = new RectHV(0.1, 0.1, 0.5, 0.7);
+
+        Stopwatch st = new Stopwatch();
+        kdtree.range(r);
+        double rangeElapsedTime = st.elapsedTime();
+        StdOut.println("Here are the points in rectangle " + r);
+
+        StdOut.println("Kd range() took " + rangeElapsedTime + " seconds.");
+        StdOut.printf("Kd range() took %20.6f%n", rangeElapsedTime);
+        kdtree.draw();
+        StdOut.println("now we are going to test range.");
+
+        StdOut.println("Rectangle: " + r + "Contains points: " + kdtree.range(r));
+        StdOut.println("Should be 10 " + kdtree.size());
+        StdOut.println("Should be 10 " + brute.size());
+        StdOut.println("Should be false " + kdtree.isEmpty());
+        StdOut.println("Should be false " + brute.isEmpty());
+        kdtree.draw();
+        KdTree kt = new KdTree();
+        Point2D p1 = new Point2D(0.5, 0.25);
+        kt.insert(p1);
+        Point2D p2 = new Point2D(0.0, 0.5);
+        kt.insert(p2);
+        Point2D p3 = new Point2D(0.5, 0.0);
+        kt.insert(p3);
+        Point2D p4 = new Point2D(0.25, 0.0);
+        kt.insert(p4);
+        Point2D p5 = new Point2D(0.0, 1.0);
+        kt.insert(p5);
+        Point2D p6 = new Point2D(1.0, 0.5);
+        kt.insert(p6);
+        Point2D p7 = new Point2D(0.25, 0.0);
+        kt.insert(p7);
+        Point2D p8 = new Point2D(0.0, 0.25);
+        kt.insert(p8);
+        Point2D p9 = new Point2D(0.25, 0.0);
+        kt.insert(p9);
+        Point2D p10 = new Point2D(0.25, 0.5);
+        kt.insert(p10);
+        Point2D queryPoint = new Point2D(0.75, 0.75);
+        kt.draw();
+        StdOut.println("Distance Squared to Query Point: " + kt.nearest(queryPoint).distanceSquaredTo(queryPoint));
+        StdOut.println(kt.nearest(queryPoint));
+        StdOut.println("Changed something for testing.");
+        KdTree k = new KdTree();
+        Queue<Point2D> s = new Queue<>();
+        Point2D p1 = new Point2D(0.7, 0.2);
+        s.enqueue(p1);
+        Point2D p2 = new Point2D(0.5, 0.4);
+        s.enqueue(p2);
+        Point2D p3 = new Point2D(0.2, 0.3);
+        s.enqueue(p3);
+        Point2D p4 = new Point2D(0.4, 0.7);
+        s.enqueue(p4);
+        Point2D p5 = new Point2D(0.9, 0.6);
+        s.enqueue(p5);
+        Point2D p6 = new Point2D(0.1, 0.9);
+        s.enqueue(p6);
+        Point2D p7 = new Point2D(0.2, 0.8);
+        s.enqueue(p7);
+        Point2D p8 = new Point2D(0.3, 0.7);
+        s.enqueue(p8);
+        Point2D p9 = new Point2D(0.4, 0.7);
+        s.enqueue(p9);
+        Point2D p10 = new Point2D(0.9, 0.6);
+        s.enqueue(p10);
+        for (Point2D p : s) {
+            k.insert(p);
+        }
+        Stack<RectHV> recs = new Stack<>();
+        RectHV r = new RectHV(0.8, 0.5, 1.0, 0.7);
+        recs.push(r);
+
+        recs.push(r);
+        r = new RectHV(0.0, 0.0, 1.0, 1.0);
+        recs.push(r);
+        r = new RectHV(0.7, 0.2, 1.0, 1.0);
+        recs.push(r);
+        for (RectHV rec : recs) {
+            StdOut.println("Rectangle: " + rec + "Contains points: " + k.range(rec));
+        }
+        StdOut.println("Does r contain the first node? " + r.contains(p1));
+        for (Point2D p : k.range(r)) {
+            StdOut.println("Here is the points in above rectangle: " + p);
+        }
+        StdOut.println("Here is the point in your rectangle : " + k.range(r));
+        StdOut.println("Rectangle " + r + "has the following points inside it: " + k.range(r));
+        Point2D p = k.nearest(queryPoint);
+        StdOut.println("Here is the nearest point to 0.75, 0.75: " + p);
+        k.draw();
+        for (int i = 0; i < 20; i++) {
+            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
+            k.insert(p);
+        }
+        StdOut.println("Finished w/o errors.");
+        int index = 1;
+        for (Node n : k.keys()) {
+            if (n.coordinate == true) {
+                StdOut.println(index + "-" + n.p);
+                index++;
+            }
         }*/
-
-//        for (Point2D p : kdtree.range(r)) {
-//            StdOut.println(" : " + p);
-//        }
-        //        int increment = 3;
-//        Point2D p = null;
-//        for (int i = 0; i < 100; i++) {
-//            p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
-//            kdtree.insert(p);
-//        }
-//        RectHV r = new RectHV(0.1, 0.1, 0.8, 0.6);
-//        StdOut.println("Rectangle: " + r + "Contains points: " + kdtree.range(r));
-        // StdOut.println("Here are the points in the above rectangle: ");
-
-//        PointSET brute = new PointSET();
-//
-//        int counter = 0;
-//        for (int i = 0; i < 4; i++) {
-//            double x = in.readDouble();
-//            double y = in.readDouble();
-//            Point2D p = new Point2D(x, y);
-//            kdtree.insert(p);
-//        }
-//        for (Node node : kdtree.keys()) {
-//            //StdOut.printf("%2.2f%n",node.maximumX);
-//            StdOut.println("Here is the point: " + node.p + "Here is its maximum x: " + node.maximumX);
-//        }
-
-        // StdOut.println(kdtree.root+""+kdtree.root.maximumX);
-//            brute.insert(p);
-        // counter++;
-        // StdOut.println(counter+" th number was just inserted.");
-//            StdOut.println();
-//            kdtree.printLevelOrder();
-
-
-        // kdtree.ensureOrder();
-        //RectHV r = new RectHV(0.1, 0.1, 0.5, 0.7);
-
-        // Stopwatch st = new Stopwatch();
-        // kdtree.range(r);
-        // double rangeElapsedTime = st.elapsedTime();
-//        StdOut.println("Here are the points in rectangle " + r);
-
-        // StdOut.println("Kd range() took " + rangeElapsedTime + " seconds.");
-        // StdOut.printf("Kd range() took %20.6f%n", rangeElapsedTime);
-        // kdtree.draw();
-        // StdOut.println("now we are going to test range.");
-        //
-        // StdOut.println("Rectangle: " + r + "Contains points: " + kdtree.range(r));
-//        StdOut.println("Should be 10 " + kdtree.size());
-//        StdOut.println("Should be 10 " + brute.size());
-//        StdOut.println("Should be false " + kdtree.isEmpty());
-//        StdOut.println("Should be false " + brute.isEmpty());
-//        kdtree.draw();
-//        KdTree kt = new KdTree();
-//        Point2D p1 = new Point2D(0.5, 0.25);
-//        kt.insert(p1);
-//        Point2D p2 = new Point2D(0.0, 0.5);
-//        kt.insert(p2);
-//        Point2D p3 = new Point2D(0.5, 0.0);
-//        kt.insert(p3);
-//        Point2D p4 = new Point2D(0.25, 0.0);
-//        kt.insert(p4);
-//        Point2D p5 = new Point2D(0.0, 1.0);
-//        kt.insert(p5);
-//        Point2D p6 = new Point2D(1.0, 0.5);
-//        kt.insert(p6);
-//        Point2D p7 = new Point2D(0.25, 0.0);
-//        kt.insert(p7);
-//        Point2D p8 = new Point2D(0.0, 0.25);
-//        kt.insert(p8);
-//        Point2D p9 = new Point2D(0.25, 0.0);
-//        kt.insert(p9);
-//        Point2D p10 = new Point2D(0.25, 0.5);
-//        kt.insert(p10);
-        // Point2D queryPoint = new Point2D(0.75, 0.75);
-        // kt.draw();
-        // StdOut.println("Distance Squared to Query Point: " + kt.nearest(queryPoint).distanceSquaredTo(queryPoint));
-        // StdOut.println(kt.nearest(queryPoint));
-//        StdOut.println("Changed something for testing.");
-        //KdTree k = new KdTree();
-//        Queue<Point2D> s = new Queue<>();
-//        Point2D p1 = new Point2D(0.7, 0.2);
-//        s.enqueue(p1);
-//        Point2D p2 = new Point2D(0.5, 0.4);
-//        s.enqueue(p2);
-//        Point2D p3 = new Point2D(0.2, 0.3);
-//        s.enqueue(p3);
-//        Point2D p4 = new Point2D(0.4, 0.7);
-//        s.enqueue(p4);
-//        Point2D p5 = new Point2D(0.9, 0.6);
-//        s.enqueue(p5);
-//        Point2D p6 = new Point2D(0.1, 0.9);
-//        s.enqueue(p6);
-//        Point2D p7 = new Point2D(0.2, 0.8);
-//        s.enqueue(p7);
-//        Point2D p8 = new Point2D(0.3, 0.7);
-//        s.enqueue(p8);
-//        Point2D p9 = new Point2D(0.4, 0.7);
-//        s.enqueue(p9);
-//        Point2D p10 = new Point2D(0.9, 0.6);
-//        s.enqueue(p10);
-//        for (Point2D p : s) {
-//            k.insert(p);
-//        }
-        //Stack<RectHV> recs = new Stack<>();
-        //RectHV r = new RectHV(0.8, 0.5, 1.0, 0.7);
-        //recs.push(r);
-
-        // recs.push(r);
-        // r = new RectHV(0.0, 0.0, 1.0, 1.0);
-        // recs.push(r);
-        // r = new RectHV(0.7, 0.2, 1.0, 1.0);
-        // recs.push(r);
-//        for (RectHV rec : recs) {
-//            StdOut.println("Rectangle: " + rec + "Contains points: " + k.range(rec));
-//        }
-        // StdOut.println("Does r contain the first node? " + r.contains(p1));
-//        for (Point2D p : k.range(r)) {
-//            StdOut.println("Here is the points in above rectangle: " + p);
-//        }
-//        StdOut.println("Here is the point in your rectangle : " + k.range(r));
-//        StdOut.println("Rectangle " + r + "has the following points inside it: " + k.range(r));
-//        Point2D p = k.nearest(queryPoint);
-//        StdOut.println("Here is the nearest point to 0.75, 0.75: " + p);
-//        k.draw();
-//        for (int i = 0; i < 20; i++) {
-//            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
-//            k.insert(p);
-//        }
-//        StdOut.println("Finished w/o errors.");
-//        int index = 1;
-//        for (Node n : k.keys()) {
-//            if (n.coordinate == true) {
-//                StdOut.println(index + "-" + n.p);
-//                index++;
-//            }
-//        }
     }
 }
 
