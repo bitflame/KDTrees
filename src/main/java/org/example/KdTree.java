@@ -1,6 +1,13 @@
 package org.example;
 
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.Point2D;
+import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.Stopwatch;
 
 
 import java.util.ArrayList;
@@ -21,8 +28,6 @@ public class KdTree {
     private MinPQ<Double> xCoordinates = new MinPQ<>();
     private boolean result = false;
 
-    /* I need to fix insert to put a point with same x on the right branch and fix the compare to return a 0 for equal values
-     * of x and y coordinate so methods like contains work fine.*/
     private static class Node implements Comparable<Node> {
         Point2D p; // key
         Node left, right, parent; // subtrees
@@ -50,7 +55,7 @@ public class KdTree {
 
         @Override
         public int compareTo(Node h) {
-            double thisX = this.p.x();
+            /*double thisX = this.p.x();
             double thisY = this.p.y();
             double hX = h.p.x();
             double hY = h.p.y();
@@ -71,6 +76,25 @@ public class KdTree {
                 }
             }
             return 0;
+        }*/
+            // cleaned up redundant caches
+            if (!this.orientation) {
+                if (this.xCoord < h.xCoord) {
+                    return -1;
+                }
+                if (this.xCoord > h.xCoord) {
+                    return 1;
+                }
+            }
+            if (this.orientation) {
+                if (this.yCoord < h.yCoord) {
+                    return -1;
+                }
+                if (this.yCoord > h.yCoord) {
+                    return 1;
+                }
+            }
+            return 0;
         }
     }
 
@@ -85,33 +109,33 @@ public class KdTree {
         if (!h.orientation) {
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.012);
-            StdDraw.point(h.p.x(), h.p.y());
-            StdDraw.point(h.p.x(), h.p.y());
+            StdDraw.point(h.xCoord, h.yCoord);
+            StdDraw.point(h.xCoord, h.yCoord);
             StdDraw.setPenRadius(0.003);
             StdDraw.setPenColor(StdDraw.RED);
-            StdDraw.line(h.p.x(), rectHV.ymin(), h.p.x(), rectHV.ymax());
+            StdDraw.line(h.xCoord, rectHV.ymin(), h.xCoord, rectHV.ymax());
             if (h.left != null) {
-                tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), h.p.x(), rectHV.ymax());
+                tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), h.xCoord, rectHV.ymax());
                 draw(h.left, tempRect);
             }
             if (h.right != null) {
-                tempRect = new RectHV(h.p.x(), rectHV.ymin(), rectHV.xmax(), rectHV.ymax());
+                tempRect = new RectHV(h.xCoord, rectHV.ymin(), rectHV.xmax(), rectHV.ymax());
                 draw(h.right, tempRect);
             }
         } else if (h.orientation) {
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.012);
-            StdDraw.point(h.p.x(), h.p.y());
+            StdDraw.point(h.xCoord, h.yCoord);
             StdDraw.setPenRadius(0.003);
             StdDraw.setPenColor(StdDraw.BLUE);
-            StdDraw.line(rectHV.xmin(), h.p.y(), rectHV.xmax(), h.p.y());
+            StdDraw.line(rectHV.xmin(), h.yCoord, rectHV.xmax(), h.yCoord);
             if (h.left != null) {
                 // the sub rectangles are different depending on parent axis orientation
-                tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), rectHV.xmax(), h.p.y());
+                tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), rectHV.xmax(), h.yCoord);
                 draw(h.left, tempRect);
             }
             if (h.right != null) {
-                tempRect = new RectHV(rectHV.xmin(), h.p.y(), rectHV.xmax(), rectHV.ymax());
+                tempRect = new RectHV(rectHV.xmin(), h.yCoord, rectHV.xmax(), rectHV.ymax());
                 draw(h.right, tempRect);
             }
         }
@@ -193,41 +217,45 @@ public class KdTree {
     }
 
     public boolean contains(Point2D p) {
-        /*if (p.equals(null)) throw new IllegalArgumentException("You have to pass a valid point object");
+        if (p.equals(null)) throw new IllegalArgumentException("You have to pass a valid point object");
         if (isEmpty()) return false;
-        if (root.p.equals(p)) return true;
-        return contains(root, n, p);
-        todo: I think I need to change the node's orientation when I am comparing
-        */
-        Node n = new Node(p, 1, false, null);
+
+        Node n = new Node(p, 1, false, root);
         n.xCoord = p.x();
         n.yCoord = p.y();
-
-        //StdOut.println(rank(n));
-        //StdOut.println(select(rank(n)));
-
-        /*for (int i =0; i< 51; i++){
-            StdOut.println("point with rank of i is: "+select(i).p);
-        }
-        while (!xCoordinates.isEmpty()) {
-            if (xCoordinates.delMin()==p.x() ){
-                for (Point2D point: range(n.nodeRect)){
-                   if (p.equals(point)) return true;
-                }
-            }
-        }*/
-        return true;
+        if (root.xCoord == n.xCoord && root.yCoord == n.yCoord) return true;
+        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
+        return contains(root, n, p);
     }
 
-  /*   private boolean contains(Node h, Node n, Point2D p) {
+    private boolean isInsideRectangle(Node h, double x, double y) {
+        if (h.minXInter <= x && h.maxXInter > x && h.minYInter <= y && h.maxYInter > y) return true;
+        return false;
+    }
 
-       if (h == null) result = false;
-        if (h.p.equals(p)) result = true;
+    private boolean contains(Node h, Node n, Point2D p) {
+        if (h == null) result = false;
+        if (h.xCoord == n.xCoord && h.yCoord == n.yCoord) result = true;
         int cmp = h.compareTo(n);
-        if (h.left != null && cmp > 0) contains(h.left, n, p);
-        if (h.right != null && cmp <= 0) contains(h.right, n, p);
+        n.orientation = !n.orientation; // is the point in the left rect or the right
+        n.parent = h;
+
+//        if (h.left != null && cmp > 0 && isInsideRectangle(h.left, n.xCoord, n.yCoord)) contains(h.left, n, p);
+//        else if (h.right != null && cmp <= 0 && isInsideRectangle(h.right, n.xCoord, n.yCoord)) contains(h.right, n, p);
+//        if (h.left != null && cmp > 0 && h.left.nodeRect.contains(p) && n.xCoord < h.left.maximumX) contains(h.left, n, p);
+//        else if (h.right != null && cmp <= 0 && h.right.nodeRect.contains(p) && n.xCoord < h.right.maximumX) contains(h.right, n, p);
+//        if (h.left != null && cmp > 0 && n.xCoord < h.left.maximumX) contains(h.left, n, p);
+//        else if (h.right != null && cmp <= 0 && n.xCoord < h.right.maximumX) contains(h.right, n, p);
+        if (h.left != null) {
+            buildChildRectangle(h, h.left);
+            if (cmp > 0 && h.left.nodeRect.contains(p))contains(h.left, n, p);
+        }
+        if (h.right != null){
+            buildChildRectangle(h, h.right);
+            if (cmp <= 0 && h.right.nodeRect.contains(p)) contains(h.right, n, p);
+        }
         return result;
-    }*/
+    }
 
     private boolean nodeRectContains(Node h, double x, double y) {
         if (h.minXInter < x && h.maxXInter > x && h.minYInter < y && h.maxYInter > y) return true;
@@ -288,6 +316,21 @@ public class KdTree {
         }
         return points; */
         return KDintersects(rect.ymin(), rect.ymax());
+    }
+
+    private void buildChildRectangle(Node parent, Node child) {
+        if (!parent.orientation) {
+            RectHV left = new RectHV(parent.minXInter, parent.minYInter, child.xCoord, parent.maxYInter);
+            parent.left.nodeRect = left;
+            RectHV right = new RectHV(child.xCoord, parent.minYInter,parent.maxXInter , parent.maxYInter);
+            parent.right.nodeRect = right;
+        } else if (parent.orientation) {
+            RectHV left = new RectHV(parent.minXInter, parent.minYInter, parent.maxXInter, child.yCoord);
+            parent.left.nodeRect = left;
+            RectHV right = new RectHV(parent.minXInter, child.yCoord,parent.maxXInter , parent.maxYInter);
+            parent.right.nodeRect = right;
+        }
+
     }
 
     private void setLeftRectIntervals(Node x) {
@@ -390,7 +433,7 @@ public class KdTree {
     }
 
     private int size(Node x) {
-        if (x==null) return 0;
+        if (x == null) return 0;
         return x.N;
     }
 
@@ -418,7 +461,7 @@ public class KdTree {
         if (!h.orientation) {
             if (h.parent == null) {
                 rHl = new RectHV(0.0, 0.0, h.xCoord, 1.0);
-                rHr = new RectHV(h.xCoord, 0.0, 1.0, 1.0);
+                rHr = new RectHV(h.yCoord, 0.0, 1.0, 1.0);
             } else if (h.parent != null) {
                 // I have to rebuild the h rectangle here or save it in the node from previous round.
                 // How should I handle points like 0.0,0.5? there is no left rectangle if (h.x() == 0) do what?
@@ -452,7 +495,7 @@ public class KdTree {
         if (h.orientation) {
             rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
             rHr = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
-            // rHr = new RectHV(h.p.x(),h.nodeRect.ymin(),h.nodeRect.xmax(),h.nodeRect.ymax());
+            // rHr = new RectHV(h.xCoord,h.nodeRect.ymin(),h.nodeRect.xmax(),h.nodeRect.ymax());
             if (h.left != null) {
                 if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
                     if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
@@ -534,7 +577,7 @@ public class KdTree {
         KdTree kdtree = new KdTree();
         String filename = args[0];
         In in = new In(filename);
-        // Stopwatch timer = new Stopwatch();
+        Stopwatch timer = new Stopwatch();
         while (!in.isEmpty()) {
             double x = in.readDouble();
             double y = in.readDouble();
@@ -543,10 +586,10 @@ public class KdTree {
 //            kdtree.size();
 //            kdtree.isEmpty();
         }
-//        double time = timer.elapsedTime();
-//        StdOut.println("It took: " + time);
+        double time = timer.elapsedTime();
+        StdOut.println("It took: " + time);
         Point2D p1 = new Point2D(0.6100000, 0.300000);
-        StdOut.println("Expect to be true : " + kdtree.contains(p1));
+        StdOut.println("Expect to be false : " + kdtree.contains(p1));
     }
 }
 
