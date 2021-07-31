@@ -445,6 +445,8 @@ public class KdTree {
                 h.maximumY = Math.max(h.maximumY, h.left.maximumY);
             }
         }
+        assert h.minYInter <= h.maxYInter : "minimum y is more than maximum y";
+        assert h.minXInter <= h.maxXInter : "minimum x is more than maximum x";
         int leftN = 0;
         if (h.left != null) {
             leftN = h.left.N;
@@ -589,6 +591,11 @@ public class KdTree {
         }
     }
 
+    private void listParents(Node h) {
+        if (h.parent == null) return;
+        System.out.println(h.parent.xCoord + "" + h.parent.yCoord);
+    }
+
     private void ensureOrder() {
         int h = height(root);
         int i;
@@ -617,7 +624,7 @@ public class KdTree {
             Point2D p = new Point2D(x, y);
             kdtree.insert(p);
         }
-        kdtree.draw();
+        // kdtree.draw();
         System.out.println("done.");
     }
 }
