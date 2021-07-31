@@ -10,6 +10,7 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Stopwatch;
 
 
+import java.awt.*;
 import java.util.ArrayList;
 
 public class KdTree {
@@ -45,9 +46,9 @@ public class KdTree {
         double minYInter = 0.0;
         double maxYInter = 1.0;
 
-        public Node(Point2D p, int n, boolean coordinate, Node parent) {
+        public Node(Point2D p, int n, boolean orientation, Node parent) {
             this.p = p;
-            this.orientation = coordinate;
+            this.orientation = orientation;
             this.parent = parent;
             this.N = n;
             this.nodeRect = null;
@@ -101,19 +102,31 @@ public class KdTree {
     public void draw() {
         RectHV rec = new RectHV(0.0, 0.0, 1.0, 1.0);
         if (root == null) return;
-        draw(root, rec);
+        draw(root);
     }
 
-    private void draw(Node h, RectHV rectHV) {
+    private void draw(Node h) {
+        // convert the rectangle to
         RectHV tempRect;
+        StringBuilder sb = new StringBuilder();
         if (!h.orientation) {
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.012);
             StdDraw.point(h.xCoord, h.yCoord);
             StdDraw.point(h.xCoord, h.yCoord);
+            sb.append(h.xCoord + " ");
+            sb.append(h.yCoord);
+            StdDraw.text(h.xCoord, h.yCoord, sb.toString());
             StdDraw.setPenRadius(0.003);
             StdDraw.setPenColor(StdDraw.RED);
-            StdDraw.line(h.xCoord, rectHV.ymin(), h.xCoord, rectHV.ymax());
+            StdDraw.line(h.xCoord, h.minYInter, h.xCoord, h.maxYInter);
+            // if h is horizontal draw h's rectangle
+            StdDraw.setPenRadius(0.005);
+            // StdDraw.setPenColor(Color.MAGENTA);
+            // drawRectangle(h);
+            /*
+            StdDraw.rectangle((h.maxXInter - h.minXInter) / 2, (h.maxYInter - h.minYInter) / 2,
+                    (h.maxXInter - h.minXInter) / 2, (h.maxYInter - h.minYInter) / 2);
             if (h.left != null) {
                 tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), h.xCoord, rectHV.ymax());
                 draw(h.left, tempRect);
@@ -121,14 +134,24 @@ public class KdTree {
             if (h.right != null) {
                 tempRect = new RectHV(h.xCoord, rectHV.ymin(), rectHV.xmax(), rectHV.ymax());
                 draw(h.right, tempRect);
-            }
+            }*/
         } else if (h.orientation) {
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.012);
             StdDraw.point(h.xCoord, h.yCoord);
+            sb.append(h.xCoord);
+            sb.append(h.yCoord);
+            StdDraw.text(h.xCoord, h.yCoord, sb.toString());
             StdDraw.setPenRadius(0.003);
             StdDraw.setPenColor(StdDraw.BLUE);
-            StdDraw.line(rectHV.xmin(), h.yCoord, rectHV.xmax(), h.yCoord);
+            StdDraw.line(h.minXInter, h.yCoord, h.maxXInter, h.yCoord);
+            // or if h is vertical draw h's rectangle
+            StdDraw.setPenRadius(0.005);
+            // StdDraw.setPenColor(Color.MAGENTA);
+            // drawRectangle(h);
+            /*
+            StdDraw.rectangle((h.maxXInter - h.minXInter) / 2, (h.maxYInter - h.minYInter) / 2,
+                    (h.maxYInter - h.minYInter) / 2,(h.maxXInter - h.minXInter) / 2);
             if (h.left != null) {
                 // the sub rectangles are different depending on parent axis orientation
                 tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), rectHV.xmax(), h.yCoord);
@@ -137,11 +160,23 @@ public class KdTree {
             if (h.right != null) {
                 tempRect = new RectHV(rectHV.xmin(), h.yCoord, rectHV.xmax(), rectHV.ymax());
                 draw(h.right, tempRect);
-            }
+            }*/
         }
-
+        if (isEmpty()) return;
+        if (h.left != null) {
+            draw(h.left);
+        }
+        if (h.right != null) {
+            draw(h.right);
+        }
     }
 
+    private void drawRectangle(Node h) {
+        StdDraw.line(h.minXInter, h.minYInter, h.maxXInter, h.minYInter);
+        StdDraw.line(h.minXInter, h.minYInter, h.minXInter, h.maxYInter);
+        StdDraw.line(h.minXInter, h.maxYInter, h.maxXInter, h.maxYInter);
+        StdDraw.line(h.maxXInter, h.minYInter, h.maxXInter, h.maxYInter);
+    }
 
     public boolean isEmpty() {
         return keys() == null;
@@ -248,9 +283,9 @@ public class KdTree {
 //        else if (h.right != null && cmp <= 0 && n.xCoord < h.right.maximumX) contains(h.right, n, p);
         if (h.left != null) {
             buildChildRectangle(h, h.left);
-            if (cmp > 0 && h.left.nodeRect.contains(p))contains(h.left, n, p);
+            if (cmp > 0 && h.left.nodeRect.contains(p)) contains(h.left, n, p);
         }
-        if (h.right != null){
+        if (h.right != null) {
             buildChildRectangle(h, h.right);
             if (cmp <= 0 && h.right.nodeRect.contains(p)) contains(h.right, n, p);
         }
@@ -322,12 +357,12 @@ public class KdTree {
         if (!parent.orientation) {
             RectHV left = new RectHV(parent.minXInter, parent.minYInter, child.xCoord, parent.maxYInter);
             parent.left.nodeRect = left;
-            RectHV right = new RectHV(child.xCoord, parent.minYInter,parent.maxXInter , parent.maxYInter);
+            RectHV right = new RectHV(child.xCoord, parent.minYInter, parent.maxXInter, parent.maxYInter);
             parent.right.nodeRect = right;
         } else if (parent.orientation) {
             RectHV left = new RectHV(parent.minXInter, parent.minYInter, parent.maxXInter, child.yCoord);
             parent.left.nodeRect = left;
-            RectHV right = new RectHV(parent.minXInter, child.yCoord,parent.maxXInter , parent.maxYInter);
+            RectHV right = new RectHV(parent.minXInter, child.yCoord, parent.maxXInter, parent.maxYInter);
             parent.right.nodeRect = right;
         }
 
@@ -340,8 +375,8 @@ public class KdTree {
             // left = new RectHV(x.parent.minXInter, x.parent.minYInter, x.parent.p.x(), x.parent.maxYInter);
             x.minXInter = x.parent.minXInter;
             x.minYInter = x.parent.minYInter;
-            x.maxXInter = x.xCoord;
-            x.maxYInter = x.parent.maxYInter;
+            x.maxXInter = x.parent.maxXInter;
+            x.maxYInter = x.parent.yCoord;
             //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
         } else {
             // vertical node
@@ -349,26 +384,28 @@ public class KdTree {
             x.minXInter = x.parent.minXInter;
             x.minYInter = x.parent.minYInter;
             x.maxXInter = x.parent.xCoord;
-            x.maxYInter = x.yCoord;
+            x.maxYInter = x.parent.maxYInter;
             //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
         }
     }
 
     private void setRightRectIntervals(Node x) {
         RectHV right;
+
         if (!x.orientation) { //
             // horizontal node
             // right = new RectHV(x.parent.p.x(), x.parent.minYInter, x.parent.maxXInter, x.parent.maxYInter);
-            x.minXInter = x.xCoord;
-            x.minYInter = x.parent.minYInter;
+            x.minXInter = x.parent.minXInter;
+            x.minYInter = x.parent.yCoord;
             x.maxXInter = x.parent.maxXInter;
             x.maxYInter = x.parent.maxYInter;
             //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
-        } else {
+        }
+        if (x.orientation) {
             // vertical node
             // right = new RectHV(x.parent.minXInter, x.parent.p.y(), x.parent.maxXInter, x.parent.maxYInter);
-            x.minXInter = x.parent.minXInter;
-            x.minYInter = x.yCoord;
+            x.minXInter = x.parent.xCoord;
+            x.minYInter = x.parent.minYInter;
             x.maxXInter = x.parent.maxXInter;
             x.maxYInter = x.parent.maxYInter;
             //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
@@ -393,20 +430,17 @@ public class KdTree {
         } else {
             newNode.orientation = !h.orientation;
             int cmp = h.compareTo(newNode);
+            newNode.parent = h;
             if (cmp <= 0) {  // It means root is smaller than the new node
-                newNode.parent = h;
-                setRightRectIntervals(newNode);
-                setLeftRectIntervals(newNode);
                 // xCoordinates.insert(newNode.p.x());
                 h.right = insert(h.right, newNode);
+                setRightRectIntervals(h.right);
                 h.maximumX = Math.max(h.maximumX, h.right.maximumX);
                 h.maximumY = Math.max(h.maximumY, h.right.maximumY);
             } else if (cmp > 0) {  // it means root is larger than the new node
-                newNode.parent = h;
-                setLeftRectIntervals(newNode);
-                setRightRectIntervals(newNode);
                 // xCoordinates.insert(newNode.p.x());
                 h.left = insert(h.left, newNode);
+                setLeftRectIntervals(h.left);
                 h.maximumX = Math.max(h.maximumX, h.left.maximumX);
                 h.maximumY = Math.max(h.maximumY, h.left.maximumY);
             }
@@ -577,19 +611,14 @@ public class KdTree {
         KdTree kdtree = new KdTree();
         String filename = args[0];
         In in = new In(filename);
-        Stopwatch timer = new Stopwatch();
         while (!in.isEmpty()) {
             double x = in.readDouble();
             double y = in.readDouble();
             Point2D p = new Point2D(x, y);
             kdtree.insert(p);
-//            kdtree.size();
-//            kdtree.isEmpty();
         }
-        double time = timer.elapsedTime();
-        StdOut.println("It took: " + time);
-        Point2D p1 = new Point2D(0.6100000, 0.300000);
-        StdOut.println("Expect to be false : " + kdtree.contains(p1));
+        kdtree.draw();
+        System.out.println("done.");
     }
 }
 
