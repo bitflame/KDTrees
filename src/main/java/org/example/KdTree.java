@@ -308,22 +308,19 @@ public class KdTree {
     }
 
     public Iterable<Point2D> range(RectHV rect) {
-
+        points = new ArrayList<>();
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
         // does the rectangle contain the root?
-        if (rect.contains(root.p)) {
-            for (Node n : keys())
-                points.add(n.p);
-            return points;
-        } else return range(root, rect);
+        return range(root, rect);
     }
 
     private Iterable<Point2D> range(Node h, RectHV rect) {
         /* check the subtrees. remember you have to check both sides if rect intersects the line through the point.
          * Is the horizontal node's line between rectangle's minx and maxx or a vertical node's line between the
          * rectangle's miny and maxy */
-        if ((h!=null) && rect.contains(h.p)) points.add(h.p);
+        if (h == null) return points;
+        if ((h != null) && rect.contains(h.p)) points.add(h.p);
         if ((!h.orientation && (rect.xmin() < h.xCoord && rect.xmax() > h.xCoord)) ||
                 ((h.orientation) && (rect.ymin() < h.yCoord && rect.ymax() > h.yCoord))) {
             // check both sides of the tree
