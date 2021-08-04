@@ -311,44 +311,32 @@ public class KdTree {
 
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
-        /*while currentx is between rect's minx and maxx get all the points in between */
-        double currentX;
-        double lo = rect.xmin();
-        double hi = rect.xmax();
-        while (!xCoordinates.isEmpty()) {
-            currentX = xCoordinates.delMin();
-            if (currentX >= lo|| currentX<=hi) {
-
-                intervalSearchTree.put(currentX, h.minYInter);
-                intervalSearchTree.put(currentX, h.maxYInter);
-            } else if (currentX == h.maximumX) {
-                intervalSearchTree.delete(currentX);
-            } else if (currentX >= lo || currentX <= hi) {
-                // this is the x-coordinate and this is the y-coordinate
-                points.add(new Point2D(currentX, intervalSearchTree.get(currentX)));
-            }
-        }
-        return points;
+        // does the rectangle contain the root?
+        if (rect.contains(root.p)) {
+            for (Node n : keys())
+                points.add(n.p);
+            return points;
+        } else return range(root, rect);
     }
 
     private Iterable<Point2D> range(Node h, RectHV rect) {
-        /* Maybe interval search refers to the rectangle's interval i.e. first you find all the rectangles that intersect
-        with rect, then you do an sliding interval search for points that are between its minx,miny, maxx, & maxy*/
-        double lo = rect.xmin();
-        double hi = rect.xmax();
-        double currentX;
-        // rank of (currentX, lo) - (currentX,hi) should give all the nodes in between
-        while (!xCoordinates.isEmpty()) {
-            currentX = xCoordinates.delMin();
-            if (currentX == h.minXInter) {
-                intervalSearchTree.put(currentX, h.minYInter);
-                intervalSearchTree.put(currentX, h.maxYInter);
-            } else if (currentX == h.maximumX) {
-                intervalSearchTree.delete(currentX);
-            } else if (currentX >= lo || currentX <= hi) {
-                // this is the x-coordinate and this is the y-coordinate
-                points.add(new Point2D(currentX, intervalSearchTree.get(currentX)));
-            }
+        /* check the subtrees. remember you have to check both sides if rect intersects the line through the point.
+         * Is the horizontal node's line between rectangle's minx and maxx or a vertical node's line between the
+         * rectangle's miny and maxy */
+        if ((h!=null) && rect.contains(h.p)) points.add(h.p);
+        if ((!h.orientation && (rect.xmin() < h.xCoord && rect.xmax() > h.xCoord)) ||
+                ((h.orientation) && (rect.ymin() < h.yCoord && rect.ymax() > h.yCoord))) {
+            // check both sides of the tree
+            if (h.left != null) range(h.left, rect);
+            if (h.right != null) range(h.right, rect);
+        } else if (((!h.orientation) && (rect.xmax() < h.xCoord)) || ((h.orientation) && (rect.ymax() < h.yCoord))
+                && h.left != null) {
+            // It is only on the left/bottom side so only check the left/bottom side of the tree
+            range(h.left, rect);
+        } else if (((!h.orientation) && (rect.xmin() > h.xCoord)) || (((h.orientation) && (rect.ymin() < h.yCoord))) &&
+                h.right != null) {
+            // It is only on the right/top side so only check the right/top
+            range(h.right, rect);
         }
         return points;
     }
@@ -626,9 +614,9 @@ public class KdTree {
             Point2D p = new Point2D(x, y);
             kdtree.insert(p);
         }
-        kdtree.draw();
+        // kdtree.draw();
         RectHV r = new RectHV(0.2, 0.14, 0.4, 0.18);
-        System.out.println("Here are the points in the rectangle"+kdtree.range(r));
+        System.out.println("Here are the points in the rectangle" + kdtree.range(r));
         System.out.println("Here is the size of the tree. " + kdtree.size());
     }
 }
