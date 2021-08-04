@@ -1,17 +1,11 @@
 package org.example;
 
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.Queue;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.MinPQ;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.Stopwatch;
+import edu.princeton.cs.algs4.*;
 
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.function.DoubleToLongFunction;
 
 public class KdTree {
     /*
@@ -28,6 +22,8 @@ public class KdTree {
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
     private MinPQ<Double> xCoordinates = new MinPQ<>();
     private boolean result = false;
+    int redundantPoints = 0;
+    private BST<Double, Double> intervalSearchTree = new BST();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -43,8 +39,8 @@ public class KdTree {
         // for tracking rectangle intervals
         double minXInter = 0.0;
         double maxXInter = 1.0;
-        double minYInter = 0.0;
-        double maxYInter = 1.0;
+        Double minYInter = 0.0;
+        Double maxYInter = 1.0;
 
         public Node(Point2D p, int n, boolean orientation, Node parent) {
             this.p = p;
@@ -239,15 +235,15 @@ public class KdTree {
         else return x;
     }
 
-    private int rank(Node lo) {
-        return rank(lo, root);
+    private int rank(Point2D p) {
+        return rank(root, p);
     }
 
-    private int rank(Node lo, Node x) {
+    private int rank(Node x, Point2D p) {
         if (x == null) return 0;
-        int cmp = lo.compareTo(x);
-        if (cmp < 0) return rank(lo, x.left);
-        else if (cmp > 0) return 1 + size(x.left) + rank(lo, x.right);
+        int cmp = p.compareTo(x.p);
+        if (cmp < 0) return rank(x.left, p);
+        else if (cmp > 0) return 1 + size(x.left) + rank(x.right, p);
         else return size(x.left);
     }
 
@@ -315,14 +311,21 @@ public class KdTree {
 
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
+        /*while currentx is between rect's minx and maxx get all the points in between */
         double currentX;
+        double lo = rect.xmin();
+        double hi = rect.xmax();
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
-            // Get me all the points with this x coordinate and y between lo and hi
-            Point2D start = new Point2D(currentX, rect.ymin());
-            Point2D end = new Point2D(currentX, rect.ymax());
-            for (Point2D p : keys(start, end)) {
-                if (rect.contains(p) && (!points.contains(p))) points.add(p);
+            if (currentX >= lo|| currentX<=hi) {
+
+                intervalSearchTree.put(currentX, h.minYInter);
+                intervalSearchTree.put(currentX, h.maxYInter);
+            } else if (currentX == h.maximumX) {
+                intervalSearchTree.delete(currentX);
+            } else if (currentX >= lo || currentX <= hi) {
+                // this is the x-coordinate and this is the y-coordinate
+                points.add(new Point2D(currentX, intervalSearchTree.get(currentX)));
             }
         }
         return points;
@@ -330,27 +333,24 @@ public class KdTree {
 
     private Iterable<Point2D> range(Node h, RectHV rect) {
         /* Maybe interval search refers to the rectangle's interval i.e. first you find all the rectangles that intersect
-        with rect, then you do an sliding interval search for points that are between its minx,miny, maxx, & maxy
-        double lo = rect.ymin();
-        double hi = rect.ymax();
+        with rect, then you do an sliding interval search for points that are between its minx,miny, maxx, & maxy*/
+        double lo = rect.xmin();
+        double hi = rect.xmax();
         double currentX;
+        // rank of (currentX, lo) - (currentX,hi) should give all the nodes in between
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
-            if (currentX >= h.minXInter) {
-                intervalSearchTree.put(h.minYInter, h.maxYInter, currentX);
-                for (Double d : intervalSearchTree.intersects(lo, hi)) {
-                    Point2D start = new Point2D(currentX, lo);
-                    Point2D end = new Point2D(currentX, hi);
-                    for (Point2D p : keys(start, end)) {
-                        if ((!points.contains(p)) && rect.contains(p)) points.add(p);
-                    }
-                }
-            } else if (currentX >= h.maximumX) {
-                intervalSearchTree.delete(h.minYInter, h.maxXInter);
+            if (currentX == h.minXInter) {
+                intervalSearchTree.put(currentX, h.minYInter);
+                intervalSearchTree.put(currentX, h.maxYInter);
+            } else if (currentX == h.maximumX) {
+                intervalSearchTree.delete(currentX);
+            } else if (currentX >= lo || currentX <= hi) {
+                // this is the x-coordinate and this is the y-coordinate
+                points.add(new Point2D(currentX, intervalSearchTree.get(currentX)));
             }
         }
-        return points; */
-        return KDintersects(rect.ymin(), rect.ymax());
+        return points;
     }
 
     private void buildChildRectangle(Node parent, Node child) {
@@ -431,7 +431,7 @@ public class KdTree {
             newNode.orientation = !h.orientation;
             int cmp = h.compareTo(newNode);
             newNode.parent = h;
-            if (cmp <= 0) {  // It means root is smaller than the new node
+            if (cmp < 0) {  // It means root is smaller than the new node
                 // xCoordinates.insert(newNode.p.x());
                 h.right = insert(h.right, newNode);
                 setRightRectIntervals(h.right);
@@ -443,6 +443,8 @@ public class KdTree {
                 setLeftRectIntervals(h.left);
                 h.maximumX = Math.max(h.maximumX, h.left.maximumX);
                 h.maximumY = Math.max(h.maximumY, h.left.maximumY);
+            } else {
+                redundantPoints++;
             }
         }
         assert h.minYInter <= h.maxYInter : "minimum y is more than maximum y";
@@ -624,8 +626,10 @@ public class KdTree {
             Point2D p = new Point2D(x, y);
             kdtree.insert(p);
         }
-        // kdtree.draw();
-        System.out.println("done.");
+        kdtree.draw();
+        RectHV r = new RectHV(0.2, 0.14, 0.4, 0.18);
+        System.out.println("Here are the points in the rectangle"+kdtree.range(r));
+        System.out.println("Here is the size of the tree. " + kdtree.size());
     }
 }
 
