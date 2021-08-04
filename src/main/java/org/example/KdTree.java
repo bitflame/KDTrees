@@ -320,18 +320,16 @@ public class KdTree {
          * Is the horizontal node's line between rectangle's minx and maxx or a vertical node's line between the
          * rectangle's miny and maxy */
         if (h == null) return points;
-        if ((h != null) && rect.contains(h.p)) points.add(h.p);
+        if (rect.contains(h.p)) points.add(h.p);
         if ((!h.orientation && (rect.xmin() < h.xCoord && rect.xmax() > h.xCoord)) ||
                 ((h.orientation) && (rect.ymin() < h.yCoord && rect.ymax() > h.yCoord))) {
             // check both sides of the tree
-            if (h.left != null) range(h.left, rect);
-            if (h.right != null) range(h.right, rect);
-        } else if (((!h.orientation) && (rect.xmax() < h.xCoord)) || ((h.orientation) && (rect.ymax() < h.yCoord))
-                && h.left != null) {
+             range(h.left, rect);
+           range(h.right, rect);
+        } else if (((!h.orientation) && (rect.xmax() < h.xCoord)) || ((h.orientation) && (rect.ymax() < h.yCoord))) {
             // It is only on the left/bottom side so only check the left/bottom side of the tree
             range(h.left, rect);
-        } else if (((!h.orientation) && (rect.xmin() > h.xCoord)) || (((h.orientation) && (rect.ymin() < h.yCoord))) &&
-                h.right != null) {
+        } else if (((!h.orientation) && (rect.xmin() > h.xCoord)) || (((h.orientation) && (rect.ymin() > h.yCoord)))) {
             // It is only on the right/top side so only check the right/top
             range(h.right, rect);
         }
