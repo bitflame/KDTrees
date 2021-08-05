@@ -24,6 +24,8 @@ public class KdTree {
     private boolean result = false;
     int redundantPoints = 0;
     private BST<Double, Double> intervalSearchTree = new BST();
+    private int nodesVisited = 0;
+    ArrayList<Point2D> pointsVisited = new ArrayList<>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -250,7 +252,6 @@ public class KdTree {
     public boolean contains(Point2D p) {
         if (p.equals(null)) throw new IllegalArgumentException("You have to pass a valid point object");
         if (isEmpty()) return false;
-
         Node n = new Node(p, 1, false, root);
         n.xCoord = p.x();
         n.yCoord = p.y();
@@ -324,8 +325,8 @@ public class KdTree {
         if ((!h.orientation && (rect.xmin() < h.xCoord && rect.xmax() > h.xCoord)) ||
                 ((h.orientation) && (rect.ymin() < h.yCoord && rect.ymax() > h.yCoord))) {
             // check both sides of the tree
-             range(h.left, rect);
-           range(h.right, rect);
+            range(h.left, rect);
+            range(h.right, rect);
         } else if (((!h.orientation) && (rect.xmax() < h.xCoord)) || ((h.orientation) && (rect.ymax() < h.yCoord))) {
             // It is only on the left/bottom side so only check the left/bottom side of the tree
             range(h.left, rect);
@@ -339,14 +340,14 @@ public class KdTree {
     private void buildChildRectangle(Node parent, Node child) {
         if (!parent.orientation) {
             RectHV left = new RectHV(parent.minXInter, parent.minYInter, child.xCoord, parent.maxYInter);
-            parent.left.nodeRect = left;
+            if (parent.left != null) parent.left.nodeRect = left;
             RectHV right = new RectHV(child.xCoord, parent.minYInter, parent.maxXInter, parent.maxYInter);
-            parent.right.nodeRect = right;
+            if (parent.right != null) parent.right.nodeRect = right;
         } else if (parent.orientation) {
             RectHV left = new RectHV(parent.minXInter, parent.minYInter, parent.maxXInter, child.yCoord);
-            parent.left.nodeRect = left;
+            if (parent.left != null) parent.left.nodeRect = left;
             RectHV right = new RectHV(parent.minXInter, child.yCoord, parent.maxXInter, parent.maxYInter);
-            parent.right.nodeRect = right;
+            if (parent.right != null) parent.right.nodeRect = right;
         }
 
     }
@@ -461,59 +462,96 @@ public class KdTree {
     public Point2D nearest(Point2D p) {
         if (p == null) throw new IllegalArgumentException("Data passed to nearest() can not be null.");
         if (root == null) throw new IllegalArgumentException("The tree is empty.");
-        /* if the closest point discovered so far is closer than the distance between the query point and the rectangle
-        corresponding to a node, there is no need to explore that node (or its subtrees). */
-        // RectHV initialRec = new RectHV(0.0, 0.0, 1.0, 1.0);
         if (contains(p)) return p;
         Point2D nearestNeig = root.p;
-        // root.nodeRect = initialRec;
+        pointsVisited.add(nearestNeig);
+        nodesVisited++;
+        System.out.println("Tree size : " + root.N);
+        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
         return nearest(root, p, nearestNeig);
     }
 
-    /* I may have to change this method also, and the fix might very well the fact that we have to go towards the query
-     * point first. todo: I need to replace rectangles code below with the methods setRightRectInterval and
-     *               setLeftRectInterval. */
     private Point2D nearest(Node h, Point2D p, Point2D nearstP) {
         RectHV rHl = null;
         RectHV rHr = null;
         h.xCoord = h.p.x();
         h.yCoord = h.p.y();
         if (h == null) return nearstP;
-        if (!h.orientation) {
-            if (h.parent == null) {
-                rHl = new RectHV(0.0, 0.0, h.xCoord, 1.0);
-                rHr = new RectHV(h.yCoord, 0.0, 1.0, 1.0);
-            } else if (h.parent != null) {
-                // I have to rebuild the h rectangle here or save it in the node from previous round.
-                // How should I handle points like 0.0,0.5? there is no left rectangle if (h.x() == 0) do what?
-                // rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
-                // setLeftRectIntervals(h);
-                // rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
-                // setRightRectIntervals(h);
+        if (h.parent == null) {
+            rHl = new RectHV(0.0, 0.0, h.xCoord, 1.0);
+            rHr = new RectHV(h.xCoord, 0.0, 1.0, 1.0);
+        } else if (h.parent != null) {
+            if (!h.orientation) {
+                rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
+                rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
+            } else if (h.orientation) {
+                rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
+                rHr = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
             }
+        }
+        if (!rHl.contains(p) || !(rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
             if (h.left != null) {
-                if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
-                    if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                        nearstP = h.left.p;
-                    }
-                }
-                h.left.parent = h;
                 h.left.nodeRect = rHl;
-                nearstP = nearest(h.left, p, nearstP);
-            }
-            if (h.right != null) {
-                if (rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
-                    if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                        nearstP = h.right.p;
-                    }
-                }
-                h.right.parent = h;
-                h.right.nodeRect = rHr;
-                nearstP = nearest(h.right, p, nearstP);
+                h.left.parent = h;
             }
 
+            if (h.right != null) {
+                h.right.nodeRect = rHr;
+                h = h.right;
+                nearstP = nearest(h, p, nearstP);
+            }
+        } else if (!rHr.contains(p) && !(rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
+            h.right.nodeRect = rHr;
+            h.right.parent = h;
+            if (h.left != null) {
+                h.left.nodeRect = rHl;
+                h = h.left;
+                nearstP = nearest(h, p, nearstP);
+            }
         }
-        if (h.orientation) {
+        else if (rHl.contains(p) && (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
+            // check rHl for points
+            if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
+                if (h.left != null) {
+                    nodesVisited++;
+                    System.out.println("Tree size : " + h.N);
+                    if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
+                        nearstP = h.left.p;
+                        pointsVisited.add(nearstP);
+                    }
+                    h.left.parent = h;
+                    if (h.right != null) {
+                        h.right.parent = h;
+                        h.right.nodeRect = rHr;
+                    }
+                    h.left.nodeRect = rHl;
+                    nearstP = nearest(h.left, p, nearstP);
+                    // nearstP = nearest(h.right, p, nearstP);
+                }
+            }
+        /*if (h.left != null) {
+            if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
+                nodesVisited++;
+                if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
+                    nearstP = h.left.p;
+                }
+            }
+            h.left.parent = h;
+            h.left.nodeRect = rHl;
+            nearstP = nearest(h.left, p, nearstP);
+        }
+        if (h.right != null) {
+            if (rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
+                nodesVisited++;
+                if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
+                    nearstP = h.right.p;
+                }
+            }
+            h.right.parent = h;
+            h.right.nodeRect = rHr;
+            nearstP = nearest(h.right, p, nearstP);
+        }
+         if (h.orientation) {
             rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
             rHr = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
             // rHr = new RectHV(h.xCoord,h.nodeRect.ymin(),h.nodeRect.xmax(),h.nodeRect.ymax());
@@ -533,6 +571,25 @@ public class KdTree {
                         nearstP = h.right.p;
                     }
                 }
+            }
+        } */
+        } else if (rHr.contains(p) && (rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
+            // check rHr
+
+            if (h.right != null) {
+                nodesVisited++;
+                System.out.println("Tree size : " + h.N);
+                if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
+                    nearstP = h.right.p;
+                    pointsVisited.add(nearstP);
+                }
+                h.right.parent = h;
+                h.left.parent = h;
+                h.left.nodeRect = rHl;
+                h.right.nodeRect = rHr;
+                nearstP = nearest(h.right, p, nearstP);
+                // nearstP = nearest(h.left, p, nearstP);
+                // floor and ceiling might help
             }
         }
         return nearstP;
@@ -603,16 +660,26 @@ public class KdTree {
         KdTree kdtree = new KdTree();
         String filename = args[0];
         In in = new In(filename);
+        int pointsCounter = 0;
         while (!in.isEmpty()) {
             double x = in.readDouble();
             double y = in.readDouble();
             Point2D p = new Point2D(x, y);
+            pointsCounter++;
             kdtree.insert(p);
         }
+        System.out.println("Tree size : " + kdtree.size());
+        System.out.println("The number of points : " + pointsCounter);
         // kdtree.draw();
-        RectHV r = new RectHV(0.2, 0.14, 0.4, 0.18);
-        System.out.println("Here are the points in the rectangle" + kdtree.range(r));
-        System.out.println("Here is the size of the tree. " + kdtree.size());
+        // RectHV r = new RectHV(0.2, 0.14, 0.4, 0.18);
+        // System.out.println("Here are the points in the rectangle" + kdtree.range(r));
+        // System.out.println("Here is the size of the tree. " + kdtree.size());
+        System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
+        System.out.println("The number of nodes visited is:  " + kdtree.nodesVisited);
+        System.out.println("Here are the points visited to get to the nearest neighbor. ");
+        for (Point2D p : kdtree.pointsVisited) {
+            System.out.println(p);
+        }
     }
 }
 
