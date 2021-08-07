@@ -30,7 +30,6 @@ public class KdTree {
     private int level = 0;
     private BST<Double, Double> intervalSearchTree = new BST();
     private int nodesVisited = 0;
-    // ArrayList<Point2D> pointsVisited = new ArrayList<>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -267,7 +266,7 @@ public class KdTree {
         root.minYInter = 0.0;
         root.maxXInter = 1.0;
         root.maxYInter = 1.0;
-        return contains(root, n, p);
+        return contains(root, n);
     }
 
     private boolean pointIsInsideRectangle(double px, double py, double minx, double miny, double maxx, double maxy) {
@@ -275,7 +274,7 @@ public class KdTree {
         return false;
     }
 
-    private boolean contains(Node h, Node n, Point2D p) {
+    private boolean contains(Node h, Node n) {
         if (h == null) {
             return result;
         }
@@ -295,7 +294,7 @@ public class KdTree {
             if (!pointIsInsideRectangle(n.xCoord, n.yCoord, h.left.minXInter, h.left.minYInter, h.left.maxXInter,
                     h.left.maxYInter) && h.right != null) {
                 h = h.right;
-                contains(h, n, p);
+                contains(h, n);
             }
             /* if (cmp > 0 && !h.left.nodeRect.contains(p)) {
                 h = h.left;
@@ -307,14 +306,14 @@ public class KdTree {
             if (!pointIsInsideRectangle(n.xCoord, n.yCoord, h.right.minXInter, h.right.minYInter,
                     h.right.maxXInter, h.right.maxYInter) && h.left != null) {
                 h = h.left;
-                contains(h, n, p);
+                contains(h, n);
             }
             /*if (cmp <= 0 && !h.right.nodeRect.contains(p)) {
                 h = h.right;
             }*/
         }
-        if (cmp >= 0 && h.left != null) contains(h.left, n, p);
-        if (cmp < 0 && h.right != null) contains(h.right, n, p);
+        if (cmp >= 0 && h.left != null) contains(h.left, n);
+        if (cmp < 0 && h.right != null) contains(h.right, n);
 
         return result;
     }
