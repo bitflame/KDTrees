@@ -33,7 +33,8 @@ public class KdTree {
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
-        Node left, right, parent; // subtrees
+        // Node left, right, parent; // subtrees
+        Node left, right;
         int N; // # nodes in this subtree
         boolean orientation; // 0 means horizontal
         RectHV nodeRect;
@@ -266,6 +267,7 @@ public class KdTree {
         root.minYInter = 0.0;
         root.maxXInter = 1.0;
         root.maxYInter = 1.0;
+        if (!pointIsInsideRectangle(n.yCoord, n.yCoord, 0.0, 0.0, 1.0, 1.0)) return false;
         return contains(root, n);
     }
 
@@ -278,10 +280,12 @@ public class KdTree {
         if (h == null) {
             return result;
         }
+        if (!pointIsInsideRectangle(n.xCoord, n.yCoord, h.minXInter, h.minYInter, h.maxXInter, h.maxYInter) &&
+                h.left == null && h.right == null) return false;
         if (h.xCoord == n.xCoord && h.yCoord == n.yCoord) result = true;
         int cmp = h.compareTo(n);
         n.orientation = !n.orientation; // is the point in the left rect or the right
-        n.parent = h;
+        // n.parent = h;
 
 //        if (h.left != null && cmp > 0 && isInsideRectangle(h.left, n.xCoord, n.yCoord)) contains(h.left, n, p);
 //        else if (h.right != null && cmp <= 0 && isInsideRectangle(h.right, n.xCoord, n.yCoord)) contains(h.right, n, p);
@@ -295,11 +299,11 @@ public class KdTree {
                     h.left.maxYInter) && h.right != null) {
                 h = h.right;
                 contains(h, n);
-            }
-            /* if (cmp > 0 && !h.left.nodeRect.contains(p)) {
+            } else if (pointIsInsideRectangle(n.xCoord, n.yCoord, h.left.minXInter, h.left.minYInter, h.left.maxXInter,
+                    h.left.maxYInter)) {
                 h = h.left;
-            } */
-            // if (cmp > 0 && h.left.nodeRect.contains(p)) contains(h.left, n, p);
+                contains(h, n);
+            }
         }
         if (h.right != null) {
             buildChildRectangle(h, h.right);
@@ -307,10 +311,12 @@ public class KdTree {
                     h.right.maxXInter, h.right.maxYInter) && h.left != null) {
                 h = h.left;
                 contains(h, n);
-            }
-            /*if (cmp <= 0 && !h.right.nodeRect.contains(p)) {
+            } else if (pointIsInsideRectangle(n.xCoord, n.yCoord, h.right.minXInter, h.right.minYInter,
+                    h.right.maxXInter, h.right.maxYInter)) {
                 h = h.right;
-            }*/
+                contains(h, n);
+            }
+
         }
         if (cmp >= 0 && h.left != null) contains(h.left, n);
         if (cmp < 0 && h.right != null) contains(h.right, n);
@@ -407,58 +413,40 @@ public class KdTree {
 
     }
 
-    private void setLeftRectIntervals(Node x) {
-
+    /* private void setLeftRectIntervals(Node x) {
         RectHV left;
-        if (!x.orientation) { // Horizontal node
-            // left = new RectHV(x.parent.minXInter, x.parent.minYInter, x.parent.p.x(), x.parent.maxYInter);
+        if (!x.orientation) {
             x.minXInter = x.parent.minXInter;
             x.minYInter = x.parent.minYInter;
             x.maxXInter = x.parent.maxXInter;
             x.maxYInter = x.parent.yCoord;
-            //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
         } else {
-            // vertical node
-            // left = new RectHV(x.parent.minXInter, x.parent.minYInter, x.parent.maxXInter, x.parent.p.y());
             x.minXInter = x.parent.minXInter;
             x.minYInter = x.parent.minYInter;
             x.maxXInter = x.parent.xCoord;
             x.maxYInter = x.parent.maxYInter;
-            //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
         }
     }
 
     private void setRightRectIntervals(Node x) {
         RectHV right;
-
-        if (!x.orientation) { //
-            // horizontal node
-            // right = new RectHV(x.parent.p.x(), x.parent.minYInter, x.parent.maxXInter, x.parent.maxYInter);
+        if (!x.orientation) {
             x.minXInter = x.parent.minXInter;
             x.minYInter = x.parent.yCoord;
             x.maxXInter = x.parent.maxXInter;
             x.maxYInter = x.parent.maxYInter;
-            //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
         }
         if (x.orientation) {
-            // vertical node
-            // right = new RectHV(x.parent.minXInter, x.parent.p.y(), x.parent.maxXInter, x.parent.maxYInter);
             x.minXInter = x.parent.xCoord;
             x.minYInter = x.parent.minYInter;
             x.maxXInter = x.parent.maxXInter;
             x.maxYInter = x.parent.maxYInter;
-            //intervalSearchTree.put(x.minYInter, x.maxYInter, x.xCoord);
         }
-    }
+    } */
 
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("You can not insert null object" +
                 "into the tree");
-        // Node newNode = new Node(p, 1, false, null);
-        // newNode.maximumX = p.x();
-        // xCoordinates.insert(p.x());
-        // newNode.xCoord = p.x();
-        // newNode.yCoord = p.y();
         level = 0;
         root = insert(root, p);
     }
@@ -529,6 +517,7 @@ public class KdTree {
         nodesVisited++;
         System.out.println("Tree size : " + root.N);
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
+        level = 0;
         return nearest(root, p, nearestNeig);
     }
 
@@ -538,10 +527,10 @@ public class KdTree {
         h.xCoord = h.p.x();
         h.yCoord = h.p.y();
         if (h == null) return nearstP;
-        if (h.parent == null) {
+        if (level == 0) { // if (h.parent == null) {
             rHl = new RectHV(0.0, 0.0, h.xCoord, 1.0);
             rHr = new RectHV(h.xCoord, 0.0, 1.0, 1.0);
-        } else if (h.parent != null) {
+        } else if (level > 0) { // if (h.parent != null) {
             if (!h.orientation) {
                 rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
                 rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
@@ -553,18 +542,20 @@ public class KdTree {
         if (!rHl.contains(p) || !(rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
             if (h.left != null) {
                 h.left.nodeRect = rHl;
-                h.left.parent = h;
+                // h.left.parent = h;
             }
 
             if (h.right != null) {
+                level++;
                 h.right.nodeRect = rHr;
                 h = h.right;
                 nearstP = nearest(h, p, nearstP);
             }
         } else if (!rHr.contains(p) && !(rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
             h.right.nodeRect = rHr;
-            h.right.parent = h;
+            // h.right.parent = h;
             if (h.left != null) {
+                level++;
                 h.left.nodeRect = rHl;
                 h = h.left;
                 nearstP = nearest(h, p, nearstP);
@@ -573,15 +564,16 @@ public class KdTree {
             // check rHl for points
             if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
                 if (h.left != null) {
+                    level++;
                     nodesVisited++;
                     System.out.println("Tree size : " + h.N);
                     if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
                         nearstP = h.left.p;
                         // pointsVisited.add(nearstP);
                     }
-                    h.left.parent = h;
+                    // h.left.parent = h;
                     if (h.right != null) {
-                        h.right.parent = h;
+                        // h.right.parent = h;
                         h.right.nodeRect = rHr;
                     }
                     h.left.nodeRect = rHl;
@@ -589,62 +581,19 @@ public class KdTree {
                     // nearstP = nearest(h.right, p, nearstP);
                 }
             }
-        /*if (h.left != null) {
-            if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
-                nodesVisited++;
-                if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                    nearstP = h.left.p;
-                }
-            }
-            h.left.parent = h;
-            h.left.nodeRect = rHl;
-            nearstP = nearest(h.left, p, nearstP);
-        }
-        if (h.right != null) {
-            if (rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
-                nodesVisited++;
-                if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                    nearstP = h.right.p;
-                }
-            }
-            h.right.parent = h;
-            h.right.nodeRect = rHr;
-            nearstP = nearest(h.right, p, nearstP);
-        }
-         if (h.orientation) {
-            rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
-            rHr = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
-            // rHr = new RectHV(h.xCoord,h.nodeRect.ymin(),h.nodeRect.xmax(),h.nodeRect.ymax());
-            if (h.left != null) {
-                if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
-                    if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                        nearstP = h.left.p;
-                    }
-                }
-                h.left.parent = h;
-                h.left.nodeRect = rHl;
-                nearstP = nearest(h.left, p, nearstP);
-            }
-            if (h.right != null) {
-                if (rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
-                    if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                        nearstP = h.right.p;
-                    }
-                }
-            }
-        } */
         } else if (rHr.contains(p) && (rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
             // check rHr
 
             if (h.right != null) {
+                level++;
                 nodesVisited++;
                 System.out.println("Tree size : " + h.N);
                 if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
                     nearstP = h.right.p;
                     // pointsVisited.add(nearstP);
                 }
-                h.right.parent = h;
-                h.left.parent = h;
+                // h.right.parent = h;
+                // h.left.parent = h;
                 h.left.nodeRect = rHl;
                 h.right.nodeRect = rHr;
                 nearstP = nearest(h.right, p, nearstP);
@@ -693,10 +642,6 @@ public class KdTree {
         }
     }
 
-    private void listParents(Node h) {
-        if (h.parent == null) return;
-        System.out.println(h.parent.xCoord + "" + h.parent.yCoord);
-    }
 
     private void ensureOrder() {
         int h = height(root);
@@ -740,10 +685,10 @@ public class KdTree {
         // System.out.println("Tree size : " + kdtree.size());
         // System.out.println("isEmpty should be false " + kdtree.isEmpty());
         // kdtree.draw();
-        // RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
-        // System.out.println("Here are the points in the rectangle" + kdtree.range(r));
+        RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
+        System.out.println("Here are the points in the rectangle" + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
-        // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
+        System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
         // System.out.println("The number of nodes visited is:  " + kdtree.nodesVisited);
         // System.out.println("Here are the points visited to get to the nearest neighbor. ");
         // for (Point2D p : kdtree.pointsVisited) {
