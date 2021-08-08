@@ -531,10 +531,10 @@ public class KdTree {
             rHl = new RectHV(0.0, 0.0, h.xCoord, 1.0);
             rHr = new RectHV(h.xCoord, 0.0, 1.0, 1.0);
         } else if (level > 0) { // if (h.parent != null) {
-            if (!h.orientation) {
+            if (level % 2 == 0) { // if (!h.orientation) {
                 rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
                 rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
-            } else if (h.orientation) {
+            } else if (level % 2 != 0) { // } else if (h.orientation) {
                 rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
                 rHr = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
             }
@@ -545,7 +545,7 @@ public class KdTree {
                 // h.left.parent = h;
             }
 
-            if (h.right != null) {
+            if (h.right != null && rHr.contains(p)) {
                 level++;
                 h.right.nodeRect = rHr;
                 h = h.right;
