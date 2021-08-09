@@ -44,9 +44,10 @@ public class KdTree {
         Double minYInter = 0.0;
         Double maxYInter = 1.0;
 
-        public Node(Point2D p, int n) {
+        public Node(Point2D p, int n, RectHV rect) {
             this.p = p;
             this.N = n;
+            this.nodeRect = rect;
         }
 
         @Override
@@ -252,31 +253,31 @@ public class KdTree {
         else return x;
     }
 
-    private int rank(Point2D p) {
-        return rank(root, p);
+    private int rank(Node n) {
+        return rank(root, n);
     }
 
-    private int rank(Node x, Point2D p) {
+    private int rank(Node x, Node n) {
         if (x == null) return 0;
-        int cmp = p.compareTo(x.p);
-        if (cmp < 0) return rank(x.left, p);
-        else if (cmp > 0) return 1 + size(x.left) + rank(x.right, p);
+        int cmp = x.compareTo(n);
+        if (cmp < 0) return 1 + size(x.left) + rank(x.right, n);
+        else if (cmp >= 0) return rank(x.left, n);
         else return size(x.left);
     }
 
-    public boolean contains(Point2D p) {
-        if (p.equals(null)) throw new IllegalArgumentException("You have to pass a valid point object");
+    public boolean contains(Point2D point) {
+        result = false;
+        if (point.equals(null)) throw new IllegalArgumentException("You have to pass a valid point object");
         if (isEmpty()) return false;
-        Node n = new Node(p, 1);
-        n.xCoord = p.x();
-        n.yCoord = p.y();
+        Node n = new Node(point, 1, null);
+        n.xCoord = point.x();
+        n.yCoord = point.y();
         if (root.xCoord == n.xCoord && root.yCoord == n.yCoord) return true;
-        // root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
-        root.minXInter = 0.0;
-        root.minYInter = 0.0;
-        root.maxXInter = 1.0;
-        root.maxYInter = 1.0;
-        if (!pointIsInsideRectangle(n.yCoord, n.yCoord, 0.0, 0.0, 1.0, 1.0)) return false;
+        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
+        // root.minXInter = 0.0;
+        // root.minYInter = 0.0;
+        // root.maxXInter = 1.0;
+        // root.maxYInter = 1.0;
         return contains(root, n);
     }
 
@@ -289,10 +290,26 @@ public class KdTree {
         if (h == null) {
             return result;
         }
-        if (!pointIsInsideRectangle(n.xCoord, n.yCoord, h.minXInter, h.minYInter, h.maxXInter, h.maxYInter) &&
-                h.left == null && h.right == null) return false;
-        if (h.xCoord == n.xCoord && h.yCoord == n.yCoord) result = true;
+        // if (!pointIsInsideRectangle(n.xCoord, n.yCoord, h.minXInter, h.minYInter, h.maxXInter, h.maxYInter) && h.left == null && h.right == null) return false;
+         if (h.xCoord == n.xCoord && h.yCoord == n.yCoord) {
+             result = true;
+         } else if (h.left == null && h.right == null) return false;
+        /*if ((h.xCoord == point.x()) && (h.yCoord == point.y())) {
+            result = true;
+        } */
         int cmp = h.compareTo(n);
+        if (h.level % 2 == 0) {
+            if (h.left != null)
+                h.left.nodeRect = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
+            if (h.right != null)
+                h.right.nodeRect = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
+        } else if (h.level % 2 != 0) {
+            if (h.left != null)
+                h.left.nodeRect = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
+            if (h.right != null)
+                h.right.nodeRect = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
+        }
+
         // n.parent = h;
 
 //        if (h.left != null && cmp > 0 && isInsideRectangle(h.left, n.xCoord, n.yCoord)) contains(h.left, n, p);
@@ -302,33 +319,32 @@ public class KdTree {
 //        if (h.left != null && cmp > 0 && n.xCoord < h.left.maximumX) contains(h.left, n, p);
 //        else if (h.right != null && cmp <= 0 && n.xCoord < h.right.maximumX) contains(h.right, n, p);
         if (cmp >= 0 && h.left != null) {
-            buildChildRectangle(h, h.left);
-            if ((!pointIsInsideRectangle(n.xCoord, n.yCoord, h.left.minXInter, h.left.minYInter, h.left.maxXInter,
-                    h.left.maxYInter)) && h.right != null) {
+            // buildChildRectangle(h, h.left);
+            if (!h.left.nodeRect.contains(n.p)) return false;
+           /* if ((!h.left.nodeRect.contains(point)) && h.right != null) {
+                h.nodeRect = h.right.nodeRect;
                 h = h.right;
-                contains(h, n);
-            } else if (pointIsInsideRectangle(n.xCoord, n.yCoord, h.left.minXInter, h.left.minYInter, h.left.maxXInter,
-                    h.left.maxYInter)) {
+                contains(h, point);
+            } else */
+            if (h.left.nodeRect.contains(n.p)) {
                 h = h.left;
-                contains(h, n);
-            }
-        }
-        else if (cmp < 0 && h.right != null) {
-            buildChildRectangle(h, h.right);
-            if ((!pointIsInsideRectangle(n.xCoord, n.yCoord, h.right.minXInter, h.right.minYInter,
-                    h.right.maxXInter, h.right.maxYInter)) && h.left != null) {
-                h = h.left;
-                contains(h, n);
-            } else if (pointIsInsideRectangle(n.xCoord, n.yCoord, h.right.minXInter, h.right.minYInter,
-                    h.right.maxXInter, h.right.maxYInter)) {
-                h = h.right;
                 contains(h, n);
             }
 
+        } else if (cmp < 0 && h.right != null) {
+            // buildChildRectangle(h, h.right);
+            if (!(h.right.nodeRect.contains(n.p))) return false;
+            /*if (!(h.right.nodeRect.contains(point)) && h.left != null) {
+                h = h.left;
+                contains(h, point);
+            } else */
+                if (h.right.nodeRect.contains(n.p)) {
+                h = h.right;
+                contains(h, n);
+            }
         }
         // if (cmp >= 0 && h.left != null) contains(h.left, n);
         // if (cmp < 0 && h.right != null) contains(h.right, n);
-
         return result;
     }
 
@@ -463,7 +479,7 @@ public class KdTree {
      * means pas the point to the private insert() method instead of newNode */
     private Node insert(Node h, Point2D p) {
         if (h == null) {
-            Node n = new Node(p, 1);
+            Node n = new Node(p, 1, null);
             n.xCoord = p.x();
             n.yCoord = p.y();
             h = n;
@@ -509,8 +525,8 @@ public class KdTree {
         if (contains(p)) return p;
         Point2D nearestNeig = root.p;
         // pointsVisited.add(nearestNeig);
-        nodesVisited++;
-        System.out.println("Tree size : " + root.N);
+        // nodesVisited++;
+        // System.out.println("Tree size : " + root.N);
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
         return nearest(root, p, nearestNeig);
     }
@@ -556,8 +572,8 @@ public class KdTree {
             // check rHl for points
             if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
                 if (h.left != null) {
-                    nodesVisited++;
-                    System.out.println("Tree size : " + h.N);
+                    // nodesVisited++;
+                    // System.out.println("Tree size : " + h.N);
                     if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
                         nearstP = h.left.p;
                         // pointsVisited.add(nearstP);
@@ -576,8 +592,8 @@ public class KdTree {
             // check rHr
 
             if (h.right != null) {
-                nodesVisited++;
-                System.out.println("Tree size : " + h.N);
+                // nodesVisited++;
+                // System.out.println("Tree size : " + h.N);
                 if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
                     nearstP = h.right.p;
                     // pointsVisited.add(nearstP);
@@ -690,7 +706,7 @@ public class KdTree {
         System.out.println("It should be true: " + kdtree.contains(new Point2D(0.451070, 0.997600)));
         System.out.println("It should be true: " + kdtree.contains(new Point2D(0.494974, 0.000025)));
         System.out.println("It should be true: " + kdtree.contains(new Point2D(0.052657, 0.723349)));
-
+        System.out.println("It should be false: " + kdtree.contains(new Point2D(0.137895, 0.723349)));
     }
 }
 
