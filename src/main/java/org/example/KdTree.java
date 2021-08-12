@@ -360,6 +360,7 @@ public class KdTree {
         points = new ArrayList<>();
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
+        else if (isEmpty()) return null;
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
         return range(root, rect);
     }
@@ -378,6 +379,7 @@ public class KdTree {
             if (rectHV.contains(temp) && (!points.contains(temp))) {
                 points.add(temp);
             }
+
             buildChildRectangle(h, h.left, h.right);
             if (rectHV.intersects(h.nodeRect)) {
                 range(h.left, rectHV);
@@ -743,8 +745,10 @@ public class KdTree {
         //RectHV r = new RectHV(0.25, 0.0, 0.625, 0.75);
         //RectHV r = new RectHV(0.39, 0.03, 0.72, 0.88);
         // RectHV r = new RectHV(0.175, 0.281, 0.742, 0.97);distinct points rectangle
-         RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
+        //RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
+        // RectHV r = new RectHV(0.0537109375, 0.3154296875, 0.8876953125, 0.7919921875);
+        RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.5950927734375, 0.2689208984375);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
