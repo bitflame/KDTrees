@@ -23,26 +23,30 @@ class PointInfoAggregator implements ArgumentsAggregator {
                 arguments.getDouble(1));
     }
 }
-class RectangleInfoAggregator implements  ArgumentsAggregator {
+
+class RectangleInfoAggregator implements ArgumentsAggregator {
     @Override
     public RectHV aggregateArguments(ArgumentsAccessor arguments, ParameterContext context) {
         return new RectHV(arguments.getDouble(0), arguments.getDouble(1), arguments.getDouble(2),
                 arguments.getDouble(3));
     }
 }
+
 class KdTreeParameterizedTest {
 
     KdTree kt = new KdTree();
 
+    @Disabled
     @BeforeEach
+    @ParameterizedTest
     void init() {
-        /* In in = new In("src/main/resources/troubleshoot.txt");
+        In in = new In();
         while (!in.isEmpty()) {
             double x = in.readDouble();
             double y = in.readDouble();
             Point2D p = new Point2D(x, y);
             kt.insert(p);
-        } */
+        }
         double x = StdRandom.uniform(0.0, 1.0);
         double y = StdRandom.uniform(0.0, 1.0);
         Point2D p = new Point2D(x, y);
@@ -57,6 +61,7 @@ class KdTreeParameterizedTest {
         Assertions.assertFalse(kt.contains(point));
     }
 
+    @Disabled
     @ParameterizedTest
     @CsvSource({"0.0000000,0.000000", "0.0000000,0.500000", "0.5000000,0.000000", "0.6100000,0.300000"})
     void containsShouldWork(double x, double y) {
@@ -66,7 +71,7 @@ class KdTreeParameterizedTest {
 
     /* This is not exactly what I wanted to do, but it is a good example that I can follow as a
      * reference */
-
+    @Disabled
     @ParameterizedTest
     @CsvSource({"0.5,0.25", "0.0,0.0", "0.5,0.0", "0.5,0.0", "0.25,0.0", "0.0,1.0", "1.0,0.5",
             "1.0,0.5", "0.25,0.0", "0.0,0.25", "0.25,0.0", "0.25,0.5"})
@@ -76,9 +81,18 @@ class KdTreeParameterizedTest {
         assertFalse(kt.contains(queryPoint));
         assertFalse(queryPoint.equals(kt.nearest(queryPoint)));
     }
+
+    @CsvFileSource(resources = "/distinctpoints.txt", delimiter = ' ')
     @ParameterizedTest
     @CsvSource({".01,0.1,0.4,0.6"})
     void range(@AggregateWith(RectangleInfoAggregator.class) RectHV r) {
+        In in = new In();
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            kt.insert(p);
+        }
         kt.range(r);
     }
 }
