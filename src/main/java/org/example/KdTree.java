@@ -319,82 +319,29 @@ public class KdTree {
         if (t != null) return t;
         else return x;
     }
-
     private boolean contains(Node h, Node n) {
+        /*here is what I forgot to do and need to work on tomorrow. See if the rect intersects with the node's rectangle,
+        * and if it does, only then check to see if it contains the node's point. If not, more on to the other nodes
+        * rectangles. You can use the enumerator to go through the tree. I do not think you are going to need the sweep
+        * line algorithm for it, but if you do, you know how to do it. You also do not need to go through the tree recursively
+        * it seems. It seems from the last feedback; it stated that you should have looked at ABCD I believe. One after
+        * another. In a row. But check it again, and there are a number of strategies that you can use to speed it up,
+        * but I doubt you will need them.*/
         if (h == null) {
             return result;
         }
-        // if (!pointIsInsideRectangle(n.xCoord, n.yCoord, h.minXInter, h.minYInter, h.maxXInter, h.maxYInter) && h.left == null && h.right == null) return false;
-         /*if (h.xCoord == n.xCoord && h.yCoord == n.yCoord) {
-             result = true;
-         } else if (h.left == null && h.right == null) return false;*/
-
-        /*if ((h.xCoord == point.x()) && (h.yCoord == point.y())) {
-            result = true;
-        } */
         int cmp = h.compareTo(n);
-        /*if (h.level % 2 == 0) {
-            if (h.left != null)
-                h.left.nodeRect = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
-            if (h.right != null)
-                h.right.nodeRect = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
-        } else if (h.level % 2 != 0) {
-            if (h.left != null)
-                h.left.nodeRect = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
-            if (h.right != null)
-                h.right.nodeRect = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
-        }
-*/
-        // n.parent = h;
-
-//        if (h.left != null && cmp > 0 && isInsideRectangle(h.left, n.xCoord, n.yCoord)) contains(h.left, n, p);
-//        else if (h.right != null && cmp <= 0 && isInsideRectangle(h.right, n.xCoord, n.yCoord)) contains(h.right, n, p);
-//        if (h.left != null && cmp > 0 && h.left.nodeRect.contains(p) && n.xCoord < h.left.maximumX) contains(h.left, n, p);
-//        else if (h.right != null && cmp <= 0 && h.right.nodeRect.contains(p) && n.xCoord < h.right.maximumX) contains(h.right, n, p);
-//        if (h.left != null && cmp > 0 && n.xCoord < h.left.maximumX) contains(h.left, n, p);
-//        else if (h.right != null && cmp <= 0 && n.xCoord < h.right.maximumX) contains(h.right, n, p);
         if (cmp > 0 && h.left != null && h.left.maximX < n.xCoord) {
-            // buildChildRectangle(h, h.left);
-            /*if (h.level%2==0){
-                h.left.nodeRect = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
-            } else if (h.level%2!=0){
-                h.left.nodeRect = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
-            }*/
-            //if (!h.left.nodeRect.contains(n.p)) return false;
-           /* if ((!h.left.nodeRect.contains(point)) && h.right != null) {
-                h.nodeRect = h.right.nodeRect;
-                h = h.right;
-                contains(h, point);
-            } else */
-            //if (h.left.nodeRect.contains(n.p)) {
-
             h = h.left;
             if (h.p.equals(n.p)) return result = true;
             else contains(h, n);
-            //}
-
         } else if (cmp < 0 && h.right != null && h.right.maximX < n.xCoord) {
-            // buildChildRectangle(h, h.right);
-            /*if (h.level%2==0){
-                h.right.nodeRect = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
-            } else if (h.level%2!=0){
-                h.right.nodeRect = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
-            }*/
-            //if (!(h.right.nodeRect.contains(n.p))) return false;
-            /*if (!(h.right.nodeRect.contains(point)) && h.left != null) {
-                h = h.left;
-                contains(h, point);
-            } else */
-            //if (h.right.nodeRect.contains(n.p)) {
 
             h = h.right;
             if (h.p.equals(n.p)) return result = true;
             else contains(h, n);
             //}
         }
-        // if (cmp >= 0 && h.left != null) contains(h.left, n);
-        // if (cmp < 0 && h.right != null) contains(h.right, n);
-
         if (h.p.equals(n.p)) result = true;
         else if (h.left == null && h.right == null) return false;
         return result;
@@ -419,34 +366,42 @@ public class KdTree {
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
         // does the rectangle contain the root?
-        return range(root, rect);
+        double rxmin = rect.xmin();
+        double rymin = rect.ymin();
+        double rxmax = rect.xmax();
+        double rymax = rect.ymax();
+        return range(root, rxmin, rymin, rxmax, rymax);
     }
 
-    private Iterable<Point2D> range(Node h, RectHV rect) {
+    private Iterable<Point2D> range(Node h, double rectXmin, double rectYmin, double rectXmax, double rectYmax) {
         /* check the subtrees. remember you have to check both sides if rect intersects the line through the point.
          * Is the horizontal node's line between rectangle's minx and maxx or a vertical node's line between the
          * rectangle's miny and maxy */
         if (h == null) return points;
-        if (rect.contains(h.p)) points.add(h.p);
+        // if (rect.contains(h.p) && (!points.contains(h.p))) points.add(h.p);
+
         //if ((!h.orientation && (rect.xmin() < h.xCoord && rect.xmax() > h.xCoord)) ||
         //((h.orientation) && (rect.ymin() < h.yCoord && rect.ymax() > h.yCoord))) {
         // check both sides of the tree
         // range(h.left, rect);
         // range(h.right, rect);
         // } else
-        if (((h.level % 2 == 0) && (rect.xmax() < h.xCoord)) || ((h.level % 2 != 0) && (rect.ymax() < h.yCoord))) {
+        if (((h.level % 2 == 0) && (rectXmax < h.xCoord)) || ((h.level % 2 != 0) && (rectYmax < h.yCoord))) {
             // It is only on the left/bottom side so only check the left/bottom side of the tree
             // range(h.left, rect);
-            if (h.left != null) h = h.left;
+            // if (h.left != null) h = h.left;
+            if (h.left != null) range(h.left, rectXmin, rectYmin, rectXmax, rectYmax);
             // range(h,rect);
-        } else if (((h.level % 2 == 0) && (rect.xmin() > h.xCoord)) || (((h.level % 2 != 0) && (rect.ymin() > h.yCoord)))) {
+        } else if (((h.level % 2 == 0) && (rectXmin >= h.xCoord)) || (((h.level % 2 != 0) && (rectYmin >= h.yCoord)))) {
             // It is only on the right/top side so only check the right/top
             // range(h.right, rect);
-            if (h.right != null) h = h.right;
+            if (h.right != null) range(h.right, rectXmin, rectYmin, rectXmax, rectYmax);
             // range(h,rect);
         }
-        range(h.left, rect);
-        range(h.right, rect);
+        if (h.xCoord >= rectXmin && h.xCoord <= rectXmax && h.yCoord >= rectYmin && h.yCoord <= rectYmax &&
+                (!points.contains(h.p))) points.add(h.p);
+        range(h.left, rectXmin, rectYmin, rectXmax, rectYmax);
+        range(h.right, rectXmin, rectYmin, rectXmax, rectYmax);
         return points;
     }
 
@@ -759,14 +714,17 @@ public class KdTree {
             kdtree.size();
             kdtree.isEmpty();
         }
-        System.out.println("put 1000000 nodes in the tree. ");
+        // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
         // System.out.println("It took " + time + "to insert and run size() and isEmpty() for 1M nodes. ");
         // System.out.println("Tree size : " + kdtree.size());
         // System.out.println("isEmpty should be false " + kdtree.isEmpty());
         // kdtree.draw();
         // RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
-        // System.out.println("Here are the points in the rectangle" + kdtree.range(r));
+        // RectHV r = new RectHV(0.675, 0.1875, 0.9375, 0.5);
+        //RectHV r = new RectHV(0.25, 0.0, 0.625, 0.75);
+        RectHV r = new RectHV(0.39, 0.03, 0.72, 0.88);
+        System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
         // System.out.println("The nearest point should be 0.052657, 0.723349: " + kdtree.nearest(new Point2D(0.052657, 0.723340)));
