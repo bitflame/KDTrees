@@ -7,6 +7,36 @@ import java.util.ArrayList;
 
 
 public class KdTree {
+    private class IntervalST<Key extends Comparable<Key>, Value> {
+        private void put(Key lo, Key hi, Value val) {
+
+        }
+
+        private Value get(Key lo, Key hi) {
+
+        }
+
+        void delete(Key lo, Key hi) {
+
+        }
+
+        Iterable<Value> intersects(Key lo, Key hi) {
+
+        }
+
+        private class Node {
+            Key lo;
+            Key hi;
+            Value val;
+
+            public void Node(Key lo, Key hi, Value val) {
+                this.lo = lo;
+                this.hi = hi;
+                this.val = val;
+            }
+        }
+    }
+
     /*
     todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
      for the length and 4 bytes for padding plus the memory needed to store the values. An array of objects uses 24 bytes
@@ -23,7 +53,6 @@ public class KdTree {
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
-    private BST<Double, Double> intSearchTree = new BST<>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -383,23 +412,24 @@ public class KdTree {
         // if (rect.contains(h.p) && (!points.contains(h.p))) points.add(h.p);
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
-            if (currentX == h.minXInter) intSearchTree.put(h.minYInter, h.maxYInter);
-            if (currentX == h.maxXInter) intSearchTree.delete(h.minYInter);
+
+            //if (currentX == h.minXInter) intSearchTree.put(h.minYInter, h.maxYInter);
+            //if (currentX == h.maxXInter) intSearchTree.delete(h.minYInter);
             if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
                 /* rectHV give the xmin and xmax that I need to check, and the intSearchTree gives different
                  * minY and maxYs for the areas. There are of course likely more than one intersecting rectangles */
-                for (Double d : intSearchTree.keys()) {
+                //for (Double d : intSearchTree.keys()) {
                     /* Now I have miny, and maxy for this coordinate. I may need to change rank to take Point2D, then
                     use it to get the rank of high and low, and then
                     * use select() or get() to get any points within these boundaries */
-                    Point2D low = new Point2D(currentX, d);
-                    select(rank(low));// this should give the lower point in my tree
-                    Point2D high = new Point2D(currentX, intSearchTree.get(d));
-                    select(rank(high));// this is the higher point in my tree
-                    for (Point2D p : keys(select(rank(low)).p, select(rank(high)).p)) {
-                        if (!points.contains(p)) points.add(p);
-                    }
-                }
+                //Point2D low = new Point2D(currentX, d);
+                //select(rank(low));// this should give the lower point in my tree
+                //Point2D high = new Point2D(currentX, intSearchTree.get(d));
+                //select(rank(high));// this is the higher point in my tree
+                //for (Point2D p : keys(select(rank(low)).p, select(rank(high)).p)) {
+                //  if (!points.contains(p)) points.add(p);
+                //}
+                //}
             }
         }
 
@@ -764,6 +794,8 @@ public class KdTree {
             kdtree.size();
             kdtree.isEmpty();
         }
+        RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.5950927734375, 0.2689208984375);
+        System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
         // System.out.println("It took " + time + "to insert and run size() and isEmpty() for 1M nodes. ");
@@ -778,8 +810,7 @@ public class KdTree {
         //RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
         // RectHV r = new RectHV(0.0537109375, 0.3154296875, 0.8876953125, 0.7919921875);
-        RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.5950927734375, 0.2689208984375);
-        System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
+
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
         // System.out.println("The nearest point should be 0.052657, 0.723349: " + kdtree.nearest(new Point2D(0.052657, 0.723340)));
