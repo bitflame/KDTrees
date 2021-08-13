@@ -7,33 +7,112 @@ import java.util.ArrayList;
 
 
 public class KdTree {
-    private class IntervalST<Key extends Comparable<Key>, Value> {
-        private void put(Key lo, Key hi, Value val) {
+    private class IntervalST<Key extends Comparable<Key>, Value extends Comparable<Value>> {
+        Node root = null;
+        ArrayList<Value> intersections = new ArrayList<>();
 
+        private void put(Key lo, Key hi, Value val) {
+            Node node = new Node(lo, hi, val);
+            root = put(root, lo, hi, val);
+        }
+
+        /* todo: test points with the same x coordinate and different y coordinates and make sure they are added to this
+           tree . Make sure to add the code to update branchMax */
+        private Node put(Node x, Key lo, Key hi, Value val) {
+            if (x == null) {
+                return new Node(lo, hi, val);
+            }
+            int cmp = lo.compareTo(x.lo);
+            if (cmp < 1) {
+                x.left = put(x.left, lo, hi, val);
+            }
+            if (cmp > 1) {
+                x.right = put(x.right, lo, hi, val);
+            }
+            /* else node.value=value given that for the same x-coordinate i.e. value I may have different y values I did
+            this differently */
+            else x.val = val;
+            // todo - may need to add the code for size node.N=size(node.left) + size(node.right) + 1
+            return x;
         }
 
         private Value get(Key lo, Key hi) {
+            return get(root, lo, hi);
+        }
+
+        private Value get(Node x, Key lo, Key hi) {
+            if (x == null) return null;
+            int cmp = lo.compareTo(x.lo);
+            if (cmp < 0) return get(x.left, lo, hi);
+            else if (cmp > 0) return get(x.right, lo, hi);
+            return x.val;
 
         }
 
         void delete(Key lo, Key hi) {
+            root = delete(root, lo, hi);
+        }
 
+        private Node delete(Node x, Key lo, Key hi) {
+            if (x == null) return null;
+            int cmp = lo.compareTo(x.lo);
+            if (cmp < 0) x.left = delete(x.left, lo, hi);
+            else if (cmp > 0) x.right = delete(x.right, lo, hi);
+            else {
+                if (x.right == null) return x.left;
+                if (x.left == null) return x.right;
+                Node t = x;
+                x = min(t.right);//todo - write the min()
+                x.right = deleteMin(t.right);
+                x.left = t.left;
+            }
+            // x.N = size(x.left) + size(x.right) + 1;
+            return x;
+        }
+
+        public void deleteMin() {
+            root = deleteMin(root);
+        }
+
+        private Node deleteMin(Node x) {
+            if (x.left == null) return x.right;
+            x.left = deleteMin(x.left);
+            // x.N = size(x.left) + size(x.right) + 1;
+            return x;
+        }
+
+        public Key min() {
+            return min(root).lo;
+        }
+
+        private Node min(Node x) {
+            if (x.left == null) return x;
+            return min(x.left);
         }
 
         Iterable<Value> intersects(Key lo, Key hi) {
+            return intersects(root, lo, hi);
+        }
 
+        Iterable<Value> intersects(Node x, Key lo, Key hi) {
+int cmp
         }
 
         private class Node {
             Key lo;
             Key hi;
+            Value branchMax;
             Value val;
+            private Node left;
+            private Node right;
 
-            public void Node(Key lo, Key hi, Value val) {
+            public Node(Key lo, Key hi, Value val) {
                 this.lo = lo;
                 this.hi = hi;
                 this.val = val;
+                this.branchMax=val;
             }
+
         }
     }
 
