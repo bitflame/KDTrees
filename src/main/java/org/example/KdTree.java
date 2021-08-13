@@ -23,6 +23,7 @@ public class KdTree {
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
+    private BST<Double, Double> intSearchTree = new BST<>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -248,15 +249,15 @@ public class KdTree {
         else return x;
     }
 
-    private int rank(Node n) {
-        return rank(root, n);
+    private int rank(Point2D pnt) {
+        return rank(root, pnt);
     }
 
-    private int rank(Node x, Node n) {
+    private int rank(Node x, Point2D point) {
         if (x == null) return 0;
-        int cmp = x.compareTo(n);
-        if (cmp < 0) return 1 + size(x.left) + rank(x.right, n);
-        else if (cmp >= 0) return rank(x.left, n);
+        int cmp = x.p.compareTo(point);
+        if (cmp < 0) return 1 + size(x.left) + rank(x.right, point);
+        else if (cmp >= 0) return rank(x.left, point);
         else return size(x.left);
     }
 
@@ -357,6 +358,8 @@ public class KdTree {
                 "object. ");
         else if (isEmpty()) return null;
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
+
+
         return range(root, rect);
     }
 
@@ -372,9 +375,35 @@ public class KdTree {
         if (h == null) {
             return points;
         }
+        double currentX;
+        h.minXInter = h.nodeRect.xmin();
+        h.minYInter = h.nodeRect.ymin();
+        h.maxXInter = h.nodeRect.xmax();
+        h.maxYInter = h.nodeRect.ymax();
         // if (rect.contains(h.p) && (!points.contains(h.p))) points.add(h.p);
+        while (!xCoordinates.isEmpty()) {
+            currentX = xCoordinates.delMin();
+            if (currentX == h.minXInter) intSearchTree.put(h.minYInter, h.maxYInter);
+            if (currentX == h.maxXInter) intSearchTree.delete(h.minYInter);
+            if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
+                /* rectHV give the xmin and xmax that I need to check, and the intSearchTree gives different
+                 * minY and maxYs for the areas. There are of course likely more than one intersecting rectangles */
+                for (Double d : intSearchTree.keys()) {
+                    /* Now I have miny, and maxy for this coordinate. I may need to change rank to take Point2D, then
+                    use it to get the rank of high and low, and then
+                    * use select() or get() to get any points within these boundaries */
+                    Point2D low = new Point2D(currentX, d);
+                    select(rank(low));// this should give the lower point in my tree
+                    Point2D high = new Point2D(currentX, intSearchTree.get(d));
+                    select(rank(high));// this is the higher point in my tree
+                    for (Point2D p : keys(select(rank(low)).p, select(rank(high)).p)) {
+                        if (!points.contains(p)) points.add(p);
+                    }
+                }
+            }
+        }
 
-        else {
+        /*else{
             Point2D temp = h.p;
             if (rectHV.contains(temp) && (!points.contains(temp))) {
                 points.add(temp);
@@ -394,7 +423,7 @@ public class KdTree {
                 if ((h.left != null) && rectHV.intersects(h.left.nodeRect)) range(h.left, rectHV);
                 if ((h.right != null) && rectHV.intersects(h.right.nodeRect)) range(h.right, rectHV);
             }
-        }
+        }*/
 
         //if ((!h.orientation && (rect.xmin() < h.xCoord && rect.xmax() > h.xCoord)) ||
         //((h.orientation) && (rect.ymin() < h.yCoord && rect.ymax() > h.yCoord))) {
