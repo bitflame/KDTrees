@@ -1,11 +1,6 @@
 package org.example;
 
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.Queue;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.*;
 
 
 import java.util.ArrayList;
@@ -24,12 +19,9 @@ public class KdTree {
     private Queue<Point2D> queue = new Queue<Point2D>();
     private Queue<Node> q = new Queue<>();
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
-
+    private MinPQ<Double> xCoordinates = new MinPQ<>();
     private boolean result = false;
     // private int level = 0;
-    Double x = 0.50347900390626;
-    Double y = 0.2066802978515626;
-    Point2D target = new Point2D(x, y);
     private int nodesVisited = 0;
 
     private static class Node implements Comparable<Node> {
@@ -370,10 +362,10 @@ public class KdTree {
 
     private Iterable<Point2D> range(Node h, RectHV rectHV) {
         /*start from minimum x to maximum and add the ymin-ymax interval to a BST. When you get to the rectHV's minx, do
-        * a range search in BST for all the intersecting y coordinates until you get to the rectHV's maxx. Do not forget
-        * to remove the rectangles once sweep-line passes the rectangle. So add when you get to the minx, and remove when
-        * you get to maxx of the data. Do a range search when you get to the minx of rectHV and continue until you get to
-        * the rectHV's maxx */
+         * a range search in BST for all the intersecting y coordinates until you get to the rectHV's maxx. Do not forget
+         * to remove the rectangles once sweep-line passes the rectangle. So add when you get to the minx, and remove when
+         * you get to maxx of the data. Do a range search when you get to the minx of rectHV and continue until you get to
+         * the rectHV's maxx */
         /* check the subtrees. remember you have to check both sides if rect intersects the line through the point.
          * Is the horizontal node's line between rectangle's minx and maxx or a vertical node's line between the
          * rectangle's miny and maxy */
@@ -517,6 +509,7 @@ public class KdTree {
         if (h == null) {
             Node n = new Node(p, 1, null);
             n.xCoord = p.x();
+            xCoordinates.insert(n.xCoord);
             n.yCoord = p.y();
             h = n;
             return h;
