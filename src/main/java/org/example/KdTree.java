@@ -150,7 +150,7 @@ public class KdTree {
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
-    private IntervalST<Double, Double> ist = new IntervalST<Double, Double>();
+    private IntervalST<Double, Point2D> ist = new IntervalST<Double, Point2D>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -421,21 +421,25 @@ public class KdTree {
                 currentX = xCoordinates.delMin();
                 // how do I go from one node to the next?
                 if (currentX >= select(i).minXInter) {
-                    ist.put(h.nodeRect.ymin(), h.nodeRect.ymax(), (h.nodeRect.ymax() - h.nodeRect.ymin()));
+                    ist.put(h.nodeRect.ymin(), h.nodeRect.ymax(), h.p);
                 }
                 if (currentX >= select(i).maxXInter) {
                     ist.delete(h.nodeRect.ymin(), h.nodeRect.ymax());
                 }
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                    for (Double d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-                         /* Almost there. I have minx, maxx, and intersects should return miny and maxy that intersects
-                        with rectHV.ymin(), rectHV.ymax(). I should then get all the points in that rectangle */
-                        Point2D loPnt = new Point2D(currentX, rectHV.ymin());
-                        Point2D hiPnt = new Point2D(currentX, rectHV.ymin() + d);
-                        StdOut.println(":" + keys(loPnt, hiPnt));
-                        for (Point2D p : keys(loPnt, hiPnt)) {
-                            points.add(p);
-                        }
+                    for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                        /* Almost there. I have minx, maxx, and intersects should return miny and maxy that intersects
+                        with rectHV.ymin(), rectHV.ymax(). I should then get all the points in that rectangle. The other
+                        possibility is to just see if the point associated with the intersecting rectangle is within
+                        rectHV. i.e. rectHV.contains() it. I don't see how off the top of my head. I gotta think about
+                         it */
+//                        Point2D loPnt = new Point2D(currentX, rectHV.ymin());
+//                        Point2D hiPnt = new Point2D(currentX, rectHV.ymin() + d);
+//                        StdOut.println(":" + keys(loPnt, hiPnt));
+//                        for (Point2D p : keys(loPnt, hiPnt)) {
+//                            points.add(p);
+//                        }
+                        points.add(point2d);
                     }
                 }
             }
