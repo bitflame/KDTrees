@@ -26,7 +26,7 @@ public class KdTree {
             }
             int cmp = lo.compareTo(x.lo);
             if (cmp < 1) {
-                if (x.left.branchMax.compareTo(hi) < 0) {
+                if (x.left != null && x.left.branchMax.compareTo(hi) < 0) {
                     x.left.branchMax = hi;
                 }
                 x.left = put(x.left, lo, hi, val);
@@ -407,14 +407,36 @@ public class KdTree {
         h.minYInter = h.nodeRect.ymin();
         h.maxXInter = h.nodeRect.xmax();
         h.maxYInter = h.nodeRect.ymax();
-        while (!xCoordinates.isEmpty()) {
-            currentX = xCoordinates.delMin();
-            ist.put(h.nodeRect.ymin(), h.nodeRect.ymax(), currentX);// either one of these will do depending on how ...
-            ist.put(h.minYInter, h.maxYInter, currentX);// you build the rectangles
-            if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-
-                for (Double d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-                    // I may have to fiddle with what intersects returns to get it right and or make is more accurate
+        for (Node n : keys()) {
+            buildChildRectangle(n, n.left, n.right);
+        }
+        /* put all the rectangles in , and build the IntervalST first, then look for intersections as you take out the
+        x-coordinates in other words do a range search for that x coordinate and any y coordinate from 0.0 to 1.0 or
+        just rectHV.ymin() to rectHV.ymax() */
+        System.out.println("Here is what selecting from 0 to size() of the tree would give you.");
+        for (int i = 0; i < size(); i++) {
+            // System.out.println(select(i).p);
+            // It gives the points in increasing rank in the tree which is what I want:-)
+            while (!xCoordinates.isEmpty()) {
+                currentX = xCoordinates.delMin();
+                // how do I go from one node to the next?
+                if (currentX >= select(i).minXInter) {
+                    ist.put(h.nodeRect.ymin(), h.nodeRect.ymax(), (h.nodeRect.ymax() - h.nodeRect.ymin()));
+                }
+                if (currentX >= select(i).maxXInter) {
+                    ist.delete(h.nodeRect.ymin(), h.nodeRect.ymax());
+                }
+                if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
+                    for (Double d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                        // Do a range search for all the points at currentX and any y value within the intersecting
+                        // interval
+                        Point2D loPnt = new Point2D(currentX, rectHV.ymin());
+                        Point2D hiPnt = new Point2D(currentX, rectHV.ymin() + d);
+                        StdOut.println(":" + keys(loPnt, hiPnt));
+                        for (Point2D p : keys(loPnt, hiPnt)) {
+                            points.add(p);
+                        }
+                    }
                 }
             }
         }
@@ -733,7 +755,8 @@ public class KdTree {
             kdtree.size();
             kdtree.isEmpty();
         }
-        RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.5950927734375, 0.2689208984375);
+        RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
+        // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.5950927734375, 0.2689208984375);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
@@ -741,7 +764,6 @@ public class KdTree {
         // System.out.println("Tree size : " + kdtree.size());
         // System.out.println("isEmpty should be false " + kdtree.isEmpty());
         // kdtree.draw();
-        // RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
         // RectHV r = new RectHV(0.675, 0.1875, 0.9375, 0.5);
         //RectHV r = new RectHV(0.25, 0.0, 0.625, 0.75);
         //RectHV r = new RectHV(0.39, 0.03, 0.72, 0.88);
