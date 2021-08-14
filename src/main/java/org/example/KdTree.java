@@ -4,10 +4,12 @@ import edu.princeton.cs.algs4.*;
 
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 
 public class KdTree {
-    private class IntervalST<Key extends Comparable<Key>, Value extends Comparable<Value>> {
+    private class IntervalST<Key extends Comparable<Key>, Value> {
         Node root = null;
         ArrayList<Value> intersections = new ArrayList<>();
 
@@ -24,15 +26,21 @@ public class KdTree {
             }
             int cmp = lo.compareTo(x.lo);
             if (cmp < 1) {
+                if (x.left.branchMax.compareTo(hi) < 0) {
+                    x.left.branchMax = hi;
+                }
                 x.left = put(x.left, lo, hi, val);
             }
             if (cmp > 1) {
+                if (x.right.branchMax.compareTo(hi) < 0) {
+                    x.right.branchMax = hi;
+                }
                 x.right = put(x.right, lo, hi, val);
             }
             /* else node.value=value given that for the same x-coordinate i.e. value I may have different y values I did
             this differently */
             else x.val = val;
-            // todo - may need to add the code for size node.N=size(node.left) + size(node.right) + 1
+            // todo - may need to add the code for size x.N=size(node.left) + size(node.right) + 1
             return x;
         }
 
@@ -95,13 +103,24 @@ public class KdTree {
         }
 
         Iterable<Value> intersects(Node x, Key lo, Key hi) {
-int cmp
+            while (x != null) {
+                // if x lo is larger than lo and less than hi
+                if (x.lo.compareTo(lo) > 0 && x.lo.compareTo(hi) < 0) intersections.add(x.val);
+                    // or if x hi is less than hi and more than lo
+                else if (x.hi.compareTo(hi) < 0 && x.hi.compareTo(lo) > 0 && (!intersections.contains(x.val)))
+                    intersections.add(x.val);
+                else if (x.left == null) x = x.right;
+                else if (x.left.branchMax.compareTo(lo) < 0) x = x.right;
+                else x = x.left;
+            }
+            return intersections;
         }
 
         private class Node {
+
             Key lo;
             Key hi;
-            Value branchMax;
+            Key branchMax;
             Value val;
             private Node left;
             private Node right;
@@ -110,9 +129,8 @@ int cmp
                 this.lo = lo;
                 this.hi = hi;
                 this.val = val;
-                this.branchMax=val;
+                this.branchMax = hi;
             }
-
         }
     }
 
@@ -132,6 +150,7 @@ int cmp
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
+    private IntervalST<Double, Double> ist = new IntervalST<Double, Double>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -156,47 +175,6 @@ int cmp
 
         @Override
         public int compareTo(Node h) {
-            /*double thisX = this.p.x();
-            double thisY = this.p.y();
-            double hX = h.p.x();
-            double hY = h.p.y();
-            if (!this.orientation) {
-                if (thisX < hX) {
-                    return -1;
-                }
-                if (thisX > hX) {
-                    return 1;
-                }
-            }
-            if (this.orientation) {
-                if (thisY < hY) {
-                    return -1;
-                }
-                if (thisY > hY) {
-                    return 1;
-                }
-            }
-            return 0;
-        }*/
-            // cleaned up redundant caches
-            /*if (!this.orientation) {
-                if (this.xCoord == h.xCoord && this.yCoord == h.yCoord) return 0;
-                if (this.xCoord <= h.xCoord) {
-                    return -1;
-                }
-                if (this.xCoord > h.xCoord) {
-                    return 1;
-                }
-            }
-            if (this.orientation) {
-                if (this.yCoord <= h.yCoord) {
-                    return -1;
-                }
-                if (this.yCoord > h.yCoord) {
-                    return 1;
-                }
-            }
-            return 0;*/
             if (this.xCoord == h.xCoord && this.yCoord == h.yCoord) return 0;
             if (this.level % 2 == 0) {
                 if (this.xCoord <= h.xCoord) {
@@ -240,19 +218,6 @@ int cmp
             StdDraw.line(h.xCoord, h.minYInter, h.xCoord, h.maxYInter);
             // if h is horizontal draw h's rectangle
             StdDraw.setPenRadius(0.005);
-            // StdDraw.setPenColor(Color.MAGENTA);
-            // drawRectangle(h);
-            /*
-            StdDraw.rectangle((h.maxXInter - h.minXInter) / 2, (h.maxYInter - h.minYInter) / 2,
-                    (h.maxXInter - h.minXInter) / 2, (h.maxYInter - h.minYInter) / 2);
-            if (h.left != null) {
-                tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), h.xCoord, rectHV.ymax());
-                draw(h.left, tempRect);
-            }
-            if (h.right != null) {
-                tempRect = new RectHV(h.xCoord, rectHV.ymin(), rectHV.xmax(), rectHV.ymax());
-                draw(h.right, tempRect);
-            }*/
         } else if (h.level % 2 != 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.012);
@@ -263,22 +228,7 @@ int cmp
             StdDraw.setPenRadius(0.003);
             StdDraw.setPenColor(StdDraw.BLUE);
             StdDraw.line(h.minXInter, h.yCoord, h.maxXInter, h.yCoord);
-            // or if h is vertical draw h's rectangle
             StdDraw.setPenRadius(0.005);
-            // StdDraw.setPenColor(Color.MAGENTA);
-            // drawRectangle(h);
-            /*
-            StdDraw.rectangle((h.maxXInter - h.minXInter) / 2, (h.maxYInter - h.minYInter) / 2,
-                    (h.maxYInter - h.minYInter) / 2,(h.maxXInter - h.minXInter) / 2);
-            if (h.left != null) {
-                // the sub rectangles are different depending on parent axis orientation
-                tempRect = new RectHV(rectHV.xmin(), rectHV.ymin(), rectHV.xmax(), h.yCoord);
-                draw(h.left, tempRect);
-            }
-            if (h.right != null) {
-                tempRect = new RectHV(rectHV.xmin(), h.yCoord, rectHV.xmax(), rectHV.ymax());
-                draw(h.right, tempRect);
-            }*/
         }
         if (isEmpty()) return;
         if (h.left != null) {
@@ -299,20 +249,6 @@ int cmp
     public boolean isEmpty() {
         return size() == 0;
     }
-
-    /*private Iterable<Point2D> KDintersects(double lo, double hi) {
-        double currentX;
-        while (!xCoordinates.isEmpty()) {
-            currentX = xCoordinates.delMin();
-            // Get me all the points with this x coordinate and y between lo and hi
-            Point2D start = new Point2D(currentX, lo);
-            Point2D end = new Point2D(currentX, hi);
-            for (Point2D p : keys(start, end)) {
-                if (!points.contains(p)) points.add(p);
-            }
-        }
-        return points;
-    }*/
 
     private Iterable<Node> keys() {
         q = new Queue<>();
@@ -391,15 +327,6 @@ int cmp
         if (get(point) == null) return false;
         if (get(point).equals(point)) return true;
         else return false;
-        // get the minimum
-        // get its ceiling until you see all the points and make sure that you do see all the points
-
-        /*Node n = new Node(point, 1, null);
-        n.xCoord = point.x();
-        n.yCoord = point.y();
-        if (root.p.equals(point)) return result = true;
-        else return contains(root, n);*/
-        // return result;
     }
 
     private boolean pointIsInsideRectangle(double px, double py, double minx, double miny, double maxx, double maxy) {
@@ -472,14 +399,6 @@ int cmp
     }
 
     private Iterable<Point2D> range(Node h, RectHV rectHV) {
-        /*start from minimum x to maximum and add the ymin-ymax interval to a BST. When you get to the rectHV's minx, do
-         * a range search in BST for all the intersecting y coordinates until you get to the rectHV's maxx. Do not forget
-         * to remove the rectangles once sweep-line passes the rectangle. So add when you get to the minx, and remove when
-         * you get to maxx of the data. Do a range search when you get to the minx of rectHV and continue until you get to
-         * the rectHV's maxx */
-        /* check the subtrees. remember you have to check both sides if rect intersects the line through the point.
-         * Is the horizontal node's line between rectangle's minx and maxx or a vertical node's line between the
-         * rectangle's miny and maxy */
         if (h == null) {
             return points;
         }
@@ -488,73 +407,17 @@ int cmp
         h.minYInter = h.nodeRect.ymin();
         h.maxXInter = h.nodeRect.xmax();
         h.maxYInter = h.nodeRect.ymax();
-        // if (rect.contains(h.p) && (!points.contains(h.p))) points.add(h.p);
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
-
-            //if (currentX == h.minXInter) intSearchTree.put(h.minYInter, h.maxYInter);
-            //if (currentX == h.maxXInter) intSearchTree.delete(h.minYInter);
+            ist.put(h.nodeRect.ymin(), h.nodeRect.ymax(), currentX);// either one of these will do depending on how ...
+            ist.put(h.minYInter, h.maxYInter, currentX);// you build the rectangles
             if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                /* rectHV give the xmin and xmax that I need to check, and the intSearchTree gives different
-                 * minY and maxYs for the areas. There are of course likely more than one intersecting rectangles */
-                //for (Double d : intSearchTree.keys()) {
-                    /* Now I have miny, and maxy for this coordinate. I may need to change rank to take Point2D, then
-                    use it to get the rank of high and low, and then
-                    * use select() or get() to get any points within these boundaries */
-                //Point2D low = new Point2D(currentX, d);
-                //select(rank(low));// this should give the lower point in my tree
-                //Point2D high = new Point2D(currentX, intSearchTree.get(d));
-                //select(rank(high));// this is the higher point in my tree
-                //for (Point2D p : keys(select(rank(low)).p, select(rank(high)).p)) {
-                //  if (!points.contains(p)) points.add(p);
-                //}
-                //}
+
+                for (Double d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                    // I may have to fiddle with what intersects returns to get it right and or make is more accurate
+                }
             }
         }
-
-        /*else{
-            Point2D temp = h.p;
-            if (rectHV.contains(temp) && (!points.contains(temp))) {
-                points.add(temp);
-            }
-
-            buildChildRectangle(h, h.left, h.right);
-            if (rectHV.intersects(h.nodeRect)) {
-                range(h.left, rectHV);
-                range(h.right, rectHV);
-            } else {
-                if ((h.left == null) || (!rectHV.intersects(h.left.nodeRect))) {
-                    range(h.right, rectHV);
-                }
-                if ((h.right == null) || (!rectHV.intersects(h.right.nodeRect))) {
-                    range(h.left, rectHV);
-                }
-                if ((h.left != null) && rectHV.intersects(h.left.nodeRect)) range(h.left, rectHV);
-                if ((h.right != null) && rectHV.intersects(h.right.nodeRect)) range(h.right, rectHV);
-            }
-        }*/
-
-        //if ((!h.orientation && (rect.xmin() < h.xCoord && rect.xmax() > h.xCoord)) ||
-        //((h.orientation) && (rect.ymin() < h.yCoord && rect.ymax() > h.yCoord))) {
-        // check both sides of the tree
-        // range(h.left, rect);
-        // range(h.right, rect);
-        // } else
-        //if (((h.level % 2 == 0) && (rectXmax < h.xCoord)) || ((h.level % 2 != 0) && (rectYmax < h.yCoord))) {
-        // It is only on the left/bottom side so only check the left/bottom side of the tree
-        // range(h.left, rect);
-        // if (h.left != null) h = h.left;
-        //if (h.left != null) range(h.left, rectXmin, rectYmin, rectXmax, rectYmax);
-        // range(h,rect);
-        // } else if (((h.level % 2 == 0) && (rectXmin >= h.xCoord)) || (((h.level % 2 != 0) && (rectYmin >= h.yCoord)))) {
-        // It is only on the right/top side so only check the right/top
-        // range(h.right, rect);
-        //if (h.right != null) range(h.right, rectXmin, rectYmin, rectXmax, rectYmax);
-        // range(h,rect);
-        //}
-        //if (h.xCoord >= rectXmin && h.xCoord <= rectXmax && h.yCoord >= rectYmin && h.yCoord <= rectYmax && (!points.contains(h.p))) points.add(h.p);
-        //range(h.left, rectXmin, rectYmin, rectXmax, rectYmax);
-        //range(h.right, rectXmin, rectYmin, rectXmax, rectYmax);
         return points;
     }
 
@@ -640,9 +503,6 @@ int cmp
         root.maximX = Math.max(root.xCoord, p.x());
     }
 
-    /* Do not create the new node and assign parent, and orientation until you have a null link to place it on. Just
-     * compare the point with the current node's point and traverse the tree to find the place the point goes into. That
-     * means pas the point to the private insert() method instead of newNode */
     private Node insert(Node h, Point2D p) {
         if (h == null) {
             Node n = new Node(p, 1, null);
