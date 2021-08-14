@@ -101,7 +101,7 @@ public class KdTree {
         Iterable<Value> intersects(Key lo, Key hi) {
             return intersects(root, lo, hi);
         }
-
+// todo - fix the infinate loop here
         Iterable<Value> intersects(Node x, Key lo, Key hi) {
             while (x != null) {
                 // if x lo is larger than lo and less than hi
