@@ -428,8 +428,8 @@ public class KdTree {
                 }
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
                     for (Double d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-                        // Do a range search for all the points at currentX and any y value within the intersecting
-                        // interval
+                         /* Almost there. I have minx, maxx, and intersects should return miny and maxy that intersects
+                        with rectHV.ymin(), rectHV.ymax(). I should then get all the points in that rectangle */
                         Point2D loPnt = new Point2D(currentX, rectHV.ymin());
                         Point2D hiPnt = new Point2D(currentX, rectHV.ymin() + d);
                         StdOut.println(":" + keys(loPnt, hiPnt));
