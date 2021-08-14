@@ -421,10 +421,10 @@ public class KdTree {
                 currentX = xCoordinates.delMin();
                 // how do I go from one node to the next?
                 if (currentX >= select(i).minXInter) {
-                    ist.put(h.nodeRect.ymin(), h.nodeRect.ymax(), h.p);
+                    ist.put(select(i).nodeRect.ymin(), select(i).nodeRect.ymax(), h.p);
                 }
                 if (currentX >= select(i).maxXInter) {
-                    ist.delete(h.nodeRect.ymin(), h.nodeRect.ymax());
+                    ist.delete(select(i).nodeRect.ymin(), select(i).nodeRect.ymax());
                 }
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
                     for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
