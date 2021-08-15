@@ -25,17 +25,16 @@ public class KdTree {
                 return new Node(lo, hi, val);
             }
             int cmp = lo.compareTo(x.lo);
-            if (cmp < 1) {
-                if (x.left != null && x.left.branchMax.compareTo(hi) < 0) {
+            if (cmp > 0) {
+                x.left = put(x.left, lo, hi, val);
+                if (x.left.branchMax.compareTo(hi) < 0) {
                     x.left.branchMax = hi;
                 }
-                x.left = put(x.left, lo, hi, val);
-            }
-            if (cmp > 1) {
+            } else if (cmp < 0) {
+                x.right = put(x.right, lo, hi, val);
                 if (x.right.branchMax.compareTo(hi) < 0) {
                     x.right.branchMax = hi;
                 }
-                x.right = put(x.right, lo, hi, val);
             }
             /* else node.value=value given that for the same x-coordinate i.e. value I may have different y values I did
             this differently */
@@ -101,20 +100,20 @@ public class KdTree {
         Iterable<Value> intersects(Key lo, Key hi) {
             return intersects(root, lo, hi);
         }
-// todo - fix the infinite loop here
+
+        // todo - fix the infinite loop here
         Iterable<Value> intersects(Node x, Key lo, Key hi) {
             while (x != null) {
                 // if x lo is larger than lo and less than hi
                 if (x.lo.compareTo(lo) > 0 && x.lo.compareTo(hi) < 0) {
                     intersections.add(x.val);
-                    break;
+                    x = x.left;
                 }
-                    // or if x hi is less than hi and more than lo
-                else if (x.hi.compareTo(hi) < 0 && x.hi.compareTo(lo) > 0 && (!intersections.contains(x.val))){
+                // or if x hi is less than hi and more than lo
+                else if (x.hi.compareTo(hi) < 0 && x.hi.compareTo(lo) > 0 && (!intersections.contains(x.val))) {
                     intersections.add(x.val);
-                    break;
-                }
-                else if (x.left == null) x = x.right;
+                    x = x.left;
+                } else if (x.left == null) x = x.right;
                 else if (x.left.branchMax.compareTo(lo) < 0) x = x.right;
                 else x = x.left;
             }
@@ -152,6 +151,7 @@ public class KdTree {
     private Queue<Node> q = new Queue<>();
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
     private MinPQ<Double> xCoordinates = new MinPQ<>();
+    ArrayList<Point2D> intersectingNodes = new ArrayList<>();
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
@@ -403,6 +403,7 @@ public class KdTree {
         return range(root, rect);
     }
 
+
     private Iterable<Point2D> range(Node h, RectHV rectHV) {
         if (h == null) {
             return points;
@@ -418,25 +419,32 @@ public class KdTree {
         /* put all the rectangles in , and build the IntervalST first, then look for intersections as you take out the
         x-coordinates in other words do a range search for that x coordinate and any y coordinate from 0.0 to 1.0 or
         just rectHV.ymin() to rectHV.ymax() */
-        System.out.println("Here is what selecting from 0 to size() of the tree would give you.");
-        for (int i = 0; i < size(); i++) {
-            // System.out.println(select(i).p);
-            // It gives the points in increasing rank in the tree which is what I want:-)
-            while (!xCoordinates.isEmpty()) {
-                currentX = xCoordinates.delMin();
+        while (!xCoordinates.isEmpty()) {
+            currentX = xCoordinates.delMin();
+            //Point2D loPoint = new Point2D(currentX, 0.0);
+            //Point2D hiPoint = new Point2D(currentX, 1.0);
+            //for (Point2D point2D : keys(loPoint, hiPoint)) {
+
+            //}
+            // System.out.println("Here is what selecting from 0 to size() of the tree would give you.");
+            for (int i = 0; i < size(); i++) {
+                // System.out.println(select(i).p);
+                // It gives the points in increasing rank in the tree which is what I want:-)
                 // how do I go from one node to the next?
                 if (currentX >= select(i).minXInter) {
-                    ist.put(select(i).nodeRect.ymin(), select(i).nodeRect.ymax(), h.p);
+                    ist.put(select(i).nodeRect.ymin(), select(i).nodeRect.ymax(), select(i).p);
                 }
+
                 if (currentX >= select(i).maxXInter) {
                     ist.delete(select(i).nodeRect.ymin(), select(i).nodeRect.ymax());
                 }
+
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
                     for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
                         /* Almost there. I have minx, maxx, and intersects should return miny and maxy that intersects
                         with rectHV.ymin(), rectHV.ymax(). I should then get all the points in that rectangle. The other
                         possibility is to just see if the point associated with the intersecting rectangle is within
-                        rectHV. i.e. rectHV.contains() it. I don't see how off the top of my head. I gotta think about
+                        rectHV. i.e. rectHV.contains() it. I don't see how off the top of my head. I have to think about
                          it */
 //                        Point2D loPnt = new Point2D(currentX, rectHV.ymin());
 //                        Point2D hiPnt = new Point2D(currentX, rectHV.ymin() + d);
@@ -444,7 +452,7 @@ public class KdTree {
 //                        for (Point2D p : keys(loPnt, hiPnt)) {
 //                            points.add(p);
 //                        }
-                        points.add(point2d);
+                        if (!points.contains(point2d) && rectHV.contains(point2d)) points.add(point2d);
                     }
                 }
             }
@@ -452,6 +460,28 @@ public class KdTree {
         return points;
     }
 
+    private Iterable<Point2D> intersectsAt(Double lo, Double hi) {
+        return intersectsAt(root, lo, hi);
+    }
+
+    private Iterable<Point2D> intersectsAt(Node x, Double lo, Double hi) {
+        while (x != null) {
+            // if x lo is larger than lo and less than hi
+            if ((x.minYInter.compareTo(lo) > 0 && x.minYInter.compareTo(hi) < 0) || (x.maxYInter.compareTo(hi) < 0 &&
+                    x.maxYInter.compareTo(lo) > 0 || (x.minYInter < lo && x.maxYInter > hi))) {
+                if (!intersectingNodes.contains(x)) {
+                    intersectingNodes.add(x.p);
+                    if (x.level % 2 == 0) x = x.left;
+                    else x = x.right;
+                }
+            } else if (x.left == null) x = x.right;
+            else if (x.left.maximX < lo) x = x.right;
+            else x = x.left;
+        }
+        return intersectingNodes;
+    }
+
+    // build intersects() for this tree and try to use it for range
     private void buildChildRectangle(Node parent, Node rightChild, Node leftChild) {
         if (parent.level % 2 != 0) {
             // RectHV left = new RectHV(parent.minXInter, parent.minYInter, parent.xCoord, parent.maxYInter);
@@ -765,8 +795,9 @@ public class KdTree {
             kdtree.isEmpty();
         }
         RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
-        // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.5950927734375, 0.2689208984375);
+        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
+
         // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
         // System.out.println("It took " + time + "to insert and run size() and isEmpty() for 1M nodes. ");
