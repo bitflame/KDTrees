@@ -101,14 +101,19 @@ public class KdTree {
         Iterable<Value> intersects(Key lo, Key hi) {
             return intersects(root, lo, hi);
         }
-// todo - fix the infinate loop here
+// todo - fix the infinite loop here
         Iterable<Value> intersects(Node x, Key lo, Key hi) {
             while (x != null) {
                 // if x lo is larger than lo and less than hi
-                if (x.lo.compareTo(lo) > 0 && x.lo.compareTo(hi) < 0) intersections.add(x.val);
-                    // or if x hi is less than hi and more than lo
-                else if (x.hi.compareTo(hi) < 0 && x.hi.compareTo(lo) > 0 && (!intersections.contains(x.val)))
+                if (x.lo.compareTo(lo) > 0 && x.lo.compareTo(hi) < 0) {
                     intersections.add(x.val);
+                    break;
+                }
+                    // or if x hi is less than hi and more than lo
+                else if (x.hi.compareTo(hi) < 0 && x.hi.compareTo(lo) > 0 && (!intersections.contains(x.val))){
+                    intersections.add(x.val);
+                    break;
+                }
                 else if (x.left == null) x = x.right;
                 else if (x.left.branchMax.compareTo(lo) < 0) x = x.right;
                 else x = x.left;
