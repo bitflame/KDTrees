@@ -30,7 +30,7 @@ public class KdTree {
                 if (x.left.branchMax.compareTo(hi) < 0) {
                     x.left.branchMax = hi;
                 }
-            } else if (cmp < 0) {
+            } else if (cmp <= 0) {
                 x.right = put(x.right, lo, hi, val);
                 if (x.right.branchMax.compareTo(hi) < 0) {
                     x.right.branchMax = hi;
@@ -105,14 +105,13 @@ public class KdTree {
         Iterable<Value> intersects(Node x, Key lo, Key hi) {
             while (x != null) {
                 // if x lo is larger than lo and less than hi
-                if (x.lo.compareTo(lo) > 0 && x.lo.compareTo(hi) < 0) {
-                    intersections.add(x.val);
-                    x = x.left;
-                }
-                // or if x hi is less than hi and more than lo
-                else if (x.hi.compareTo(hi) < 0 && x.hi.compareTo(lo) > 0 && (!intersections.contains(x.val))) {
-                    intersections.add(x.val);
-                    x = x.left;
+                if (((x.lo.compareTo(lo) > 0) && x.lo.compareTo(hi) < 0) || (((x.hi.compareTo(hi) < 0) &&
+                        x.hi.compareTo(lo) > 0))) || ((x.lo.compareTo(lo) < 0) && (x.hi.compareTo(hi) > 0))
+                        || ((x.lo.compareTo(lo) > 0) && (x.hi.compareTo(hi) < 0)))) {
+                    if (!intersections.contains(x.val)) {
+                        intersections.add(x.val);
+                        x = x.left;
+                    }
                 } else if (x.left == null) x = x.right;
                 else if (x.left.branchMax.compareTo(lo) < 0) x = x.right;
                 else x = x.left;
@@ -424,9 +423,9 @@ public class KdTree {
             //Point2D loPoint = new Point2D(currentX, 0.0);
             //Point2D hiPoint = new Point2D(currentX, 1.0);
             //for (Point2D point2D : keys(loPoint, hiPoint)) {
-
             //}
             // System.out.println("Here is what selecting from 0 to size() of the tree would give you.");
+            System.out.println("");
             for (int i = 0; i < size(); i++) {
                 // System.out.println(select(i).p);
                 // It gives the points in increasing rank in the tree which is what I want:-)
@@ -434,13 +433,9 @@ public class KdTree {
                 if (currentX >= select(i).minXInter) {
                     ist.put(select(i).nodeRect.ymin(), select(i).nodeRect.ymax(), select(i).p);
                 }
-
-                if (currentX >= select(i).maxXInter) {
-                    ist.delete(select(i).nodeRect.ymin(), select(i).nodeRect.ymax());
-                }
-
-                if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                    for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+            }
+            if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
+                for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
                         /* Almost there. I have minx, maxx, and intersects should return miny and maxy that intersects
                         with rectHV.ymin(), rectHV.ymax(). I should then get all the points in that rectangle. The other
                         possibility is to just see if the point associated with the intersecting rectangle is within
@@ -452,8 +447,13 @@ public class KdTree {
 //                        for (Point2D p : keys(loPnt, hiPnt)) {
 //                            points.add(p);
 //                        }
-                        if (!points.contains(point2d) && rectHV.contains(point2d)) points.add(point2d);
-                    }
+                    if (!points.contains(point2d) && rectHV.contains(point2d)) points.add(point2d);
+                }
+            }
+
+            for (int i = 0; i < size(); i++) {
+                if (currentX >= select(i).maxXInter) {
+                    ist.delete(select(i).nodeRect.ymin(), select(i).nodeRect.ymax());
                 }
             }
         }
