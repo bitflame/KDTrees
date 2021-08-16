@@ -1,11 +1,17 @@
 package org.example;
 
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.Point2D;
+import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.MinPQ;
+
 
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+
 
 
 public class KdTree {
@@ -149,7 +155,7 @@ public class KdTree {
     private Queue<Node> q = new Queue<>();
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
     private MinPQ<Double> xCoordinates = new MinPQ<>();
-    ArrayList<Point2D> intersectingNodes = new ArrayList<>();
+    private ArrayList<Point2D> intersectingNodes = new ArrayList<>();
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
@@ -427,6 +433,8 @@ public class KdTree {
 
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
                     for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                        /* todo - See if you can get all the points in this branch, either in the KdTree or in IST and
+                            if that can fix the tests that fail */
                         if (!points.contains(point2d) && rectHV.contains(point2d)) points.add(point2d);
                     }
                 }
