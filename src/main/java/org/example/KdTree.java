@@ -9,9 +9,7 @@ import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.MinPQ;
 
 
-
 import java.util.ArrayList;
-
 
 
 public class KdTree {
@@ -432,10 +430,20 @@ public class KdTree {
                 }
 
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                    for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-                        /* todo - See if you can get all the points in this branch, either in the KdTree or in IST and
-                            if that can fix the tests that fail */
-                        if (!points.contains(point2d) && rectHV.contains(point2d)) points.add(point2d);
+                    /*for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                         todo - See if you can get all the points in this branch, either in the KdTree or in IST and
+                            if that can fix the tests that fail. See if this paint that matches is what is in
+                             select(i), and if the nodes under it are also in rectHV
+                        if (!points.contains(point2d) && rectHV.contains(point2d)) {
+                            points.add(point2d);
+                        }
+                    }*/
+                    Point2D temp;
+                    for (Node n : keys(select(i))) {
+                        temp = n.p;
+                        if (!points.contains(temp) && rectHV.contains(temp)) {
+                            points.add(temp);
+                        }
                     }
                 }
             }
@@ -778,15 +786,15 @@ public class KdTree {
             kdtree.size();
             kdtree.isEmpty();
         }
-        kdtree.draw();
-        // RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
-        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
-        // RectHV r = new RectHV(0.52656, 0.723348, 0.52658, 0.723350); 0.052657 0.723349 does not work in 10000.txt file
+        // kdtree.draw();
+        //RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
+        //RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+         RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.5, 0.7, 0.6, 0.8);
         // RectHV r = new RectHV(0.003, 0.5, 0.004, 0.6); 0.003089 0.555492 works with this rectangle
         // RectHV r = new RectHV(0.003, 0.55, 0.004, 0.58); but does not work with this. Either my rectangles are wrong
         // or I need to fix the precision
-        // System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
+        System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
 
         // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
