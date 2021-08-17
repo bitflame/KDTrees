@@ -73,7 +73,7 @@ public class KdTree {
                 if (x.right == null) return x.left;
                 if (x.left == null) return x.right;
                 Node t = x;
-                x = min(t.right);//todo - write the min()
+                x = min(t.right);
                 x.right = deleteMin(t.right);
                 x.left = t.left;
             }
@@ -413,27 +413,30 @@ public class KdTree {
         h.minYInter = h.nodeRect.ymin();
         h.maxXInter = h.nodeRect.xmax();
         h.maxYInter = h.nodeRect.ymax();
+        for (int i = 0; i < size(); i++) buildChildRectangle(select(i), select(i).left, select(i).right);
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
             Point2D temp;
+            Point2D loPoint;
+            Point2D hiPoint;
             for (Node n : keys()) {
-                // I can build rectangles for each node since this starts at the root
-                buildChildRectangle(n, n.left, n.right);
-                if (currentX >= n.maxYInter) {
+                if (currentX >= n.minYInter) {
                     ist.put(n.minYInter, n.maxYInter, currentX);
                 }
                 if (currentX >= n.maxYInter) {
                     ist.delete(n.minYInter, n.maxYInter);
                 }
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                    /*for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-                         todo - See if you can get all the points in this branch, either in the KdTree or in IST and
-                            if that can fix the tests that fail. See if this paint that matches is what is in
-                             select(i), and if the nodes under it are also in rectHV
-                        if (!points.contains(point2d) && rectHV.contains(point2d)) {
-                            points.add(point2d);
-                        }
-                    }*/
+//                    loPoint = new Point2D(currentX, rectHV.ymin());
+//                    hiPoint = new Point2D(currentX, rectHV.ymax());
+//                    System.out.println(select(rank(loPoint)));
+//                    System.out.println(select(rank(hiPoint)));
+//                    for (Point2D point2D: keys(loPoint,hiPoint))
+//                        System.out.println(point2D);
+                    // todo --You need to use intersects() when it is not null and do a range search in the KdTree for
+                    // points with ranks between the lo and hi at currentX. The range search is a recursive search of
+                    // the KdTree nodes. Listen to the end of the 1d range search lecture if you need more details. Or
+                    // read the transcript. Almost all the way at the bottom
                     temp = n.p;
                     if (!points.contains(temp) && rectHV.contains(temp)) {
                         points.add(temp);
@@ -797,14 +800,14 @@ public class KdTree {
             kdtree.isEmpty();
         }
         // kdtree.draw();
-        //RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
+        // RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
         //RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
         //RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.5, 0.7, 0.6, 0.8);
         // RectHV r = new RectHV(0.003, 0.5, 0.004, 0.6); 0.003089 0.555492 works with this rectangle
         // RectHV r = new RectHV(0.003, 0.55, 0.004, 0.58); but does not work with this. Either my rectangles are wrong
         // or I need to fix the precision
-
+        RectHV r = new RectHV(0.23, 0.52, 0.96, 0.62);// 3c rectangle
 
         // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
@@ -818,7 +821,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.175, 0.281, 0.742, 0.97);distinct points rectangle
         //RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
-        RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        //RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
