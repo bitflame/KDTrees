@@ -442,7 +442,11 @@ public class KdTree {
                     // read the transcript. Almost all the way at the bottom
 
                     for (Node node : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-                        for(Node nn: getNodesInSubtree(node)){
+//                        for (Node nn : getNodesInSubtree(node)) {
+//                            temp = nn.p;
+//                            if (!points.contains(temp) && rectHV.contains(temp)) points.add(temp);
+//                        }
+                        for (Node nn: getNodesInRectangle(currentX,rectHV.ymin(),rectHV.ymax())){
                             temp=nn.p;
                             if (!points.contains(temp)) points.add(temp);
                         }
@@ -474,6 +478,19 @@ public class KdTree {
             } */
         }
         return points;
+    }
+
+    private Iterable<Node> getNodesInRectangle(Double currentX, Double lo, Double hi) {
+        q = new Queue<>();
+        return getNodesInRectangle(root, currentX, lo, hi, q);
+    }
+
+    private Iterable<Node> getNodesInRectangle(Node x, Double currentX, Double lo, Double hi, Queue q) {
+        if (x == null) return q;
+        if (x.xCoord == currentX && x.yCoord >= lo && x.yCoord <= hi) q.enqueue(x);
+        getNodesInRectangle(x.left, currentX, lo, hi, q);
+        getNodesInRectangle(x.right, currentX, lo, hi, q);
+        return q;
     }
 
     private Iterable<Node> getNodesInSubtree(Node n) {
@@ -826,13 +843,12 @@ public class KdTree {
         // kdtree.draw();
         // RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
         //RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
-        //RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
+        // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.5, 0.7, 0.6, 0.8);
         // RectHV r = new RectHV(0.003, 0.5, 0.004, 0.6); 0.003089 0.555492 works with this rectangle
         // RectHV r = new RectHV(0.003, 0.55, 0.004, 0.58); but does not work with this. Either my rectangles are wrong
         // or I need to fix the precision
-        RectHV r = new RectHV(0.23, 0.52, 0.96, 0.62);// 3c rectangle
-
+        // RectHV r = new RectHV(0.23, 0.52, 0.96, 0.62);// 3c rectangle
         // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
         // System.out.println("It took " + time + "to insert and run size() and isEmpty() for 1M nodes. ");
@@ -845,7 +861,15 @@ public class KdTree {
         // RectHV r = new RectHV(0.175, 0.281, 0.742, 0.97);distinct points rectangle
         //RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
-        //RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        // 0.372, 0.497
+        // RectHV r = new RectHV(0.371, 0.496, 0.373, 0.498);
+        // 0.499, 0.208
+        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        // tests from 10000.txt file
+        // 0.003089 0.555492
+        RectHV r = new RectHV(0.003088, 0.555491, 0.003090, 0.555493);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
