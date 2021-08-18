@@ -36,6 +36,11 @@ class KdTreeParameterizedTest {
 
     KdTree kt = new KdTree();
 
+    @BeforeAll
+    void draw() {
+        kt.draw();
+    }
+
     @Disabled
     @BeforeEach
     @ParameterizedTest

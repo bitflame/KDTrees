@@ -102,12 +102,12 @@ public class KdTree {
         }
 
         Iterable<Value> intersects(Key lo, Key hi) {
-            return intersects(root, lo, hi);
+            intersections = new ArrayList<>();
+            return intersects(root, lo, hi, intersections);
         }
 
         // todo - fix the infinite loop here
-        Iterable<Value> intersects(Node x, Key lo, Key hi) {
-            intersections = new ArrayList<>();
+        Iterable<Value> intersects(Node x, Key lo, Key hi, ArrayList<Value> intersections) {
             if (x == null) return intersections;
             // if x lo is larger than lo and less than hi
             if (((x.lo.compareTo(lo) < 0) && (x.hi.compareTo(hi) > 0)) ||
@@ -116,9 +116,10 @@ public class KdTree {
                     ((x.lo.compareTo(lo) > 0) && (x.hi.compareTo(hi) < 0))) {
                 intersections.add(x.val);
             }
-            if (x.left != null) intersects(x.left, lo, hi);
-            if (x.left == null && x.right != null) intersects(x.right, lo, hi);
-            if (x.left != null && x.left.branchMax.compareTo(lo) < 0 && x.right != null) intersects(x.right, lo, hi);
+            if (x.left != null) intersects(x.left, lo, hi, intersections);
+            if (x.left == null && x.right != null) intersects(x.right, lo, hi, intersections);
+            if (x.left != null && x.left.branchMax.compareTo(lo) < 0 && x.right != null)
+                intersects(x.right, lo, hi, intersections);
             return intersections;
         }
 
@@ -157,7 +158,7 @@ public class KdTree {
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
-    private IntervalST<Double, Double> ist = new IntervalST<Double, Double>();
+    private IntervalST<Double, KdTree.Node> ist = new IntervalST<Double, Node>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -417,13 +418,15 @@ public class KdTree {
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
             Point2D temp;
-            Point2D loPoint;
-            Point2D hiPoint;
+            // Point2D loPoint;
+            // Point2D hiPoint;
+            // loPoint = new Point2D(currentX,0.0);
+            // hiPoint = new Point2D(currentX, 1.0);
             for (Node n : keys()) {
-                if (currentX >= n.minYInter) {
-                    ist.put(n.minYInter, n.maxYInter, currentX);
+                if (currentX >= n.minXInter) {
+                    ist.put(n.minYInter, n.maxYInter, n);
                 }
-                if (currentX >= n.maxYInter) {
+                if (currentX >= n.maxXInter) {
                     ist.delete(n.minYInter, n.maxYInter);
                 }
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
@@ -437,10 +440,18 @@ public class KdTree {
                     // points with ranks between the lo and hi at currentX. The range search is a recursive search of
                     // the KdTree nodes. Listen to the end of the 1d range search lecture if you need more details. Or
                     // read the transcript. Almost all the way at the bottom
-                    temp = n.p;
-                    if (!points.contains(temp) && rectHV.contains(temp)) {
-                        points.add(temp);
+
+                    for (Node node : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                        for(Node nn: getNodesInSubtree(node)){
+                            temp=nn.p;
+                            if (!points.contains(temp)) points.add(temp);
+                        }
                     }
+//                    temp = n.p;
+//                    if (!points.contains(temp) && rectHV.contains(temp)) {
+//                        points.add(temp);
+//                    }
+//                    for (Node node : keys(n)) points.add(node.p);
                 }
             }
             /* for (int i = 0; i < size(); i++) {
@@ -463,6 +474,19 @@ public class KdTree {
             } */
         }
         return points;
+    }
+
+    private Iterable<Node> getNodesInSubtree(Node n) {
+        q = new Queue<>();
+        q.enqueue(n);
+        return getNodesInSubtree(n, q);
+    }
+
+    private Iterable<Node> getNodesInSubtree(Node n, Queue q) {
+        if (n == null) return q;
+        getNodesInSubtree(n.left);
+        getNodesInSubtree(n.right);
+        return q;
     }
 
     private Iterable<Point2D> intersectsAt(Double lo, Double hi) {
