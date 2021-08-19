@@ -422,6 +422,8 @@ public class KdTree {
             Point2D hiPoint;
             // loPoint = new Point2D(currentX,0.0);
             // hiPoint = new Point2D(currentX, 1.0);
+            // write a loop that goes from min() to max() and if you have to write the max() method
+
             for (Node n : keys()) {
                 if (currentX >= n.minXInter) {
                     ist.put(n.minYInter, n.maxYInter, n);
@@ -435,8 +437,8 @@ public class KdTree {
                     // of the root or I should try to find a way to use the node with smaller rectangle. Further
                     // testing would tell
                     for (Node nn : ist.intersections) {
-                        temp=nn.p;
-                        if (nn.xCoord >= rectHV.xmin() && nn.xCoord <= rectHV.xmax() && !points.contains(temp))
+                        temp = nn.p;
+                        if (!points.contains(temp) && rectHV.contains(temp))
                             points.add(temp);
                     }
 //                    loPoint = new Point2D(currentX, rectHV.ymin());
@@ -459,10 +461,10 @@ public class KdTree {
 //                            temp = nn.p;
 //                            if (!points.contains(temp) && rectHV.contains(temp)) points.add(temp);
 //                        }
-                        //for (Node nn: getNodesInRectangle(currentX,rectHV.ymin(),rectHV.ymax())){
-                        //  temp=nn.p;
-                        //if (!points.contains(temp)) points.add(temp);
-                        //}
+                    //for (Node nn: getNodesInRectangle(currentX,rectHV.ymin(),rectHV.ymax())){
+                    //  temp=nn.p;
+                    //if (!points.contains(temp)) points.add(temp);
+                    //}
                     //}
 //                    temp = n.p;
 //                    if (!points.contains(temp) && rectHV.contains(temp)) {
@@ -679,6 +681,15 @@ public class KdTree {
         return (min(x.left));
     }
 
+    private Point2D max() {
+        return root.p;
+    }
+
+    private Point2D max(Node x) {
+        if (x.right == null) return x.p;
+        return (max(x.right));
+    }
+
     private void print(Node x) {
         if (x == null) return;
         print(x.left);
@@ -875,12 +886,13 @@ public class KdTree {
         //RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
-        // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+         RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         // Tests for distinct points
         // 0.372, 0.497
         // RectHV r = new RectHV(0.371, 0.496, 0.373, 0.498);
         // 0.499, 0.208
-        RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        // RectHV r = new RectHV(0.225,0.178,0.565,0.498);
         // tests from 10000.txt file
         // 0.003089 0.555492
         // RectHV r = new RectHV(0.003088, 0.555491, 0.003090, 0.555493);
