@@ -418,8 +418,8 @@ public class KdTree {
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
             Point2D temp;
-            // Point2D loPoint;
-            // Point2D hiPoint;
+            Point2D loPoint;
+            Point2D hiPoint;
             // loPoint = new Point2D(currentX,0.0);
             // hiPoint = new Point2D(currentX, 1.0);
             for (Node n : keys()) {
@@ -429,9 +429,19 @@ public class KdTree {
                 if (currentX >= n.maxXInter) {
                     ist.delete(n.minYInter, n.maxYInter);
                 }
-                if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
+                if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax() && ist.intersects(rectHV.ymin(),
+                        rectHV.ymax()) != null) {
+                    for (Node nn : ist.intersections) {
+                        temp=nn.p;
+                        if (nn.xCoord >= rectHV.xmin() && nn.xCoord <= rectHV.xmax() && !points.contains(temp))
+                            points.add(temp);
+                    }
 //                    loPoint = new Point2D(currentX, rectHV.ymin());
 //                    hiPoint = new Point2D(currentX, rectHV.ymax());
+//                    for (int i = rank(loPoint); i <= rank(hiPoint); i++) {
+//                        temp = select(i).p;
+//                        if (rectHV.contains(temp) && !points.contains(temp)) points.add(temp);
+//                    }
 //                    System.out.println(select(rank(loPoint)));
 //                    System.out.println(select(rank(hiPoint)));
 //                    for (Point2D point2D: keys(loPoint,hiPoint))
@@ -446,10 +456,10 @@ public class KdTree {
 //                            temp = nn.p;
 //                            if (!points.contains(temp) && rectHV.contains(temp)) points.add(temp);
 //                        }
-                        for (Node nn: getNodesInRectangle(currentX,rectHV.ymin(),rectHV.ymax())){
-                            temp=nn.p;
-                            if (!points.contains(temp)) points.add(temp);
-                        }
+                        //for (Node nn: getNodesInRectangle(currentX,rectHV.ymin(),rectHV.ymax())){
+                        //  temp=nn.p;
+                        //if (!points.contains(temp)) points.add(temp);
+                        //}
                     }
 //                    temp = n.p;
 //                    if (!points.contains(temp) && rectHV.contains(temp)) {
@@ -863,13 +873,14 @@ public class KdTree {
         //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        // Tests for distinct points
         // 0.372, 0.497
         // RectHV r = new RectHV(0.371, 0.496, 0.373, 0.498);
         // 0.499, 0.208
-        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
         // tests from 10000.txt file
         // 0.003089 0.555492
-        RectHV r = new RectHV(0.003088, 0.555491, 0.003090, 0.555493);
+        // RectHV r = new RectHV(0.003088, 0.555491, 0.003090, 0.555493);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
