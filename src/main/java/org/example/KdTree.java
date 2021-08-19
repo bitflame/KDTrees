@@ -431,6 +431,9 @@ public class KdTree {
                 }
                 if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax() && ist.intersects(rectHV.ymin(),
                         rectHV.ymax()) != null) {
+                    // The root rectangle shows up here. I wonder if this is because the target is to the right
+                    // of the root or I should try to find a way to use the node with smaller rectangle. Further
+                    // testing would tell
                     for (Node nn : ist.intersections) {
                         temp=nn.p;
                         if (nn.xCoord >= rectHV.xmin() && nn.xCoord <= rectHV.xmax() && !points.contains(temp))
@@ -451,7 +454,7 @@ public class KdTree {
                     // the KdTree nodes. Listen to the end of the 1d range search lecture if you need more details. Or
                     // read the transcript. Almost all the way at the bottom
 
-                    for (Node node : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                    //for (Node node : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
 //                        for (Node nn : getNodesInSubtree(node)) {
 //                            temp = nn.p;
 //                            if (!points.contains(temp) && rectHV.contains(temp)) points.add(temp);
@@ -460,7 +463,7 @@ public class KdTree {
                         //  temp=nn.p;
                         //if (!points.contains(temp)) points.add(temp);
                         //}
-                    }
+                    //}
 //                    temp = n.p;
 //                    if (!points.contains(temp) && rectHV.contains(temp)) {
 //                        points.add(temp);
