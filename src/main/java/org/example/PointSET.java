@@ -111,15 +111,6 @@ public class PointSET {
         } */
 
         for (Iterator<Point2D> it = treeSet.iterator(); it.hasNext(); ) {
-            // Node node = it.next();
-            // point = node.p;
-            // node.rect=buildRect(point);
-            /*todo -- I do not choose sides. I think I can move building node rectangles here, and save a bunch of space.
-               Plus Ido not think I need a node for this class. I can get by with the Point2D */
-            /*if (nearestP != null && node.rect.distanceTo(p) > nearestP.distanceTo(p) && it.hasNext()) {
-                node = it.next();
-                point = node.p;
-            }*/
             point = it.next();
             if ((nearestP == null) || point.distanceSquaredTo(p) < nearestP.distanceSquaredTo(p))
                 nearestP = point;

@@ -23,8 +23,6 @@ public class KdTree {
             root = put(root, lo, hi, val);
         }
 
-        /* todo: test points with the same x coordinate and different y coordinates and make sure they are added to this
-           tree . Make sure to add the code to update branchMax */
         private Node put(Node x, Key lo, Key hi, Value val) {
             if (x == null) {
                 return new Node(lo, hi, val);
@@ -44,7 +42,6 @@ public class KdTree {
             /* else node.value=value given that for the same x-coordinate i.e. value I may have different y values I did
             this differently */
             else x.val = val;
-            // todo - may need to add the code for size x.N=size(node.left) + size(node.right) + 1
             return x;
         }
 
@@ -107,7 +104,6 @@ public class KdTree {
             return intersects(root, lo, hi, intersections);
         }
 
-        // todo - fix the infinite loop here
         Iterable<Value> intersects(Node x, Key lo, Key hi, ArrayList<Value> intersections) {
             if (x == null) return intersections;
             // if x lo is larger than lo and less than hi
@@ -428,7 +424,7 @@ public class KdTree {
             buildChildRectangle(select(i), select(i).left, select(i).right);
             priorityQueue.insert(select(i));
         }
-
+        Point2D temp;
         while (!priorityQueue.isEmpty()) {
             Node currentNode = priorityQueue.delMin();
             Double currentXcurr = currentNode.minXInter;
@@ -449,19 +445,18 @@ public class KdTree {
             /* when x coordinates change look for overlap. If target rectangle intersects do a recursive search to check
             the intersections point weather it is inside the rectangle we want. Then check the children's rectangles if
             they overlap. If not, abandon that branch. */
+            Point2D loPoint;
+            Point2D hiPoint;
+            loPoint = new Point2D(rectHV.xmin(), rectHV.ymin());
+            hiPoint = new Point2D(rectHV.xmax(), rectHV.ymax());
             if (ist.intersects(rectHV.ymin(), rectHV.ymax()) != null) {
-                // check each intersection for points that might be inside the rectangle we want
-                for(Node n: ist.intersects(rectHV.ymin(),rectHV.ymax()))System.out.println(""+n.p);
+                // does rectHV contain the point?
+                for (Node n : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
+                    getNodesInRectangle(n, loPoint, hiPoint, rectHV);
+                }
 
             }
         }
-
-        //currentX = xCoordinates.delMin();
-        Point2D temp;
-        Point2D loPoint;
-        Point2D hiPoint;
-        loPoint = new Point2D(rectHV.xmin(), rectHV.ymin());
-        hiPoint = new Point2D(rectHV.xmax(), rectHV.ymax());
         // create a recursive search method that gets these nodes instead of a loop and use maxX to trim the unwanted
         /*for (int i = rank(loPoint); i < rank(hiPoint); i++) {
             temp = select(i).p;
@@ -470,17 +465,18 @@ public class KdTree {
         return points;
     }
 
-    private Iterable<Node> getNodesInRectangle(Double currentX, Double lo, Double hi) {
-        q = new Queue<>();
-        return getNodesInRectangle(root, currentX, lo, hi, q);
-    }
-
-    private Iterable<Node> getNodesInRectangle(Node x, Double currentX, Double lo, Double hi, Queue q) {
-        if (x == null) return q;
-        if (x.xCoord == currentX && x.yCoord >= lo && x.yCoord <= hi) q.enqueue(x);
-        getNodesInRectangle(x.left, currentX, lo, hi, q);
-        getNodesInRectangle(x.right, currentX, lo, hi, q);
-        return q;
+    private void getNodesInRectangle(Node n, Point2D loPoint, Point2D hiPoint, RectHV rectHV) {
+        /*todo slide 13 tells me that using a node in IST will not be acceptable. I really should do the range search the
+        *  way it shows. I also need to find the slide that talks about how to prune the branches for this method */
+        Point2D temp = n.p;
+        if (rectHV.contains(temp) && !points.contains(temp)) points.add(temp);
+        System.out.println(rank(n.p));
+        System.out.println(rank(loPoint));
+        System.out.println(rank(hiPoint));
+        // recursively Check all the children of n's rank that is between hipoint and lopoint
+        if (n.left == null) getNodesInRectangle(n.right, loPoint, hiPoint, rectHV);
+        if (n.right == null) getNodesInRectangle(n.left, loPoint, hiPoint, rectHV);
+        if(n.left.maximX<loPoint.x()) getNodesInRectangle(n.right,loPoint,hiPoint,rectHV);
     }
 
     private Iterable<Node> getNodesInSubtree(Node n) {
@@ -600,8 +596,8 @@ public class KdTree {
         n.xCoord = p.x();
         // xCoordinates.insert(n.xCoord);
         n.yCoord = p.y();
-        n.maximX=n.xCoord;
-        n= insert(root, n);
+        n.maximX = n.xCoord;
+        n = insert(root, n);
         //if (root!=null) root.maximX = Math.max(root.xCoord, n.xCoord);
         root = n;
     }
@@ -609,8 +605,8 @@ public class KdTree {
     private Node insert(Node h, Node n) {
         if (h == null) {
             // Node n = new Node(p, 1, null);
-             // h.maximX=Math.max(h.xCoord,n.xCoord);
-             h = n;
+            // h.maximX=Math.max(h.xCoord,n.xCoord);
+            h = n;
             // priorityQueue.insert(n);
             return h;
         }
