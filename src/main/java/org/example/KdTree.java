@@ -429,20 +429,22 @@ public class KdTree {
             priorityQueue.insert(select(i));
         }
         while (!priorityQueue.isEmpty()) {
-            Node currentNode=priorityQueue.delMin();
+            Node currentNode = priorityQueue.delMin();
             Double currentXcurr = currentNode.minXInter;
             ist.put(currentNode.minYInter, currentNode.maxYInter, currentNode);
-            while (currentNode.xCoord==currentXcurr) {
-                currentNode=priorityQueue.delMin();
+            while (currentNode.xCoord == currentXcurr) {
+                currentNode = priorityQueue.delMin();
                 // add rectangle(s) to Interval Search Tree
                 ist.put(currentNode.minYInter, currentNode.maxYInter, currentNode);
 
                 // remove rectangle(s) when their maxX equals minX of the current rectangle(s)
 
-                while(ist.get(ist.min()).maxXInter<currentNode.minXInter) ist.deleteMin();
+                while (ist.get(ist.min()).maxXInter < currentNode.minXInter) ist.deleteMin();
             }
-            // when x coordinates change look for overlap, and then remove the rectangles with maxXCoordinate less than current X coordinate
-            if (ist.intersects(rectHV.ymin(), rectHV.ymax())!=null) {
+            /* when x coordinates change look for overlap. If target rectangle intersects do a recursive search to check
+            the intersections point weather it is inside the rectangle we want. Then check the children's rectangles if
+            they overlap. If not, abandon that branch. */
+            if (ist.intersects(rectHV.ymin(), rectHV.ymax()) != null) {
                 // check each intersection for points that might be inside the rectangle we want
             }
         }
