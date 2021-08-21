@@ -157,7 +157,7 @@ public class KdTree {
     private MinPQ<Node> priorityQueue = new MinPQ<>(new Comparator<Node>() {
         @Override
         public int compare(Node Obj1, Node Obj2) {
-            if (Obj1.xCoord < Obj2.xCoord) return 1;
+            if (Obj1.xCoord > Obj2.xCoord) return 1;
             else return -1;
         }
     });
@@ -428,24 +428,31 @@ public class KdTree {
             buildChildRectangle(select(i), select(i).left, select(i).right);
             priorityQueue.insert(select(i));
         }
+
         while (!priorityQueue.isEmpty()) {
             Node currentNode = priorityQueue.delMin();
             Double currentXcurr = currentNode.minXInter;
             ist.put(currentNode.minYInter, currentNode.maxYInter, currentNode);
             while (currentNode.xCoord == currentXcurr) {
+                if (priorityQueue.isEmpty()) break;
                 currentNode = priorityQueue.delMin();
                 // add rectangle(s) to Interval Search Tree
                 ist.put(currentNode.minYInter, currentNode.maxYInter, currentNode);
 
                 // remove rectangle(s) when their maxX equals minX of the current rectangle(s)
 
-                while (ist.get(ist.min()).maxXInter < currentNode.minXInter) ist.deleteMin();
+                while (ist.get(ist.min()).maxXInter < currentNode.minXInter) {
+                    ist.deleteMin();
+                }
+
             }
             /* when x coordinates change look for overlap. If target rectangle intersects do a recursive search to check
             the intersections point weather it is inside the rectangle we want. Then check the children's rectangles if
             they overlap. If not, abandon that branch. */
             if (ist.intersects(rectHV.ymin(), rectHV.ymax()) != null) {
                 // check each intersection for points that might be inside the rectangle we want
+                for(Node n: ist.intersects(rectHV.ymin(),rectHV.ymax()))System.out.println(""+n.p);
+
             }
         }
 
@@ -453,80 +460,13 @@ public class KdTree {
         Point2D temp;
         Point2D loPoint;
         Point2D hiPoint;
-        // loPoint = new Point2D(currentX,0.0);
-        // hiPoint = new Point2D(currentX, 1.0);
-        // write a loop that goes from min() to max() and if you have to write the max() method
-
-        //for (Node n : keys()) {
-        //if (currentX >= n.minXInter) {
-        //ist.put(n.minYInter, n.maxYInter, n);
-        //}
-        //if (currentX >= n.maxXInter) {
-        //ist.delete(n.minYInter, n.maxYInter);
-        //}
-        //if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax() && ist.intersects(rectHV.ymin(), rectHV.ymax()) !=null){
-        // The root rectangle shows up here. I wonder if this is because the target is to the right
-        // of the root or I should try to find a way to use the node with smaller rectangle. Further
-        // testing would tell
-//                    for (Node nn : ist.intersections) {
-//                        temp = nn.p;
-//                        if (!points.contains(temp) && rectHV.contains(temp))
-//                            points.add(temp);
-//                    }
         loPoint = new Point2D(rectHV.xmin(), rectHV.ymin());
         hiPoint = new Point2D(rectHV.xmax(), rectHV.ymax());
         // create a recursive search method that gets these nodes instead of a loop and use maxX to trim the unwanted
-        for (int i = rank(loPoint); i < rank(hiPoint); i++) {
+        /*for (int i = rank(loPoint); i < rank(hiPoint); i++) {
             temp = select(i).p;
             if (!points.contains(temp)) points.add(temp);
-            // temp = select(i).p;
-            // if (rectHV.contains(temp) && !points.contains(temp)) points.add(temp);
-        }
-//                    System.out.println(select(rank(loPoint)));
-//                    System.out.println(select(rank(hiPoint)));
-//                    for (Point2D point2D: keys(loPoint,hiPoint))
-//                        System.out.println(point2D);
-        // todo --You need to use intersects() when it is not null and do a range search in the KdTree for
-        // points with ranks between the lo and hi at currentX. The range search is a recursive search of
-        // the KdTree nodes. Listen to the end of the 1d range search lecture if you need more details. Or
-        // read the transcript. Almost all the way at the bottom
-
-        //for (Node node : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-//                        for (Node nn : getNodesInSubtree(node)) {
-//                            temp = nn.p;
-//                            if (!points.contains(temp) && rectHV.contains(temp)) points.add(temp);
-//                        }
-        //for (Node nn: getNodesInRectangle(currentX,rectHV.ymin(),rectHV.ymax())){
-        //  temp=nn.p;
-        //if (!points.contains(temp)) points.add(temp);
-        //}
-        //}
-//                    temp = n.p;
-//                    if (!points.contains(temp) && rectHV.contains(temp)) {
-//                        points.add(temp);
-//                    }
-//                    for (Node node : keys(n)) points.add(node.p);
-        // }
-
-            /* for (int i = 0; i < size(); i++) {
-                if (currentX >= select(i).minXInter) {
-                    ist.put(select(i).minYInter, select(i).maxYInter, currentX);
-                }
-
-                if (currentX >= select(i).maxXInter) {
-                    ist.delete(select(i).minYInter, select(i).maxYInter);
-                }
-                if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                    Point2D temp;
-                    for (Node n : keys(select(i))) {
-                        temp = n.p;
-                        if (!points.contains(temp) && rectHV.contains(temp)) {
-                            points.add(temp);
-                        }
-                    }
-                }
-            } */
-        //}
+        }*/
         return points;
     }
 
@@ -660,16 +600,19 @@ public class KdTree {
         n.xCoord = p.x();
         // xCoordinates.insert(n.xCoord);
         n.yCoord = p.y();
-        root = insert(root, n);
-        root.maximX = Math.max(root.xCoord, p.x());
+        n.maximX=n.xCoord;
+        n= insert(root, n);
+        //if (root!=null) root.maximX = Math.max(root.xCoord, n.xCoord);
+        root = n;
     }
 
     private Node insert(Node h, Node n) {
         if (h == null) {
             // Node n = new Node(p, 1, null);
-            // h = n;
+             // h.maximX=Math.max(h.xCoord,n.xCoord);
+             h = n;
             // priorityQueue.insert(n);
-            return n;
+            return h;
         }
         int cmp = h.compareTo(n);
         if (cmp < 0) {
