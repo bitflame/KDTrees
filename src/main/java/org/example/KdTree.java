@@ -16,6 +16,8 @@ public class KdTree {
     private class IntervalST<Key extends Comparable<Key>, Value> {
         Node root = null;
         ArrayList<Value> intersections = new ArrayList<>();
+        private static final boolean RED = true;
+        private static final boolean BLACK = false;
 
         private void put(Key lo, Key hi, Value val) {
             Node node = new Node(lo, hi, val);
@@ -122,6 +124,11 @@ public class KdTree {
             return intersections;
         }
 
+        private boolean isRed(Node x) {
+            if (x == null) return false;
+            return x.color = RED;
+        }
+
         private class Node {
 
             Key lo;
@@ -130,12 +137,16 @@ public class KdTree {
             Value val;
             private Node left;
             private Node right;
+            int N;
+            boolean color;
 
-            public Node(Key lo, Key hi, Value val) {
+            public Node(Key lo, Key hi, Value val, int N, boolean color) {
                 this.lo = lo;
                 this.hi = hi;
                 this.val = val;
                 this.branchMax = hi;
+                this.N = N;
+                this.color = color;
             }
         }
     }
@@ -423,8 +434,8 @@ public class KdTree {
         }
         if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
             /* add a method here to recursively find the points between loPoint and hiPoint using the difference in their
-            * ranks. First one being one corner (bottom/left) of overlapping rectangle and the latter being the other corner
-            *  (top/right) */
+             * ranks. First one being one corner (bottom/left) of overlapping rectangle and the latter being the other corner
+             *  (top/right) */
             temp = h.p;
             if (!points.contains(temp) && rectHV.contains(temp)) {
                 points.add(temp);
@@ -477,7 +488,6 @@ public class KdTree {
                 parent.right.maxYInter = parent.maxYInter;
             }
         }
-
     }
 
     public void insert(Point2D p) {
