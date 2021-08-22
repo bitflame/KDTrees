@@ -436,27 +436,6 @@ public class KdTree {
         return points;
     }
 
-    private Iterable<Point2D> intersectsAt(Double lo, Double hi) {
-        return intersectsAt(root, lo, hi);
-    }
-
-    private Iterable<Point2D> intersectsAt(Node x, Double lo, Double hi) {
-        while (x != null) {
-            // if x lo is larger than lo and less than hi
-            if ((x.minYInter.compareTo(lo) > 0 && x.minYInter.compareTo(hi) < 0) || (x.maxYInter.compareTo(hi) < 0 &&
-                    x.maxYInter.compareTo(lo) > 0 || (x.minYInter < lo && x.maxYInter > hi))) {
-                if (!intersectingNodes.contains(x)) {
-                    intersectingNodes.add(x.p);
-                    x = x.left;
-                }
-            }
-            if (x.left == null) x = x.right;
-            if (x.left.maximX < lo) x = x.right;
-            x = x.left;
-        }
-        return intersectingNodes;
-    }
-
     // build intersects() for this tree and try to use it for range
     private void buildChildRectangle(Node parent, Node rightChild, Node leftChild) {
         if (parent.level % 2 != 0) {
@@ -501,37 +480,6 @@ public class KdTree {
         }
 
     }
-
-    /* private void setLeftRectIntervals(Node x) {
-        RectHV left;
-        if (!x.orientation) {
-            x.minXInter = x.parent.minXInter;
-            x.minYInter = x.parent.minYInter;
-            x.maxXInter = x.parent.maxXInter;
-            x.maxYInter = x.parent.yCoord;
-        } else {
-            x.minXInter = x.parent.minXInter;
-            x.minYInter = x.parent.minYInter;
-            x.maxXInter = x.parent.xCoord;
-            x.maxYInter = x.parent.maxYInter;
-        }
-    }
-
-    private void setRightRectIntervals(Node x) {
-        RectHV right;
-        if (!x.orientation) {
-            x.minXInter = x.parent.minXInter;
-            x.minYInter = x.parent.yCoord;
-            x.maxXInter = x.parent.maxXInter;
-            x.maxYInter = x.parent.maxYInter;
-        }
-        if (x.orientation) {
-            x.minXInter = x.parent.xCoord;
-            x.minYInter = x.parent.minYInter;
-            x.maxXInter = x.parent.maxXInter;
-            x.maxYInter = x.parent.maxYInter;
-        }
-    } */
 
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("You can not insert null object" +
