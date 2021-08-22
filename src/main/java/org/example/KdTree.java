@@ -308,14 +308,14 @@ public class KdTree {
         Node n = new Node(pnt, 1, null);
         n.xCoord = pnt.x();
         n.yCoord = pnt.y();
-        return rank(root, n);
+        return rank(n, root);
     }
 
-    private int rank(Node x, Node n) {
+    private int rank(Node n, Node x) {
         if (x == null) return 0;
-        int cmp = x.compareTo(n);
-        if (cmp < 0) return 1 + size(x.left) + rank(x.right, n);
-        else if (cmp >= 0) return rank(x.left, n);
+        int cmp = n.compareTo(x);
+        if (cmp < 0) return rank(n, x.left);
+        else if (cmp > 0) return 1 + size(x.left) + rank(n, x.right);
         else return size(x.left);
     }
 
@@ -466,17 +466,17 @@ public class KdTree {
     }
 
     private void getNodesInRectangle(Node n, Point2D loPoint, Point2D hiPoint, RectHV rectHV) {
-        /*todo slide 13 tells me that using a node in IST will not be acceptable. I really should do the range search the
-        *  way it shows. I also need to find the slide that talks about how to prune the branches for this method */
+        /* I guess ist.intersects() just tells me the loPoint of rectangle(s) that intersect with rectHV, so I should
+        * come here and look for any points with minYInter, and maxYInter that matches, and perhaps point(s) in between
+        * these hi and lo and this is where rank helps. I can do a select(kdtree.rank(lo)) through select(kdtree.rank(hi))
+        * absolute value of point1.hi - point2.hi gives the interesting region's hi coordinates, point1.lo - point2.lo
+        * provides the lo point coordinates */
         Point2D temp = n.p;
         if (rectHV.contains(temp) && !points.contains(temp)) points.add(temp);
-        System.out.println(rank(n.p));
-        System.out.println(rank(loPoint));
-        System.out.println(rank(hiPoint));
         // recursively Check all the children of n's rank that is between hipoint and lopoint
         if (n.left == null) getNodesInRectangle(n.right, loPoint, hiPoint, rectHV);
         if (n.right == null) getNodesInRectangle(n.left, loPoint, hiPoint, rectHV);
-        if(n.left.maximX<loPoint.x()) getNodesInRectangle(n.right,loPoint,hiPoint,rectHV);
+        if (n.left.maximX < loPoint.x()) getNodesInRectangle(n.right, loPoint, hiPoint, rectHV);
     }
 
     private Iterable<Node> getNodesInSubtree(Node n) {
@@ -850,9 +850,9 @@ public class KdTree {
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         // Tests for distinct points ----------------------
         // 0.083, 0.51
-        // RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);
+         RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);
         // 0.083, 0.51 and 0.144, 0.179; 0.226, 0.577; 0.372, 0.497
-        RectHV r = new RectHV(0.082, 0.178, 0.373, 0.578);
+        // RectHV r = new RectHV(0.082, 0.178, 0.373, 0.578);
         // 0.372, 0.497
         //RectHV r = new RectHV(0.371, 0.496, 0.373, 0.498);
         // 0.499, 0.208
