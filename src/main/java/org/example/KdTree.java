@@ -412,10 +412,6 @@ public class KdTree {
             return points;
         }
         double currentX = 0;
-        h.minXInter = h.nodeRect.xmin();
-        h.minYInter = h.nodeRect.ymin();
-        h.maxXInter = h.nodeRect.xmax();
-        h.maxYInter = h.nodeRect.ymax();
         if (!xCoordinates.isEmpty()) currentX = xCoordinates.delMin();
         Point2D temp;
         buildChildRectangle(h, h.left, h.right);
