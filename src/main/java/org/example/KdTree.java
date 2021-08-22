@@ -422,8 +422,9 @@ public class KdTree {
             ist.delete(h.minYInter, h.maxYInter);
         }
         if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-            /* add a method here to recursively find the points between loPoint and hiPoint. First one being one corner
-            * (bottom/left) of overlapping rectangle and the later being the other corner (top/right) */
+            /* add a method here to recursively find the points between loPoint and hiPoint using the difference in their
+            * ranks. First one being one corner (bottom/left) of overlapping rectangle and the latter being the other corner
+            *  (top/right) */
             temp = h.p;
             if (!points.contains(temp) && rectHV.contains(temp)) {
                 points.add(temp);
