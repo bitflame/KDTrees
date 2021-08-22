@@ -301,14 +301,17 @@ public class KdTree {
     }
 
     private int rank(Point2D pnt) {
-        return rank(root, pnt);
+        Node n = new Node(pnt, 1, null);
+        n.xCoord = pnt.x();
+        n.yCoord = pnt.y();
+        return rank(n, root);
     }
 
-    private int rank(Node x, Point2D point) {
+    private int rank(Node n, Node x) {
         if (x == null) return 0;
-        int cmp = x.p.compareTo(point);
-        if (cmp < 0) return 1 + size(x.left) + rank(x.right, point);
-        else if (cmp >= 0) return rank(x.left, point);
+        int cmp = n.compareTo(x);
+        if (cmp < 0) return rank(n, x.left);
+        else if (cmp > 0) return 1 + size(x.left) + rank(n, x.right);
         else return size(x.left);
     }
 
@@ -408,57 +411,28 @@ public class KdTree {
         if (h == null) {
             return points;
         }
-        double currentX;
+        double currentX = 0;
         h.minXInter = h.nodeRect.xmin();
         h.minYInter = h.nodeRect.ymin();
         h.maxXInter = h.nodeRect.xmax();
         h.maxYInter = h.nodeRect.ymax();
-        while (!xCoordinates.isEmpty()) {
-            currentX = xCoordinates.delMin();
-            Point2D temp;
-            for (Node n : keys()) {
-                // I can build rectangles for each node since this starts at the root
-                buildChildRectangle(n, n.left, n.right);
-                if (currentX >= n.maxYInter) {
-                    ist.put(n.minYInter, n.maxYInter, currentX);
-                }
-                if (currentX >= n.maxYInter) {
-                    ist.delete(n.minYInter, n.maxYInter);
-                }
-                if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                    /*for (Point2D point2d : ist.intersects(rectHV.ymin(), rectHV.ymax())) {
-                         todo - See if you can get all the points in this branch, either in the KdTree or in IST and
-                            if that can fix the tests that fail. See if this paint that matches is what is in
-                             select(i), and if the nodes under it are also in rectHV
-                        if (!points.contains(point2d) && rectHV.contains(point2d)) {
-                            points.add(point2d);
-                        }
-                    }*/
-                    temp = n.p;
-                    if (!points.contains(temp) && rectHV.contains(temp)) {
-                        points.add(temp);
-                    }
-                }
-            }
-            /* for (int i = 0; i < size(); i++) {
-                if (currentX >= select(i).minXInter) {
-                    ist.put(select(i).minYInter, select(i).maxYInter, currentX);
-                }
-
-                if (currentX >= select(i).maxXInter) {
-                    ist.delete(select(i).minYInter, select(i).maxYInter);
-                }
-                if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-                    Point2D temp;
-                    for (Node n : keys(select(i))) {
-                        temp = n.p;
-                        if (!points.contains(temp) && rectHV.contains(temp)) {
-                            points.add(temp);
-                        }
-                    }
-                }
-            } */
+        if (!xCoordinates.isEmpty()) currentX = xCoordinates.delMin();
+        Point2D temp;
+        buildChildRectangle(h, h.left, h.right);
+        if (currentX >= h.minYInter) {
+            ist.put(h.minYInter, h.maxYInter, currentX);
         }
+        if (currentX >= h.maxYInter) {
+            ist.delete(h.minYInter, h.maxYInter);
+        }
+        if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
+            temp = h.p;
+            if (!points.contains(temp) && rectHV.contains(temp)) {
+                points.add(temp);
+            }
+        }
+        if (h.left != null) range(h.left, rectHV);
+        if (h.right != null) range(h.right, rectHV);
         return points;
     }
 
@@ -620,6 +594,15 @@ public class KdTree {
     private Point2D min(Node x) {
         if (x.left == null) return x.p;
         return (min(x.left));
+    }
+
+    private Point2D max() {
+        return root.p;
+    }
+
+    private Point2D max(Node x) {
+        if (x.right == null) return x.p;
+        return (max(x.right));
     }
 
     private void print(Node x) {
