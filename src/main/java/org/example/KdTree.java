@@ -1,12 +1,6 @@
 package org.example;
 
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.Queue;
-import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.*;
 
 
 import java.util.ArrayList;
@@ -161,7 +155,8 @@ public class KdTree {
     private boolean result = false;
     // private int level = 0;
     private int nodesVisited = 0;
-    private IntervalST<Double, KdTree.Node> ist = new IntervalST<Double, Node>();
+    //private IntervalST<Double, KdTree.Node> ist = new IntervalST<Double, Node>();
+    private IntervalST<Double, Interval1D> ist = new IntervalST<Double, Interval1D>();
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -428,16 +423,18 @@ public class KdTree {
         while (!priorityQueue.isEmpty()) {
             Node currentNode = priorityQueue.delMin();
             Double currentXcurr = currentNode.minXInter;
-            ist.put(currentNode.minYInter, currentNode.maxYInter, currentNode);
+            Interval1D interval = new Interval1D(currentNode.minYInter, currentNode.maxYInter);
+            ist.put(currentNode.minYInter, currentNode.maxYInter, interval);
             while (currentNode.xCoord == currentXcurr) {
                 if (priorityQueue.isEmpty()) break;
                 currentNode = priorityQueue.delMin();
                 // add rectangle(s) to Interval Search Tree
-                ist.put(currentNode.minYInter, currentNode.maxYInter, currentNode);
+                interval = new Interval1D(currentNode.minYInter, currentNode.maxYInter);
+                ist.put(currentNode.minYInter, currentNode.maxYInter, interval);
 
                 // remove rectangle(s) when their maxX equals minX of the current rectangle(s)
 
-                while (ist.get(ist.min()).maxXInter < currentNode.minXInter) {
+                while (ist.get(ist.min()). < currentNode.minXInter) {
                     ist.deleteMin();
                 }
 
@@ -467,16 +464,18 @@ public class KdTree {
 
     private void getNodesInRectangle(Node n, Point2D loPoint, Point2D hiPoint, RectHV rectHV) {
         /* I guess ist.intersects() just tells me the loPoint of rectangle(s) that intersect with rectHV, so I should
-        * come here and look for any points with minYInter, and maxYInter that matches, and perhaps point(s) in between
-        * these hi and lo and this is where rank helps. I can do a select(kdtree.rank(lo)) through select(kdtree.rank(hi))
-        * absolute value of point1.hi - point2.hi gives the interesting region's hi coordinates, point1.lo - point2.lo
-        * provides the lo point coordinates */
-        Point2D temp = n.p;
-        if (rectHV.contains(temp) && !points.contains(temp)) points.add(temp);
+         * come here and look for any points with minYInter, and maxYInter that matches, and perhaps point(s) in between
+         * these hi and lo and this is where rank helps. I can do a select(kdtree.rank(lo)) through select(kdtree.rank(hi))
+         * absolute value of point1.hi - point2.hi gives the interesting region's hi coordinates, point1.lo - point2.lo
+         * provides the lo point coordinates */
+        //Point2D temp = n.p;
+        //if (rectHV.contains(temp) && !points.contains(temp)) points.add(temp);
         // recursively Check all the children of n's rank that is between hipoint and lopoint
-        if (n.left == null) getNodesInRectangle(n.right, loPoint, hiPoint, rectHV);
-        if (n.right == null) getNodesInRectangle(n.left, loPoint, hiPoint, rectHV);
-        if (n.left.maximX < loPoint.x()) getNodesInRectangle(n.right, loPoint, hiPoint, rectHV);
+        //if (n.left == null) getNodesInRectangle(n.right, loPoint, hiPoint, rectHV);
+        //if (n.right == null) getNodesInRectangle(n.left, loPoint, hiPoint, rectHV);
+        //if (n.left.maximX < loPoint.x()) getNodesInRectangle(n.right, loPoint, hiPoint, rectHV);
+        System.out.println(select(rank(loPoint)).p);
+        System.out.println(select(rank(hiPoint)).p);
     }
 
     private Iterable<Node> getNodesInSubtree(Node n) {
@@ -850,7 +849,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         // Tests for distinct points ----------------------
         // 0.083, 0.51
-         RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);
+        RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);
         // 0.083, 0.51 and 0.144, 0.179; 0.226, 0.577; 0.372, 0.497
         // RectHV r = new RectHV(0.082, 0.178, 0.373, 0.578);
         // 0.372, 0.497
