@@ -537,22 +537,25 @@ public class KdTree {
         root.minYInter = 0.0;
         root.maxXInter = 1.0;
         root.maxYInter = 1.0;
-        for (Node n:keys()) buildChildRectangle(n, n.left, n.right);
+        for (Node n : keys()) buildChildRectangle(n, n.left, n.right);
         double currentX = 0;
         Point2D temp, loPoint, hiPoint;
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
             addRemoveToIntervalSearchTree(currentX);
             if (currentX >= rect.xmin() && currentX <= rect.xmax()) {
-                for (Double d : ist.intersects(rect.ymin(),rect.ymax())) {
+                for (Double d : ist.intersects(rect.ymin(), rect.ymax())) {
                     // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
                     ist.get(d);
+                    /* todo -- instead of absolute value I wonder if I should try the smaller of lo vs. rect.ymin() and the larger
+                    of hi vs. rect.ymax() */
                     Double lo = Math.abs(d - rect.ymin());
                     Double hi = Math.abs(ist.get(d) - rect.ymax());
                     hiPoint = new Point2D(currentX, hi);
                     loPoint = new Point2D(currentX, lo);
                     for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
-                        points.add(select(i).p);
+                        temp = select(i).p;
+                        if (!points.contains(temp)) points.add(temp);
                     }
                 }
             }
@@ -852,9 +855,19 @@ public class KdTree {
             kdtree.size();
             kdtree.isEmpty();
         }
-        // kdtree.draw();
-        RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);
-        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        kdtree.draw();
+        // From Distinct Points file
+        // RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52); passed
+        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209); passed
+        // RectHV r = new RectHV(0.563, 0.412, 0.565, 0.414); passed
+        // RectHV r = new RectHV(0.225, 0.576, 0.227, 0.578); passed
+        // RectHV r = new RectHV(0.143, 0.178, 0.145, 0.18); passed
+        // RectHV r = new RectHV(0.31, 0.707, 0.33, 0.709); passed
+        // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363); passed
+        // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363);
+        // from Circle4.txt
+        //RectHV r = new RectHV(0.0, 0.49, 0.1, 0.51);
+        RectHV r = new RectHV(0.49, .9, 0.51, 1.0);
         // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.5, 0.7, 0.6, 0.8);
         // RectHV r = new RectHV(0.003, 0.5, 0.004, 0.6); 0.003089 0.555492 works with this rectangle
