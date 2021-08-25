@@ -557,8 +557,11 @@ public class KdTree {
 
 
     private void addRemoveToIntervalSearchTree(Double currentX) {
+        root.minXInter=0.0;
+        root.minYInter=0.0;
+        root.maxXInter=1.0;
+        root.maxYInter=1.0;
         addRemoveToIntervalSearchTree(root, currentX);
-        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
     }
 
     private void addRemoveToIntervalSearchTree(Node h, Double currentX) {
@@ -620,43 +623,30 @@ public class KdTree {
     public void insert(Point2D p) {
         if (p == null) throw new IllegalArgumentException("You can not insert null object" +
                 "into the tree");
-        root = insert(root, p);
+        Node n = new Node(p, 1, null);
+        n.xCoord = p.x();
+        xCoordinates.insert(n.xCoord);
+        n.yCoord = p.y();
+        root = insert(root, n);
         root.maximX = Math.max(root.xCoord, p.x());
     }
 
-    private Node insert(Node h, Point2D p) {
+    private Node insert(Node h, Node n) {
         if (h == null) {
-            Node n = new Node(p, 1, null);
-            n.xCoord = p.x();
-            xCoordinates.insert(n.xCoord);
-            n.yCoord = p.y();
-            h = n;
-            return h;
+            // Node n = new Node(p, 1, null);
+            // h = n;
+            return n;
         }
-        if (h.level % 2 == 0) {
-            if (h.xCoord == p.x() && h.yCoord == p.y()) h.p = p;
-            else if (h.xCoord <= p.x()) {
-                h.right = insert(h.right, p);
-                h.right.level = h.level + 1;
-                h.maximX = Math.max(h.maximX, h.right.maximX);
-            } else {
-                h.left = insert(h.left, p);
-                h.left.level = h.level + 1;
-                // h.maximX = Math.max(h.maximX, h.left.maximX);
-            }
-        } else {
-            // h is vertical
-            if (h.xCoord == p.x() && h.yCoord == p.y()) h.p = p;
-            else if (h.yCoord <= p.y()) {
-                h.right = insert(h.right, p);
-                h.right.level = h.level + 1;
-                // h.maximX = Math.max(h.maximX, h.right.maximX);
-            } else {
-                h.left = insert(h.left, p);
-                h.left.level = h.level + 1;
-                // h.maximX = Math.max(h.maximX, h.left.maximX);
-            }
-        }
+        int cmp = h.compareTo(n);
+        if (cmp < 0) {
+            h.right = insert(h.right, n);
+            h.right.level = h.level + 1;
+            h.maximX = Math.max(h.maximX, h.right.maximX);
+        } else if (cmp > 0) {
+            h.left = insert(h.left, n);
+            h.left.level = h.level + 1;
+            h.maximX = Math.max(h.maximX, h.left.maximX);
+        } else (h.p) = n.p;
         h.N = size(h.left) + size(h.right) + 1;
         return h;
     }
@@ -864,15 +854,13 @@ public class KdTree {
             kdtree.isEmpty();
         }
         // kdtree.draw();
-        //RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
-        RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
-        //RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
+        RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);
+        // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.5, 0.7, 0.6, 0.8);
         // RectHV r = new RectHV(0.003, 0.5, 0.004, 0.6); 0.003089 0.555492 works with this rectangle
         // RectHV r = new RectHV(0.003, 0.55, 0.004, 0.58); but does not work with this. Either my rectangles are wrong
         // or I need to fix the precision
-
-
         // System.out.println("put 1000000 nodes in the tree. ");
         // double time = timer.elapsedTime();
         // System.out.println("It took " + time + "to insert and run size() and isEmpty() for 1M nodes. ");
@@ -880,11 +868,11 @@ public class KdTree {
         // System.out.println("isEmpty should be false " + kdtree.isEmpty());
         // kdtree.draw();
         // RectHV r = new RectHV(0.675, 0.1875, 0.9375, 0.5);
-        //RectHV r = new RectHV(0.25, 0.0, 0.625, 0.75);
-        //RectHV r = new RectHV(0.39, 0.03, 0.72, 0.88);
+        // RectHV r = new RectHV(0.25, 0.0, 0.625, 0.75);
+        // RectHV r = new RectHV(0.39, 0.03, 0.72, 0.88);
         // RectHV r = new RectHV(0.175, 0.281, 0.742, 0.97);distinct points rectangle
-        //RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
-        //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
+        // RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
+        // RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
