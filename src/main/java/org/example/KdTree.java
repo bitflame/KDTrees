@@ -10,105 +10,209 @@ import edu.princeton.cs.algs4.MinPQ;
 
 
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 
+/*
+    todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
+     for the length and 4 bytes for padding plus the memory needed to store the values. An array of objects uses 24 bytes
+     of overhead plus 8N for each object; plus the object size
+     todo: node memory: 8 bytes for each key and value, 8 * 4 = 32, 4 bytes for N, and 16 bytes of Object overhead,
+     plus 2*8=16 bytes for the two left and right objects that are null by default, plus 8 bytes of extra overhead for a
+     total of 76 bytes. The rest are as follows: boolean: 1, byte: 1, char: 2, int 4, float 4, long 8, double 8
+    */
 
 public class KdTree {
+
     private class IntervalST<Key extends Comparable<Key>, Value> {
         Node root = null;
-        ArrayList<Value> intersections = new ArrayList<>();
+        ArrayList<Key> intersections = new ArrayList<>();
+        ArrayList<Key> keys = new ArrayList<>();
         private static final boolean RED = true;
         private static final boolean BLACK = false;
 
-        private void put(Key lo, Key hi, Value val) {
-            Node node = new Node(lo, hi, val);
-            root = put(root, lo, hi, val);
+        public Node moveRedLeft(Node h) {
+            flipColors(h);
+            if (h.right != null && isRed(h.right.left)) {
+                h.right = rotateRight(h.right);
+                h = rotateLeft(h);
+                flipColors(h);
+            }
+            return h;
         }
 
-        /* todo: test points with the same x coordinate and different y coordinates and make sure they are added to this
-           tree . Make sure to add the code to update branchMax */
-        private Node put(Node x, Key lo, Key hi, Value val) {
-            if (x == null) {
-                return new Node(lo, hi, val);
+
+        public void put(Key lo, Key hi, Value val) {
+            if (lo == null) throw new IllegalArgumentException("Key can not be null");
+            if (val == null) delete(lo, hi);
+            root = put(root, lo, hi, val);
+            root.color = BLACK;
+        }
+
+
+        private Node put(Node h, Key lo, Key hi, Value val) {
+            if (h == null) {
+                return new Node(lo, hi, val, 1, RED);
             }
-            int cmp = lo.compareTo(x.lo);
+            int cmp = lo.compareTo(h.lo);
             if (cmp < 0) {
-                x.left = put(x.left, lo, hi, val);
-                if (x.left.branchMax.compareTo(hi) < 0) {
-                    x.left.branchMax = hi;
+                h.left = put(h.left, lo, hi, val);
+                if (h.left.branchMax.compareTo(hi) < 0) {
+                    h.left.branchMax = hi;
                 }
             } else if (cmp > 0) {
-                x.right = put(x.right, lo, hi, val);
-                if (x.right.branchMax.compareTo(hi) < 0) {
-                    x.right.branchMax = hi;
+                h.right = put(h.right, lo, hi, val);
+                if (h.right.branchMax.compareTo(hi) < 0) {
+                    h.right.branchMax = hi;
                 }
-            }
-            /* else node.value=value given that for the same x-coordinate i.e. value I may have different y values I did
-            this differently */
-            else x.val = val;
-            // todo - may need to add the code for size x.N=size(node.left) + size(node.right) + 1
+            } else h.val = val;
+            if (isRed(h.right) && !isRed(h.left)) h = rotateLeft(h);
+            if (isRed(h.left) && isRed(h.left.left)) h = rotateRight(h);
+            if (isRed(h.left) && isRed(h.right)) flipColors(h);
+            h.N = size(h.left) + size(h.right) + 1;
+            return h;
+        }
+
+        private Node rotateLeft(Node h) {
+            if ((h == null) || h.right == null) return h;
+            Node x = h.right;
+            h.right = x.left;
+            x.left = h;
+            x.color = h.color;
+            h.color = RED;
+            x.N = h.N;
+            h.N = 1 + size(h.left) + size(h.right);
             return x;
         }
 
-        private Value get(Key lo, Key hi) {
-            return get(root, lo, hi);
+        private Node rotateRight(Node h) {
+            if ((h == null) || h.left == null) return h;
+            Node x = h.left;
+            h.left = x.right;
+            x.right = h;
+            x.color = h.color;
+            h.color = RED;
+            x.N = h.N;
+            h.N = 1 + size(h.left) + size(h.right);
+            return x;
         }
 
-        private Value get(Node x, Key lo, Key hi) {
+        private void flipColors(Node h) {
+            if (h == null || h.left == null || h.right == null) return;
+            // root must have opposite color to its children
+            if (((isRed(h) && !isRed(h.left) && !isRed(h.right)) || ((!isRed(h)) && (isRed(h.left)) && (isRed(h.right))))) {
+                h.color = !h.color;
+                h.left.color = !h.left.color;
+                h.right.color = !h.right.color;
+            }
+        }
+
+        private Node moveRedRight(Node h) {
+            flipColors(h);
+            if ((h.left != null) && !isRed(h.left.left)) h = rotateRight(h);
+            return h;
+        }
+
+        public void deleteMax() {
+            if (!isRed(root.left) && !isRed(root.right)) root.color = RED;
+            root = deleteMax(root);
+            if (!isEmpty()) root.color = BLACK;
+        }
+
+        private Node deleteMax(Node h) {
+            if (isRed(h.left)) h = rotateRight(h);
+            if (h.right == null) return null;
+            if (!isRed(h.right) && !isRed(h.right.left)) h = moveRedRight(h);
+            h.right = deleteMax(h.right);
+            return balance(h);
+        }
+
+        public boolean contains(Key lo, Key hi) {
+            if (lo == null) throw new IllegalArgumentException("Argument to contains() cannot be null");
+            return get(lo) != null;
+        }
+
+        public Value get(Key lo) {
+            if (lo == null) return null;
+            return get(root, lo);
+        }
+
+        private Value get(Node x, Key lo) {
             if (x == null) return null;
             int cmp = lo.compareTo(x.lo);
-            if (cmp < 0) return get(x.left, lo, hi);
-            else if (cmp > 0) return get(x.right, lo, hi);
+            if (cmp < 0) return get(x.left, lo);
+            else if (cmp > 0) return get(x.right, lo);
             return x.val;
 
         }
 
-        void delete(Key lo, Key hi) {
+        public void delete(Key lo, Key hi) {
+            if (!isRed(root.left) && !isRed(root.right)) root.color = RED;
             root = delete(root, lo, hi);
+            if (!isEmpty()) root.color = BLACK;
         }
 
         private Node delete(Node x, Key lo, Key hi) {
             if (x == null) return null;
             int cmp = lo.compareTo(x.lo);
-            if (cmp < 0) x.left = delete(x.left, lo, hi);
-            else if (cmp > 0) x.right = delete(x.right, lo, hi);
-            else {
-                if (x.right == null) return x.left;
-                if (x.left == null) return x.right;
-                Node t = x;
-                x = min(t.right);//todo - write the min()
-                x.right = deleteMin(t.right);
-                x.left = t.left;
+            if (cmp < 0) {
+                if ((x.left != null) && !isRed(x.left) && !isRed(x.left.left)) x = moveRedLeft(x);
+                x.left = delete(x.left, lo, hi);
+            } else {
+                if (isRed(x.left)) x = rotateRight(x);
+                if (lo.compareTo(x.lo) == 0 && x.right == null) return null;
+                if ((x.right != null) && !isRed(x.right) && !isRed(x.right.left)) x = moveRedRight(x);
+                if (lo.compareTo(x.lo) == 0) {
+                    x.val = get(x.right, min(x.right).lo);
+                    x.lo = min(x.right).lo;
+                    x.right = deleteMin(x.right);
+                } else x.right = delete(x.right, lo, hi);
             }
             // x.N = size(x.left) + size(x.right) + 1;
-            return x;
+            return balance(x);
+        }
+
+        public boolean isEmpty() {
+            return size(root) == 0;
         }
 
         public void deleteMin() {
+            if (isEmpty()) return;
+            if (!isRed(root.left) && !isRed(root.right)) root.color = RED;
             root = deleteMin(root);
+            if (!isEmpty()) root.color = BLACK;
         }
 
-        private Node deleteMin(Node x) {
-            if (x.left == null) return x.right;
-            x.left = deleteMin(x.left);
-            // x.N = size(x.left) + size(x.right) + 1;
-            return x;
+        private Node deleteMin(Node h) {
+            if (h.left == null) return null;
+            if (!isRed(h.left) && !isRed(h.left.left)) h = moveRedLeft(h);
+            h.left = deleteMin(h.left);
+            return balance(h);
+        }
+
+        private Node balance(Node h) {
+            if (h == null) return null;
+            if (isRed(h.right) && !isRed(h.left)) h = rotateLeft(h);
+            if (isRed(h.left) && h.left != null && isRed(h.left.left)) h = rotateRight(h);
+            if (isRed(h.left) && isRed(h.right)) flipColors(h);
+            h.N = size(h.left) + 1 + size(h.right);
+            return h;
         }
 
         public Key min() {
+            if (root == null) throw new NoSuchElementException("Empty binary search tree");
             return min(root).lo;
         }
 
-        private Node min(Node x) {
+        public Node min(Node x) {
             if (x.left == null) return x;
             return min(x.left);
         }
 
-        Iterable<Value> intersects(Key lo, Key hi) {
+        Iterable<Key> intersects(Key lo, Key hi) {
             return intersects(root, lo, hi);
         }
 
-        // todo - fix the infinite loop here
-        Iterable<Value> intersects(Node x, Key lo, Key hi) {
+        Iterable<Key> intersects(Node x, Key lo, Key hi) {
             intersections = new ArrayList<>();
             if (x == null) return intersections;
             // if x lo is larger than lo and less than hi
@@ -116,7 +220,7 @@ public class KdTree {
                     ((x.lo.compareTo(lo) > 0) && (x.lo.compareTo(hi) < 0)) ||
                     ((x.lo.compareTo(lo) < 0) && (x.hi.compareTo(lo) > 0)) ||
                     ((x.lo.compareTo(lo) > 0) && (x.hi.compareTo(hi) < 0))) {
-                intersections.add(x.val);
+                intersections.add(lo);
             }
             if (x.left != null) intersects(x.left, lo, hi);
             if (x.left == null && x.right != null) intersects(x.right, lo, hi);
@@ -124,9 +228,32 @@ public class KdTree {
             return intersections;
         }
 
-        private boolean isRed(Node x) {
+        public boolean isRed(Node x) {
             if (x == null) return false;
-            return x.color = RED;
+            return x.color == RED;
+        }
+
+        public int size() {
+            if (root == null) return 0;
+            return size(root);
+        }
+
+        private int size(Node x) {
+            if (x == null) return 0;
+            return x.N;
+        }
+
+        private Iterable<Key> keys() {
+            keys = new ArrayList<>();
+            return keys(root);
+        }
+
+        private Iterable<Key> keys(Node h) {
+            if (h == null) return keys;
+            keys.add(h.lo);
+            if (h.left != null) keys(h.left);
+            if (h.right != null) keys(h.right);
+            return keys;
         }
 
         private class Node {
@@ -139,6 +266,7 @@ public class KdTree {
             private Node right;
             int N;
             boolean color;
+            Node root = null;
 
             public Node(Key lo, Key hi, Value val, int N, boolean color) {
                 this.lo = lo;
@@ -151,14 +279,6 @@ public class KdTree {
         }
     }
 
-    /*
-    todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
-     for the length and 4 bytes for padding plus the memory needed to store the values. An array of objects uses 24 bytes
-     of overhead plus 8N for each object; plus the object size
-     todo: node memory: 8 bytes for each key and value, 8 * 4 = 32, 4 bytes for N, and 16 bytes of Object overhead,
-     plus 2*8=16 bytes for the two left and right objects that are null by default, plus 8 bytes of extra overhead for a
-     total of 76 bytes. The rest are as follows: boolean: 1, byte: 1, char: 2, int 4, float 4, long 8, double 8
-    */
     private Node root;
     private Queue<Point2D> queue = new Queue<Point2D>();
     private Queue<Node> q = new Queue<>();
@@ -413,38 +533,45 @@ public class KdTree {
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
         else if (isEmpty()) return null;
-        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
-        return range(root, rect);
-    }
-
-
-    private Iterable<Point2D> range(Node h, RectHV rectHV) {
-        if (h == null) {
-            return points;
-        }
         double currentX = 0;
-        if (!xCoordinates.isEmpty()) currentX = xCoordinates.delMin();
-        Point2D temp;
-        buildChildRectangle(h, h.left, h.right);
-        if (currentX >= h.minYInter) {
-            ist.put(h.minYInter, h.maxYInter, currentX);
-        }
-        if (currentX >= h.maxYInter) {
-            ist.delete(h.minYInter, h.maxYInter);
-        }
-        if (currentX >= rectHV.xmin() && currentX <= rectHV.xmax()) {
-            /* add a method here to recursively find the points between loPoint and hiPoint using the difference in their
-             * ranks. First one being one corner (bottom/left) of overlapping rectangle and the latter being the other corner
-             *  (top/right) */
-            temp = h.p;
-            if (!points.contains(temp) && rectHV.contains(temp)) {
-                points.add(temp);
+        Point2D temp, loPoint, hiPoint;
+        while (!xCoordinates.isEmpty()) {
+            currentX = xCoordinates.delMin();
+            addRemoveToIntervalSearchTree(currentX);
+            if (currentX >= rect.xmin() && currentX <= rect.xmax()) {
+                for (Double d : ist.intersections) {
+                    // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
+                    ist.get(d);
+                    Double lo = Math.abs(d - rect.ymin());
+                    Double hi = Math.abs(ist.get(d) - rect.ymax());
+                    hiPoint = new Point2D(currentX, hi);
+                    loPoint = new Point2D(currentX, lo);
+                    for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
+                        points.add(select(i).p);
+                    }
+                }
             }
         }
-        if (h.left != null) range(h.left, rectHV);
-        if (h.right != null) range(h.right, rectHV);
         return points;
     }
+
+
+    private void addRemoveToIntervalSearchTree(Double currentX) {
+        addRemoveToIntervalSearchTree(root, currentX);
+        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
+    }
+
+    private void addRemoveToIntervalSearchTree(Node h, Double currentX) {
+        buildChildRectangle(h, h.left, h.right);
+        if (currentX >= h.minXInter) {
+            ist.put(h.minYInter, h.maxYInter, currentX);
+        } else if (currentX <= h.maxYInter) {
+            ist.delete(h.minYInter, h.maxYInter);
+        }
+        if (h.right != null) addRemoveToIntervalSearchTree(h.right, currentX);
+        if (h.left != null) addRemoveToIntervalSearchTree(h.left, currentX);
+    }
+
 
     // build intersects() for this tree and try to use it for range
     private void buildChildRectangle(Node parent, Node rightChild, Node leftChild) {
@@ -738,7 +865,7 @@ public class KdTree {
         }
         // kdtree.draw();
         //RectHV r = new RectHV(0.2, 0.14, 0.8, 0.95);
-        //RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209);
         //RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.5, 0.7, 0.6, 0.8);
         // RectHV r = new RectHV(0.003, 0.5, 0.004, 0.6); 0.003089 0.555492 works with this rectangle
@@ -758,7 +885,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.175, 0.281, 0.742, 0.97);distinct points rectangle
         //RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         //RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
-        RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
