@@ -220,7 +220,7 @@ public class KdTree {
                     ((x.lo.compareTo(lo) > 0) && (x.lo.compareTo(hi) < 0)) ||
                     ((x.lo.compareTo(lo) < 0) && (x.hi.compareTo(lo) > 0)) ||
                     ((x.lo.compareTo(lo) > 0) && (x.hi.compareTo(hi) < 0))) {
-                intersections.add(lo);
+                intersections.add(x.lo);
             }
             if (x.left != null) intersects(x.left, lo, hi);
             if (x.left == null && x.right != null) intersects(x.right, lo, hi);
@@ -533,13 +533,18 @@ public class KdTree {
         if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
         else if (isEmpty()) return null;
+        root.minXInter = 0.0;
+        root.minYInter = 0.0;
+        root.maxXInter = 1.0;
+        root.maxYInter = 1.0;
+        for (Node n:keys()) buildChildRectangle(n, n.left, n.right);
         double currentX = 0;
         Point2D temp, loPoint, hiPoint;
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
             addRemoveToIntervalSearchTree(currentX);
             if (currentX >= rect.xmin() && currentX <= rect.xmax()) {
-                for (Double d : ist.intersections) {
+                for (Double d : ist.intersects(rect.ymin(),rect.ymax())) {
                     // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
                     ist.get(d);
                     Double lo = Math.abs(d - rect.ymin());
@@ -557,18 +562,14 @@ public class KdTree {
 
 
     private void addRemoveToIntervalSearchTree(Double currentX) {
-        root.minXInter=0.0;
-        root.minYInter=0.0;
-        root.maxXInter=1.0;
-        root.maxYInter=1.0;
         addRemoveToIntervalSearchTree(root, currentX);
     }
 
     private void addRemoveToIntervalSearchTree(Node h, Double currentX) {
-        buildChildRectangle(h, h.left, h.right);
         if (currentX >= h.minXInter) {
             ist.put(h.minYInter, h.maxYInter, currentX);
-        } else if (currentX >= h.maxYInter) {
+        }
+        if (currentX >= h.maxYInter) {
             ist.delete(h.minYInter, h.maxYInter);
         }
         if (h.right != null) addRemoveToIntervalSearchTree(h.right, currentX);
@@ -627,25 +628,23 @@ public class KdTree {
         n.xCoord = p.x();
         xCoordinates.insert(n.xCoord);
         n.yCoord = p.y();
+        n.maximX = n.xCoord;
         root = insert(root, n);
-        root.maximX = Math.max(root.xCoord, p.x());
     }
 
     private Node insert(Node h, Node n) {
         if (h == null) {
-            // Node n = new Node(p, 1, null);
-            // h = n;
             return n;
         }
         int cmp = h.compareTo(n);
         if (cmp < 0) {
             h.right = insert(h.right, n);
+            h.maximX = Math.max(h.right.maximX, h.maximX);
             h.right.level = h.level + 1;
-            h.maximX = Math.max(h.maximX, h.right.maximX);
         } else if (cmp > 0) {
             h.left = insert(h.left, n);
+            h.maximX = Math.max(h.left.maximX, h.maximX);
             h.left.level = h.level + 1;
-            h.maximX = Math.max(h.maximX, h.left.maximX);
         } else (h.p) = n.p;
         h.N = size(h.left) + size(h.right) + 1;
         return h;
