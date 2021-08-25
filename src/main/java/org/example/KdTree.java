@@ -549,13 +549,13 @@ public class KdTree {
                     ist.get(d);
                     /* todo -- instead of absolute value I wonder if I should try the smaller of lo vs. rect.ymin() and the larger
                     of hi vs. rect.ymax() */
-                    Double lo = Math.abs(d - rect.ymin());
-                    Double hi = Math.abs(ist.get(d) - rect.ymax());
+                    Double lo = (d < rect.ymin()) ? d : rect.ymin();
+                    Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
                     hiPoint = new Point2D(currentX, hi);
                     loPoint = new Point2D(currentX, lo);
                     for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
                         temp = select(i).p;
-                        if (!points.contains(temp)) points.add(temp);
+                        if (!points.contains(temp) && rect.contains(temp)) points.add(temp);
                     }
                 }
             }
