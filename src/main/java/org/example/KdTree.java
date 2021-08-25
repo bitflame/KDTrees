@@ -565,7 +565,7 @@ public class KdTree {
         buildChildRectangle(h, h.left, h.right);
         if (currentX >= h.minXInter) {
             ist.put(h.minYInter, h.maxYInter, currentX);
-        } else if (currentX <= h.maxYInter) {
+        } else if (currentX >= h.maxYInter) {
             ist.delete(h.minYInter, h.maxYInter);
         }
         if (h.right != null) addRemoveToIntervalSearchTree(h.right, currentX);
