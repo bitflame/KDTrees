@@ -216,10 +216,10 @@ public class KdTree {
             intersections = new ArrayList<>();
             if (x == null) return intersections;
             // if x lo is larger than lo and less than hi
-            if (((x.lo.compareTo(lo) < 0) && (x.hi.compareTo(hi) > 0)) ||
-                    ((x.lo.compareTo(lo) > 0) && (x.lo.compareTo(hi) < 0)) ||
-                    ((x.lo.compareTo(lo) < 0) && (x.hi.compareTo(lo) > 0)) ||
-                    ((x.lo.compareTo(lo) > 0) && (x.hi.compareTo(hi) < 0))) {
+            if (((x.lo.compareTo(lo) <= 0) && (x.hi.compareTo(hi) >= 0)) ||
+                    ((x.lo.compareTo(lo) >= 0) && (x.lo.compareTo(hi) <= 0)) ||
+                    ((x.lo.compareTo(lo) <= 0) && (x.hi.compareTo(lo) >= 0)) ||
+                    ((x.lo.compareTo(lo) >= 0) && (x.hi.compareTo(hi) <= 0))) {
                 intersections.add(x.lo);
             }
             if (x.left != null) intersects(x.left, lo, hi);
@@ -341,7 +341,7 @@ public class KdTree {
         root.maxXInter = 1.0;
         root.maxYInter = 1.0;
         // draw(root);
-        for (Node n: keys()) draw(n);
+        for (Node n : keys()) draw(n);
     }
 
     private void draw(Node h) {
@@ -554,8 +554,6 @@ public class KdTree {
                 for (Double d : ist.intersects(rect.ymin(), rect.ymax())) {
                     // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
                     ist.get(d);
-                    /* todo -- instead of absolute value I wonder if I should try the smaller of lo vs. rect.ymin() and the larger
-                    of hi vs. rect.ymax() */
                     Double lo = (d < rect.ymin()) ? d : rect.ymin();
                     Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
                     hiPoint = new Point2D(currentX, hi);
@@ -579,7 +577,7 @@ public class KdTree {
         if (currentX >= h.minXInter) {
             ist.put(h.minYInter, h.maxYInter, currentX);
         }
-        if (currentX >= h.maxYInter) {
+        if (currentX > h.maxYInter) {
             ist.delete(h.minYInter, h.maxYInter);
         }
         if (h.right != null) addRemoveToIntervalSearchTree(h.right, currentX);
@@ -876,10 +874,10 @@ public class KdTree {
             double y = in.readDouble();
             Point2D p = new Point2D(x, y);
             kdtree.insert(p);
-            kdtree.size();
-            kdtree.isEmpty();
+            // kdtree.size();
+            // kdtree.isEmpty();
         }
-        kdtree.draw();
+        // kdtree.draw();
         // From Distinct Points file
         // RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52); passed
         // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209); passed
@@ -889,9 +887,13 @@ public class KdTree {
         // RectHV r = new RectHV(0.31, 0.707, 0.33, 0.709); passed
         // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363); passed
         // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363);
+        // RectHV r = new RectHV(0.862, 0.824, 0.864, 0.826);
         // from Circle4.txt
-        //RectHV r = new RectHV(0.0, 0.49, 0.1, 0.51);
+        // RectHV r = new RectHV(0.0, 0.49, 0.1, 0.51); 0.0,0.5 works
+        // RectHV r = new RectHV(0.49, 0.99, 0.51, 1.0); 0.5,1.0 works
+        // RectHV r = new RectHV(0.49, 0.0, 0.51, 0.01); 0.5,0.0 works
         // RectHV r = new RectHV(0.49, .9, 0.51, 1.0);
+        RectHV r = new RectHV(0.9, .49, 1.0, 0.51);
         // from circle10000.txt
         // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350);
@@ -913,7 +915,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         // RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
-        // System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
+        System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
         // System.out.println("The nearest point should be 0.052657, 0.723349: " + kdtree.nearest(new Point2D(0.052657, 0.723340)));
