@@ -35,21 +35,11 @@ class RectangleInfoAggregator implements ArgumentsAggregator {
 class KdTreeParameterizedTest {
 
     KdTree kt = new KdTree();
-
-    @CsvFileSource(resources = "src/main/resources/distinctpoints.txt", delimiter = ' ')
+    @ParameterizedTest
+    @CsvFileSource(resources = "/distinctpoints.txt", delimiter = ' ')
     void init(double x, double y) {
         Point2D p = new Point2D(x, y);
         kt.insert(p);
-        // In in = new In();
-        //while (!in.isEmpty()) {
-             //x = in.readDouble();
-             //y = in.readDouble();
-
-        //}
-        //double x = StdRandom.uniform(0.0, 1.0);
-//        double y = StdRandom.uniform(0.0, 1.0);
-//        Point2D p = new Point2D(x, y);
-//        for (int i = 0; i < 10; i++) kt.insert(p);
     }
 
 
@@ -81,18 +71,12 @@ class KdTreeParameterizedTest {
         //assertFalse(kt.contains(queryPoint));
         //assertFalse(queryPoint.equals(kt.nearest(queryPoint)));
     }
-@Disabled
-    @CsvFileSource(resources = "/distinctpoints.txt", delimiter = ' ')
+
     @ParameterizedTest
-    @CsvSource({".01,0.1,0.4,0.6"})
-    void range(@AggregateWith(RectangleInfoAggregator.class) RectHV r) {
-        In in = new In();
-        while (!in.isEmpty()) {
-            double x = in.readDouble();
-            double y = in.readDouble();
-            Point2D p = new Point2D(x, y);
-            //kt.insert(p);
-        }
-        //kt.range(r);
+    @CsvSource({".082,0.5,0.084,0.52"})
+    void range(double a, double b, double c, double d, @AggregateWith(RectangleInfoAggregator.class) RectHV r) {
+        r = new RectHV(a, b, c, d);
+        kt.range(r);
+        System.out.println(kt.range(r));
     }
 }
