@@ -554,13 +554,18 @@ public class KdTree {
                 for (Double d : ist.intersects(rect.ymin(), rect.ymax())) {
                     // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
                     ist.get(d);
+                    temp= new Point2D(currentX,ist.get(d));
+                    if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
                     Double lo = (d < rect.ymin()) ? d : rect.ymin();
                     Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
                     hiPoint = new Point2D(currentX, hi);
                     loPoint = new Point2D(currentX, lo);
                     for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
-                        temp = select(i).p;
-                        if (!points.contains(temp) && rect.contains(temp)) points.add(temp);
+                        if (select(i) != null) {
+                            temp = select(i).p;
+                            if (!points.contains(temp) && rect.contains(temp)) points.add(temp);
+                        }
+
                     }
                 }
             }
@@ -575,7 +580,7 @@ public class KdTree {
 
     private void addRemoveToIntervalSearchTree(Node h, Double currentX) {
         if (currentX >= h.minXInter) {
-            ist.put(h.minYInter, h.maxYInter, currentX);
+            ist.put(h.minYInter, h.maxYInter, h.yCoord);
         }
         if (currentX > h.maxYInter) {
             ist.delete(h.minYInter, h.maxYInter);
