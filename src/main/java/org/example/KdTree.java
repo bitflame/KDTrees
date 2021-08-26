@@ -334,47 +334,54 @@ public class KdTree {
     }
 
     public void draw() {
-        RectHV rec = new RectHV(0.0, 0.0, 1.0, 1.0);
+        // RectHV rec = new RectHV(0.0, 0.0, 1.0, 1.0);
         if (root == null) return;
-        draw(root);
+        root.minXInter = 0.0;
+        root.minYInter = 0.0;
+        root.maxXInter = 1.0;
+        root.maxYInter = 1.0;
+        // draw(root);
+        for (Node n: keys()) draw(n);
     }
 
     private void draw(Node h) {
+        buildChildRectangle(h, h.left, h.right);
         // convert the rectangle to
-        RectHV tempRect;
-        StringBuilder sb = new StringBuilder();
+        // RectHV tempRect;
+        // StringBuilder sb = new StringBuilder();
         if (h.level % 2 == 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.012);
             StdDraw.point(h.xCoord, h.yCoord);
             StdDraw.point(h.xCoord, h.yCoord);
-            sb.append(h.xCoord + " ");
-            sb.append(h.yCoord);
-            StdDraw.text(h.xCoord, h.yCoord, sb.toString());
+            // sb.append(h.xCoord + " ");
+            // sb.append(h.yCoord);
+            // StdDraw.text(h.xCoord, h.yCoord, sb.toString());
             StdDraw.setPenRadius(0.003);
             StdDraw.setPenColor(StdDraw.RED);
             StdDraw.line(h.xCoord, h.minYInter, h.xCoord, h.maxYInter);
             // if h is horizontal draw h's rectangle
-            StdDraw.setPenRadius(0.005);
+            // StdDraw.setPenRadius(0.005);
         } else if (h.level % 2 != 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.012);
             StdDraw.point(h.xCoord, h.yCoord);
-            sb.append(h.xCoord);
-            sb.append(h.yCoord);
-            StdDraw.text(h.xCoord, h.yCoord, sb.toString());
+            // sb.append(h.xCoord);
+            // sb.append(h.yCoord);
+            // StdDraw.text(h.xCoord, h.yCoord, sb.toString());
             StdDraw.setPenRadius(0.003);
             StdDraw.setPenColor(StdDraw.BLUE);
             StdDraw.line(h.minXInter, h.yCoord, h.maxXInter, h.yCoord);
-            StdDraw.setPenRadius(0.005);
+            // StdDraw.setPenRadius(0.005);
         }
-        if (isEmpty()) return;
-        if (h.left != null) {
-            draw(h.left);
-        }
-        if (h.right != null) {
-            draw(h.right);
-        }
+//        if (isEmpty()) return;
+//
+//        if (h.left != null) {
+//            draw(h.left);
+//        }
+//        if (h.right != null) {
+//            draw(h.right);
+//        }
     }
 
     private void drawRectangle(Node h) {
@@ -581,45 +588,61 @@ public class KdTree {
 
 
     // build intersects() for this tree and try to use it for range
-    private void buildChildRectangle(Node parent, Node rightChild, Node leftChild) {
+    private void buildChildRectangle(Node parent, Node leftChild, Node rightChild) {
         if (parent.level % 2 != 0) {
             // RectHV left = new RectHV(parent.minXInter, parent.minYInter, parent.xCoord, parent.maxYInter);
 
             // if (parent.left != null) parent.left.nodeRect = left;
-            if (parent.left != null) {
+            if (leftChild != null && parent.left != null) {
                 // leftChild.nodeRect = new RectHV(parent.minXInter, parent.minYInter, parent.xCoord, parent.maxYInter);
-                parent.left.minXInter = parent.minXInter;
-                parent.left.minYInter = parent.minYInter;
-                parent.left.maxXInter = parent.xCoord;
-                parent.left.maxYInter = parent.maxYInter;
+//                parent.left.minXInter = parent.minXInter;
+//                parent.left.minYInter = parent.minYInter;
+//                parent.left.maxXInter = parent.xCoord;
+//                parent.left.maxYInter = parent.maxYInter;
+                leftChild.minXInter = parent.minXInter;
+                leftChild.minYInter = parent.minYInter;
+                leftChild.maxXInter = parent.maxXInter;
+                leftChild.maxYInter = parent.yCoord;
             }
 
             // if (parent.right != null) parent.right.nodeRect = right;
-            if (parent.right != null) {
+            if (rightChild != null && parent.right != null) {
                 // rightChild.nodeRect = new RectHV(parent.xCoord, parent.minYInter, parent.maxXInter, parent.maxYInter);
-                parent.right.minXInter = parent.right.xCoord;
-                parent.right.minYInter = parent.minYInter;
-                parent.right.maxXInter = parent.maxXInter;
-                parent.right.maxYInter = parent.maxYInter;
+//                parent.right.minXInter = parent.right.xCoord;
+//                parent.right.minYInter = parent.minYInter;
+//                parent.right.maxXInter = parent.maxXInter;
+//                parent.right.maxYInter = parent.maxYInter;
+                rightChild.minXInter = parent.minXInter;
+                rightChild.minYInter = parent.yCoord;
+                rightChild.maxXInter = parent.maxXInter;
+                rightChild.maxYInter = parent.maxYInter;
             }
         } else if (parent.level % 2 == 0) {
 
             // if (parent.left != null) parent.left.nodeRect = left;
-            if (parent.left != null) {
+            if (leftChild != null && parent.left != null) {
                 // leftChild.nodeRect = new RectHV(parent.minXInter, parent.minYInter, parent.maxXInter, parent.yCoord);
-                parent.left.minXInter = parent.minXInter;
-                parent.left.minYInter = parent.minYInter;
-                parent.left.maxXInter = parent.maxXInter;
-                parent.left.maxYInter = parent.left.yCoord;
+//                parent.left.minXInter = parent.minXInter;
+//                parent.left.minYInter = parent.minYInter;
+//                parent.left.maxXInter = parent.maxXInter;
+//                parent.left.maxYInter = parent.left.yCoord;
+                leftChild.minXInter = parent.minXInter;
+                leftChild.minYInter = parent.minYInter;
+                leftChild.maxXInter = parent.xCoord;
+                leftChild.maxYInter = parent.maxYInter;
             }
 
             // if (parent.right != null) parent.right.nodeRect = right;
-            if (parent.right != null) {
+            if (rightChild != null && parent.right != null) {
                 // rightChild.nodeRect = new RectHV(parent.minXInter, parent.yCoord, parent.maxXInter, parent.maxYInter);
-                parent.right.minXInter = parent.minXInter;
-                parent.right.minYInter = parent.right.yCoord;
-                parent.right.maxXInter = parent.maxXInter;
-                parent.right.maxYInter = parent.maxYInter;
+//                parent.right.minXInter = parent.minXInter;
+//                parent.right.minYInter = parent.right.yCoord;
+//                parent.right.maxXInter = parent.maxXInter;
+//                parent.right.maxYInter = parent.maxYInter;
+                rightChild.minXInter = parent.xCoord;
+                rightChild.minYInter = parent.minYInter;
+                rightChild.maxXInter = parent.maxXInter;
+                rightChild.maxYInter = parent.maxYInter;
             }
         }
     }
@@ -628,6 +651,7 @@ public class KdTree {
         if (p == null) throw new IllegalArgumentException("You can not insert null object" +
                 "into the tree");
         Node n = new Node(p, 1, null);
+        n.level = 0;
         n.xCoord = p.x();
         xCoordinates.insert(n.xCoord);
         n.yCoord = p.y();
@@ -867,9 +891,12 @@ public class KdTree {
         // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363);
         // from Circle4.txt
         //RectHV r = new RectHV(0.0, 0.49, 0.1, 0.51);
-        RectHV r = new RectHV(0.49, .9, 0.51, 1.0);
-        // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350); // 0.052657 0.723349 does not work in 10000.txt file
+        // RectHV r = new RectHV(0.49, .9, 0.51, 1.0);
+        // from circle10000.txt
+        // 0.052657 0.723349 does not work in 10000.txt file
+        // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350);
         // RectHV r = new RectHV(0.5, 0.7, 0.6, 0.8);
+        // RectHV r = new RectHV(0.938152,0.740876 , 0.938154,0.740878);
         // RectHV r = new RectHV(0.003, 0.5, 0.004, 0.6); 0.003089 0.555492 works with this rectangle
         // RectHV r = new RectHV(0.003, 0.55, 0.004, 0.58); but does not work with this. Either my rectangles are wrong
         // or I need to fix the precision
@@ -886,7 +913,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         // RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
         // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
-        System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
+        // System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
         // System.out.println("The nearest point should be 0.052657, 0.723349: " + kdtree.nearest(new Point2D(0.052657, 0.723340)));
