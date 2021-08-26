@@ -553,13 +553,18 @@ public class KdTree {
             if (currentX >= rect.xmin() && currentX <= rect.xmax()) {
                 for (Double d : ist.intersects(rect.ymin(), rect.ymax())) {
                     // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
-                    ist.get(d);
-                    temp= new Point2D(currentX,ist.get(d));
-                    if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
-//                    Double lo = (d < rect.ymin()) ? d : rect.ymin();
-//                    Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
-//                    hiPoint = new Point2D(currentX, hi);
-//                    loPoint = new Point2D(currentX, lo);
+                    //ist.get(d);
+                    //temp = new Point2D(currentX, ist.get(d));
+                    //if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
+
+                    Double lo = (d < rect.ymin()) ? d : rect.ymin();
+                    Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
+                    hiPoint = new Point2D(currentX, hi);
+                    loPoint = new Point2D(currentX, lo);
+                    for (Point2D p : keys(loPoint, hiPoint)) {
+                        //temp=p;
+                        if (rect.contains(p) && (!points.contains(p))) points.add(p);
+                    }
 //                    for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
 //                        if (select(i) != null) {
 //                            temp = select(i).p;
@@ -890,6 +895,8 @@ public class KdTree {
 //        System.out.println(kdtree.select(2).p);
 //        System.out.println(kdtree.select(3).p);
 //        System.out.println(kdtree.select(4).p);
+        // from test1 query rectangle = [0.288, 0.827] x [0.218, 0.819]
+        //RectHV r = new RectHV(0.288,0.218,0.827,0.819);
         // kdtree.draw();
         // From Distinct Points file
         // RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52); passed
@@ -898,7 +905,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.225, 0.576, 0.227, 0.578); passed
         // RectHV r = new RectHV(0.143, 0.178, 0.145, 0.18); passed
         // RectHV r = new RectHV(0.31, 0.707, 0.33, 0.709); passed
-        // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363); passed
+        // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363);  passed
         // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363);
         // RectHV r = new RectHV(0.862, 0.824, 0.864, 0.826);
         // from Circle4.txt
@@ -906,7 +913,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.49, 0.99, 0.51, 1.0); 0.5,1.0 works
         // RectHV r = new RectHV(0.49, 0.0, 0.51, 0.01); 0.5,0.0 works
         // RectHV r = new RectHV(0.49, .9, 0.51, 1.0);
-        RectHV r = new RectHV(0.9, .49, 1.0, 0.51);
+        // RectHV r = new RectHV(0.9, .49, 1.0, 0.51);
         // from circle10000.txt
         // 0.052657 0.723349 does not work in 10000.txt file
         // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.723350);
@@ -927,7 +934,9 @@ public class KdTree {
         // RectHV r = new RectHV(0.175, 0.281, 0.742, 0.97);distinct points rectangle
         // RectHV r = new RectHV(0.479, 0.198, 0.894, 0.676);
         // RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
-        // RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        //RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
+        // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.72335); from 10000.txt
+        RectHV r = new RectHV(0.0, 0.125, 1.0, 0.25);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));

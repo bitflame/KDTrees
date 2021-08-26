@@ -5,12 +5,13 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 
 class KdTreeParameterizedTest {
 
     KdTree kt = new KdTree();
-    @ParameterizedTest
+    @TestFactory
     @CsvFileSource(resources = "/distinctpoints.txt", delimiter = ' ')
     void init(double x, double y) {
         Point2D p = new Point2D(x, y);
