@@ -546,7 +546,7 @@ public class KdTree {
         root.maxYInter = 1.0;
         for (Node n : keys()) buildChildRectangle(n, n.left, n.right);
         double currentX = 0;
-        Point2D temp, loPoint, hiPoint;
+        Point2D temp = null, loPoint, hiPoint;
         while (!xCoordinates.isEmpty()) {
             currentX = xCoordinates.delMin();
             addRemoveToIntervalSearchTree(currentX);
@@ -557,14 +557,21 @@ public class KdTree {
                     //temp = new Point2D(currentX, ist.get(d));
                     //if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
 
-                    Double lo = (d < rect.ymin()) ? d : rect.ymin();
-                    Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
-                    hiPoint = new Point2D(currentX, hi);
-                    loPoint = new Point2D(currentX, lo);
-                    for (Point2D p : keys(loPoint, hiPoint)) {
-                        //temp=p;
-                        if (rect.contains(p) && (!points.contains(p))) points.add(p);
-                    }
+                    // Double lo = (d < rect.ymin()) ? d : rect.ymin();
+                    // Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
+
+//                    hiPoint = new Point2D(currentX, rect.ymin());
+//                    loPoint = new Point2D(currentX, rect.ymax());
+//                    for (Point2D p : keys(loPoint, hiPoint)) {
+//                    temp=p;
+//                    if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
+//                    }
+                    points.add(new Point2D(currentX,ist.get(d)));
+//                    temp = loPoint;
+//                    while (!temp.equals(hiPoint)) {
+//                        temp = ceiling(loPoint);
+//                        points.add(temp);
+//                    }
 //                    for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
 //                        if (select(i) != null) {
 //                            temp = select(i).p;
@@ -899,7 +906,7 @@ public class KdTree {
         //RectHV r = new RectHV(0.288,0.218,0.827,0.819);
         // kdtree.draw();
         // From Distinct Points file
-        // RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52); passed
+        RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);// passed
         // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209); passed
         // RectHV r = new RectHV(0.563, 0.412, 0.565, 0.414); passed
         // RectHV r = new RectHV(0.225, 0.576, 0.227, 0.578); passed
@@ -936,7 +943,7 @@ public class KdTree {
         // RectHV r = new RectHV(0.125, 0.25, 0.5, 0.625);
         //RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.72335); from 10000.txt
-        RectHV r = new RectHV(0.0, 0.125, 1.0, 0.25);
+        // RectHV r = new RectHV(0.0, 0.125, 1.0, 0.25);
         System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
