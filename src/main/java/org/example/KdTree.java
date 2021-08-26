@@ -351,26 +351,26 @@ public class KdTree {
         // StringBuilder sb = new StringBuilder();
         if (h.level % 2 == 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
-            StdDraw.setPenRadius(0.012);
+            // StdDraw.setPenRadius(0.012);
             StdDraw.point(h.xCoord, h.yCoord);
             StdDraw.point(h.xCoord, h.yCoord);
             // sb.append(h.xCoord + " ");
             // sb.append(h.yCoord);
             // StdDraw.text(h.xCoord, h.yCoord, sb.toString());
-            StdDraw.setPenRadius(0.003);
-            StdDraw.setPenColor(StdDraw.RED);
+            // StdDraw.setPenRadius(0.003);
+            // StdDraw.setPenColor(StdDraw.RED);
             StdDraw.line(h.xCoord, h.minYInter, h.xCoord, h.maxYInter);
             // if h is horizontal draw h's rectangle
             // StdDraw.setPenRadius(0.005);
         } else if (h.level % 2 != 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
-            StdDraw.setPenRadius(0.012);
+            // StdDraw.setPenRadius(0.012);
             StdDraw.point(h.xCoord, h.yCoord);
             // sb.append(h.xCoord);
             // sb.append(h.yCoord);
             // StdDraw.text(h.xCoord, h.yCoord, sb.toString());
-            StdDraw.setPenRadius(0.003);
-            StdDraw.setPenColor(StdDraw.BLUE);
+            // StdDraw.setPenRadius(0.003);
+            // StdDraw.setPenColor(StdDraw.BLUE);
             StdDraw.line(h.minXInter, h.yCoord, h.maxXInter, h.yCoord);
             // StdDraw.setPenRadius(0.005);
         }
@@ -556,17 +556,17 @@ public class KdTree {
                     ist.get(d);
                     temp= new Point2D(currentX,ist.get(d));
                     if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
-                    Double lo = (d < rect.ymin()) ? d : rect.ymin();
-                    Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
-                    hiPoint = new Point2D(currentX, hi);
-                    loPoint = new Point2D(currentX, lo);
-                    for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
-                        if (select(i) != null) {
-                            temp = select(i).p;
-                            if (!points.contains(temp) && rect.contains(temp)) points.add(temp);
-                        }
-
-                    }
+//                    Double lo = (d < rect.ymin()) ? d : rect.ymin();
+//                    Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
+//                    hiPoint = new Point2D(currentX, hi);
+//                    loPoint = new Point2D(currentX, lo);
+//                    for (int i = rank(hiPoint); i >= rank(loPoint); i--) {
+//                        if (select(i) != null) {
+//                            temp = select(i).p;
+//                            if (!points.contains(temp) && rect.contains(temp)) points.add(temp);
+//                        }
+//
+//                    }
                 }
             }
         }
@@ -882,6 +882,14 @@ public class KdTree {
             // kdtree.size();
             // kdtree.isEmpty();
         }
+//        for (Node n:kdtree.keys()) {
+//            System.out.println("The ranks for point "+n.p + "is: "+kdtree.rank(n.p));
+//        }
+//        System.out.println(kdtree.select(0).p);
+//        System.out.println(kdtree.select(1).p);
+//        System.out.println(kdtree.select(2).p);
+//        System.out.println(kdtree.select(3).p);
+//        System.out.println(kdtree.select(4).p);
         // kdtree.draw();
         // From Distinct Points file
         // RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52); passed
