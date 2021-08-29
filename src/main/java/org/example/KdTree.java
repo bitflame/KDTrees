@@ -906,7 +906,8 @@ public class KdTree {
         //RectHV r = new RectHV(0.288,0.218,0.827,0.819);
         // kdtree.draw();
         // From Distinct Points file
-        RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);// passed
+        //RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);// passed
+        RectHV r = new RectHV(0.082,0.178,0.145,0.52);
         // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209); passed
         // RectHV r = new RectHV(0.563, 0.412, 0.565, 0.414); passed
         // RectHV r = new RectHV(0.225, 0.576, 0.227, 0.578); passed
