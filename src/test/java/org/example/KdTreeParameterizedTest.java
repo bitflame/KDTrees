@@ -6,10 +6,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.util.Locale;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -35,7 +32,7 @@ class KdTreeParameterizedTest {
             // results
             KdTree kt = new KdTree();
 
-            for (final File fileEntry : folder.listFiles()) {
+            /* for (final File fileEntry : folder.listFiles()) {
                 String fileName = fileEntry.getName().toUpperCase();
                 if (fileName.endsWith(".TXT")){
                     Scanner scanner = new Scanner(fileEntry);
@@ -46,17 +43,15 @@ class KdTreeParameterizedTest {
                         Point2D p = new Point2D(x, y);
                         kt.insert(p);
                     }
-                    // Stream.collect(Arguments.of(kt,r,expectPoints));
                 }
-            }
-            /*Scanner scanner = new Scanner(new File("src/main/resources/distinctpoints.txt"));
-            KdTree kt = new KdTree();
+            } */
+            Scanner scanner = new Scanner(new File("src/main/resources/distinctpoints.txt"));
             while (scanner.hasNext()) {
                 double x = scanner.nextDouble();
                 double y = scanner.nextDouble();
                 Point2D p = new Point2D(x, y);
                 kt.insert(p);
-            }*/
+            }
              return Stream.of(Arguments.of(kt, r, expectPoints));
             //return strem;
         }
