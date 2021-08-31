@@ -6,66 +6,59 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.PublicKey;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.stream.Stream;
 
 
 class KdTreeParameterizedTest {
+    static class KdTreeArgumentsProvider implements ArgumentsProvider {
 
-    KdTree kt = new KdTree();
-
-    @CsvFileSource(resources = "/distinctpoints.txt", delimiter = ' ')
-    void init(double x, double y) {
-        Point2D p = new Point2D(x, y);
-        kt.insert(p);
+        // create a rectangle by reading four double values from a file. May be possible to put the data in the same file
+        // that way one file has all the data for one test instance
+        RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);
+        // Just adding two points to expected points for now, but it can be expanded.
+        Point2D p1 = new Point2D(0.083, 0.51);
+        Point2D[] expectPoints = {p1};
+        // pass the tree instance and the rectangle along with the expected results to a test method to validate the result
+        // the expected results are a set of Points
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            // read the data for each test from the files in a directory that contains the points, rectangle(s), and the expected result(s)
+            // create the kdtree and add points to it by reading two double values from a file. I wonder how I should design the
+            // input data file. Ideally I want all the points first, then I want to create a rectangle, but it would be nice to
+            // have one file that results in multiple test instances with the same KdTree but different rectangles and expected
+            // results
+            KdTree kt = new KdTree();
+            Point2D p = new Point2D(0.372, 0.497);
+            kt.insert(p);
+            p = new Point2D(0.564, 0.413);
+            kt.insert(p);
+            p = new Point2D(0.226, 0.577);
+            kt.insert(p);
+            p = new Point2D(0.144, 0.179);
+            kt.insert(p);
+            p = new Point2D(0.083, 0.51);
+            kt.insert(p);
+            p = new Point2D(0.32, 0.708);
+            kt.insert(p);
+            p = new Point2D(0.417, 0.362);
+            kt.insert(p);
+            p = new Point2D(0.862, 0.825);
+            kt.insert(p);
+            p = new Point2D(0.785, 0.725);
+            kt.insert(p);
+            p = new Point2D(0.499, 0.208);
+            kt.insert(p);
+            // here is how to return KdTree instance and the rectangle.
+            // return Stream.of(kt, r, expectPoints).map(Arguments::of); -- 08/08/21 13:24
+            return Stream.of(Arguments.of(kt, r, expectPoints));
+        }
     }
 
-/* amazing tutorial - everything you want to know about Junit5 parameterized testing
-* https://www.petrikainulainen.net/programming/testing/junit-5-tutorial-writing-parameterized-tests/ Everything! */
-    @ParameterizedTest
-    @CsvSource({"0.61,0.31"})
-    void containsShouldNotWork(double x, double y) {
-        //init();
-        Point2D point = new Point2D(x, y);
-        Assertions.assertFalse(kt.contains(point));
-    }
-
-    @Disabled
-    @ParameterizedTest
-    @CsvSource({"0.0000000,0.000000", "0.0000000,0.500000", "0.5000000,0.000000", "0.6100000,0.300000"})
-    void containsShouldWork(double x, double y) {
-        Point2D point = new Point2D(x, y);
-        //Assertions.assertTrue(kt.contains(point));
-    }
-
-
-    Stream<Arguments> createKdTreeInstance() throws IOException {
-        Stream<String> stream;
-        System.out.println("Inside the createdKdTreeInstance Method ");
-        stream = Files.lines(Paths.get("src/main/resources/distinctpoints.txt"));
-        kt = new KdTree();
-        stream.map(x -> x.split("\\s")).forEach(x -> kt.insert(new Point2D(Double.parseDouble(x[0]),
-                Double.parseDouble(x[1]))));
-    }
-
-    @DisplayName("range() Method Test")
-    //@ParameterizedTest
-    @CsvSource({".082,0.5,0.084,0.52"})
-    @MethodSource("createKdTreeInstance")
-    //@ArgumentsSource(KdTreeArgumentProvider.class)
-
-    void range(double a, double b, double c, double d) throws IOException {
-        createKdTreeInstance();
-        RectHV r = new RectHV(a, b, c, d);
+    @DisplayName("should create a rectangle with the given coordinates and test KdTree's range() function")
+    @ParameterizedTest(name = "{index}=> kt={0},rectangle={1},expectedPoints={2}")
+    @ArgumentsSource(KdTreeArgumentsProvider.class)
+    void range(KdTree kt, RectHV r, Point2D[] expectedPoints) {
         Assertions.assertNotNull(kt.range(r));
-        // kt.range(r);
-        //System.out.println(kt.range(r));
+       // how do I validate expected points if/when there are more than one?
     }
 }
