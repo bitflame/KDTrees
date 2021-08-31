@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -32,19 +33,32 @@ class KdTreeParameterizedTest {
             // input data file. Ideally I want all the points first, then I want to create a rectangle, but it would be nice to
             // have one file that results in multiple test instances with the same KdTree but different rectangles and expected
             // results
+            KdTree kt = new KdTree();
 
             for (final File fileEntry : folder.listFiles()) {
-                System.out.println(fileEntry);
+                String fileName = fileEntry.getName().toUpperCase();
+                if (fileName.endsWith(".TXT")){
+                    Scanner scanner = new Scanner(fileEntry);
+                    kt = new KdTree();
+                    while (scanner.hasNext()) {
+                        double x = scanner.nextDouble();
+                        double y = scanner.nextDouble();
+                        Point2D p = new Point2D(x, y);
+                        kt.insert(p);
+                    }
+                    // Stream.collect(Arguments.of(kt,r,expectPoints));
+                }
             }
-            Scanner scanner = new Scanner(new File("src/main/resources/distinctpoints.txt"));
+            /*Scanner scanner = new Scanner(new File("src/main/resources/distinctpoints.txt"));
             KdTree kt = new KdTree();
             while (scanner.hasNext()) {
                 double x = scanner.nextDouble();
                 double y = scanner.nextDouble();
                 Point2D p = new Point2D(x, y);
                 kt.insert(p);
-            }
-            return Stream.of(Arguments.of(kt, r, expectPoints));
+            }*/
+             return Stream.of(Arguments.of(kt, r, expectPoints));
+            //return strem;
         }
     }
 
