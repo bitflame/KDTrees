@@ -1,17 +1,22 @@
 package org.example;
 
-import edu.princeton.cs.algs4.Point2D;
+
 import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.Stopwatch;
 
-
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
-
+import java.util.Scanner;
+/* todo -- Build a KdTree with the Key, Value generics and Key being the point, and perhaps the value of
+    type node. The implement insert first and make sure it works. */
 /*
     todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
      for the length and 4 bytes for padding plus the memory needed to store the values. An array of objects uses 24 bytes
@@ -23,9 +28,13 @@ import java.util.NoSuchElementException;
 
 public class KdTree {
 
+    //public KdTree() throws IOException {
+    public KdTree() {
+    }
+
     private class IntervalST<Key extends Comparable<Key>, Value> {
         Node root = null;
-        ArrayList<Key> intersections = new ArrayList<>();
+        ArrayList<Value> intersections = new ArrayList<>();
         ArrayList<Key> keys = new ArrayList<>();
         private static final boolean RED = true;
         private static final boolean BLACK = false;
@@ -54,16 +63,16 @@ public class KdTree {
                 return new Node(lo, hi, val, 1, RED);
             }
             int cmp = lo.compareTo(h.lo);
-            if (cmp < 0) {
+            if (cmp < 0 && h.val != val) {
                 h.left = put(h.left, lo, hi, val);
-                if (h.left.branchMax.compareTo(hi) < 0) {
-                    h.left.branchMax = hi;
-                }
-            } else if (cmp > 0) {
+//                if (h.left.branchMax.compareTo(hi) < 0) {
+//                    h.left.branchMax = hi;
+//                }
+            } else if (cmp >= 0 && h.val != val) {
                 h.right = put(h.right, lo, hi, val);
-                if (h.right.branchMax.compareTo(hi) < 0) {
-                    h.right.branchMax = hi;
-                }
+//                if (h.right.branchMax.compareTo(hi) < 0) {
+//                    h.right.branchMax = hi;
+//                }
             } else h.val = val;
             if (isRed(h.right) && !isRed(h.left)) h = rotateLeft(h);
             if (isRed(h.left) && isRed(h.left.left)) h = rotateRight(h);
@@ -141,7 +150,7 @@ public class KdTree {
             int cmp = lo.compareTo(x.lo);
             if (cmp < 0) return get(x.left, lo);
             else if (cmp > 0) return get(x.right, lo);
-            return x.val;
+            else return x.val;
 
         }
 
@@ -208,23 +217,26 @@ public class KdTree {
             return min(x.left);
         }
 
-        Iterable<Key> intersects(Key lo, Key hi) {
+        Iterable<Value> intersects(Key lo, Key hi) {
             return intersects(root, lo, hi);
         }
 
-        Iterable<Key> intersects(Node x, Key lo, Key hi) {
-            intersections = new ArrayList<>();
+        Iterable<Value> intersects(Node x, Key lo, Key hi) {
+
             if (x == null) return intersections;
             // if x lo is larger than lo and less than hi
-            if (((x.lo.compareTo(lo) <= 0) && (x.hi.compareTo(hi) >= 0)) ||
+            //if (!((x.hi.compareTo(lo) < 0) || (x.lo.compareTo(hi) > 0))) intersections.add(x.val);
+            if ((lo.compareTo(x.lo) >= 0) && (lo.compareTo(x.hi) <= 0)) intersections.add(x.val);
+            if ((hi.compareTo(x.hi) <= 0) && (hi.compareTo(x.lo) >= 0)) intersections.add(x.val);
+            /*if (((x.lo.compareTo(lo) <= 0) && (x.hi.compareTo(hi) >= 0)) ||
                     ((x.lo.compareTo(lo) >= 0) && (x.lo.compareTo(hi) <= 0)) ||
                     ((x.lo.compareTo(lo) <= 0) && (x.hi.compareTo(lo) >= 0)) ||
                     ((x.lo.compareTo(lo) >= 0) && (x.hi.compareTo(hi) <= 0))) {
-                intersections.add(x.lo);
-            }
+                intersections.add(x.val);
+            }*/
+            //if (x.left != null && x.left.branchMax.compareTo(lo) < 0 && x.right != null) intersects(x.right, lo, hi);
             if (x.left != null) intersects(x.left, lo, hi);
-            if (x.left == null && x.right != null) intersects(x.right, lo, hi);
-            if (x.left != null && x.left.branchMax.compareTo(lo) < 0 && x.right != null) intersects(x.right, lo, hi);
+            if (x.right != null) intersects(x.right, lo, hi);
             return intersections;
         }
 
@@ -260,7 +272,7 @@ public class KdTree {
 
             Key lo;
             Key hi;
-            Key branchMax;
+            // Key branchMax;
             Value val;
             private Node left;
             private Node right;
@@ -272,7 +284,7 @@ public class KdTree {
                 this.lo = lo;
                 this.hi = hi;
                 this.val = val;
-                this.branchMax = hi;
+                //this.branchMax = hi;
                 this.N = N;
                 this.color = color;
             }
@@ -289,6 +301,10 @@ public class KdTree {
     // private int level = 0;
     private int nodesVisited = 0;
     private IntervalST<Double, Double> ist = new IntervalST<Double, Double>();
+
+
+//    File myObject = new File("output.txt");
+//    FileWriter myWriter = new FileWriter(myObject);
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -351,26 +367,26 @@ public class KdTree {
         // StringBuilder sb = new StringBuilder();
         if (h.level % 2 == 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
-            // StdDraw.setPenRadius(0.012);
-            StdDraw.point(h.xCoord, h.yCoord);
+            StdDraw.setPenRadius(0.012);
+            //StdDraw.point(h.xCoord, h.yCoord);
             StdDraw.point(h.xCoord, h.yCoord);
             // sb.append(h.xCoord + " ");
             // sb.append(h.yCoord);
             // StdDraw.text(h.xCoord, h.yCoord, sb.toString());
-            // StdDraw.setPenRadius(0.003);
-            // StdDraw.setPenColor(StdDraw.RED);
+            StdDraw.setPenRadius(0.003);
+            StdDraw.setPenColor(StdDraw.RED);
             StdDraw.line(h.xCoord, h.minYInter, h.xCoord, h.maxYInter);
             // if h is horizontal draw h's rectangle
             // StdDraw.setPenRadius(0.005);
         } else if (h.level % 2 != 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
-            // StdDraw.setPenRadius(0.012);
+            StdDraw.setPenRadius(0.012);
             StdDraw.point(h.xCoord, h.yCoord);
             // sb.append(h.xCoord);
             // sb.append(h.yCoord);
             // StdDraw.text(h.xCoord, h.yCoord, sb.toString());
-            // StdDraw.setPenRadius(0.003);
-            // StdDraw.setPenColor(StdDraw.BLUE);
+            StdDraw.setPenRadius(0.003);
+            StdDraw.setPenColor(StdDraw.BLUE);
             StdDraw.line(h.minXInter, h.yCoord, h.maxXInter, h.yCoord);
             // StdDraw.setPenRadius(0.005);
         }
@@ -396,7 +412,9 @@ public class KdTree {
     }
 
     private Iterable<Node> keys() {
+        if (root == null) return null;
         q = new Queue<>();
+        q.enqueue(root);
         return keys(root);
     }
 
@@ -442,14 +460,14 @@ public class KdTree {
         Node n = new Node(pnt, 1, null);
         n.xCoord = pnt.x();
         n.yCoord = pnt.y();
-        return rank(n, root);
+        return rank(root, n);
     }
 
-    private int rank(Node n, Node x) {
+    private int rank(Node x, Node n) {
         if (x == null) return 0;
-        int cmp = n.compareTo(x);
-        if (cmp < 0) return rank(n, x.left);
-        else if (cmp > 0) return 1 + size(x.left) + rank(n, x.right);
+        int cmp = x.compareTo(n);
+        if (cmp > 0) return rank(x.left, n);
+        else if (cmp < 0) return 1 + size(x.left) + rank(x.right, n);
         else return size(x.left);
     }
 
@@ -482,19 +500,19 @@ public class KdTree {
         return false;
     }
 
-    private Point2D ceiling(Point2D point) {
-        Node x = ceiling(root, point);
+    private Node ceiling(Point2D p) {
+        Node h = new Node(p, 1, null);
+        Node x = ceiling(root, h);
         if (x == null) return null;
-        return x.p;
+        return x;
     }
 
-    private Node ceiling(Node x, Point2D point) {
+    private Node ceiling(Node x, Node h) {
         if (x == null) return null;
-        Node n = new Node(point, 1, null);
-        int cmp = x.compareTo(n);
+        int cmp = x.compareTo(h);
         if (cmp == 0) return x;
-        if (cmp > 0) return ceiling(x.right, point);
-        Node t = ceiling(x.left, point);
+        if (cmp > 0) return ceiling(x.right, h);
+        Node t = ceiling(x.left, h);
         if (t != null) return t;
         else return x;
     }
@@ -522,43 +540,71 @@ public class KdTree {
     }
 
     private Node floor(Point2D p) {
-        return floor(root, p);
+        Node h = new Node(p, 1, null);
+        Node x = floor(root, h);
+        if (x == null) return null;
+        return x;
     }
 
-    private Node floor(Node x, Point2D point) {
+    private Node floor(Node x, Node h) {
         if (x == null) return null;
-        int cmp = x.p.compareTo(point);
+        int cmp = x.compareTo(h);
         if (cmp == 0) return x;
-        if (cmp < 0) return floor(x.left, point);
-        Node t = floor(x.right, point);
+        if (cmp < 0) return floor(x.left, h);
+        Node t = floor(x.right, h);
         if (t != null) return t;
         else return x;
     }
 
-    public Iterable<Point2D> range(RectHV rect) {
+    //public Iterable<Point2D> range(RectHV r) throws IOException {
+    public Iterable<Point2D> range(RectHV r) {
         points = new ArrayList<>();
-        if (rect == null) throw new IllegalArgumentException("rectangle has to be a valid " +
+        if (r == null) throw new IllegalArgumentException("rectangle has to be a valid " +
                 "object. ");
         else if (isEmpty()) return null;
-        root.minXInter = 0.0;
-        root.minYInter = 0.0;
-        root.maxXInter = 1.0;
-        root.maxYInter = 1.0;
-        for (Node n : keys()) buildChildRectangle(n, n.left, n.right);
-        double currentX = 0;
-        Point2D temp = null, loPoint, hiPoint;
-        while (!xCoordinates.isEmpty()) {
-            currentX = xCoordinates.delMin();
-            addRemoveToIntervalSearchTree(currentX);
-            if (currentX >= rect.xmin() && currentX <= rect.xmax()) {
-                for (Double d : ist.intersects(rect.ymin(), rect.ymax())) {
-                    // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
-                    //ist.get(d);
-                    //temp = new Point2D(currentX, ist.get(d));
-                    //if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
+        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
 
-                    // Double lo = (d < rect.ymin()) ? d : rect.ymin();
-                    // Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
+
+        // findout why floor returns a node and ceiling returns a point.
+        // Point2D fromP = ceiling(lowCorner).p;
+
+        // Point2D toP = floor(hiCorner).p;
+
+        /*for (int i = (rank(lowCorner) - 1); i <= rank(hiCorner); i++) {
+            if (select(i) != null && select(i).nodeRect.intersects(r)) {
+                if (r.contains(select(i).p)) points.add(select(i).p);
+            }
+        }*/
+
+//        for (int i = rank(fromP); i < rank(toP); i++) {
+//            if (select(i) != null && select(i).nodeRect.intersects(r)) {
+//                points.add(select(i).p);
+//            }
+//        }
+//        root.minXInter = 0.0;
+//        root.minYInter = 0.0;
+//        root.maxXInter = 1.0;
+//        root.maxYInter = 1.0;
+//        for (Node n : keys()) buildChildRectangle(n, n.left, n.right);
+//
+//        double currentX = 0;
+//        double lo = r.ymin();
+//        double hi = r.ymax();
+//        while (!xCoordinates.isEmpty()) {
+//            currentX = xCoordinates.delMin();
+//            addRemoveToIntervalSearchTree(currentX);
+//            for (Double d : ist.keys()) {
+//                System.out.println("ist lo: " + d + "ist hi: " + ist.get(d));
+//            }
+//            if (currentX >= r.xmin() && currentX <= r.xmax()) {
+//                for (Double d : ist.intersects(r.ymin(), r.ymax())) {
+        // d is the lo, and the return value of this is the hi. Get all the points with ranks between these two values
+        //ist.get(d);
+        //temp = new Point2D(currentX, ist.get(d));
+        //if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
+
+        // Double lo = (d < rect.ymin()) ? d : rect.ymin();
+        // Double hi = (ist.get(d) > rect.ymax()) ? ist.get(d) : rect.ymax();
 
 //                    hiPoint = new Point2D(currentX, rect.ymin());
 //                    loPoint = new Point2D(currentX, rect.ymax());
@@ -566,7 +612,13 @@ public class KdTree {
 //                    temp=p;
 //                    if (rect.contains(temp) && (!points.contains(temp))) points.add(temp);
 //                    }
-                    points.add(new Point2D(currentX,ist.get(d)));
+        // put in the hi as what gets returned
+//                    if (d >= lo && d <= hi) {
+//                        Point2D point = new Point2D(currentX, d);
+//                        if (!points.contains(point) && get(point) != null)
+//                            points.add(point);
+//                    }
+        // points.add(new Point2D(currentX, ist.get(d)));
 //                    temp = loPoint;
 //                    while (!temp.equals(hiPoint)) {
 //                        temp = ceiling(loPoint);
@@ -579,85 +631,126 @@ public class KdTree {
 //                        }
 //
 //                    }
-                }
-            }
+        // }
+        //}
+        //}
+        //myWriter.close();
+        return range(root, r);
+    }
+
+    private Iterable<Point2D> range(Node x, RectHV r) {
+
+        buildChildRectangle(x, x.left, x.right);
+        Point2D lowCorner = new Point2D(r.xmin(), r.ymin());
+        Point2D hiCorner = new Point2D(r.xmax(), r.ymax());
+        Point2D currentNodePoint = x.p;
+        int nodeRank = rank(currentNodePoint);
+        if (nodeRank <= rank(hiCorner) && nodeRank >= (rank(lowCorner)-1)) {
+            if (r.contains(currentNodePoint))
+            points.add(currentNodePoint);
+        }
+        if (r.intersects(x.nodeRect)) {
+            if (x.left != null && x.left.maximX>r.xmin()) range(x.left, r);
+            if (x.right != null) range(x.right, r);
         }
         return points;
     }
 
-
+    //todo: remove filewriter and throws IOException from this method and its overloaded version below before you submit
+    // again. Also remove it from main.
     private void addRemoveToIntervalSearchTree(Double currentX) {
         addRemoveToIntervalSearchTree(root, currentX);
     }
 
+
     private void addRemoveToIntervalSearchTree(Node h, Double currentX) {
-        if (currentX >= h.minXInter) {
+        if (h == null) return;
+        if ((currentX >= h.minXInter) && ((ist.get(h.minYInter) == null) || (!ist.get(h.minYInter).equals(h.yCoord)))) {
             ist.put(h.minYInter, h.maxYInter, h.yCoord);
+            //StdOut.println("for point" + h.p + "miny is: " + h.minYInter + "maxy is: " + h.maxYInter);
+            // myWriter.write("adding " + h.minYInter + ", " + h.maxYInter + ", " + h.yCoord + "\n");
         }
-        if (currentX > h.maxYInter) {
+        if (currentX > h.maxXInter) {
             ist.delete(h.minYInter, h.maxYInter);
+            // myWriter.write("removing " + h.minYInter + ", " + h.maxYInter + "\n");
         }
-        if (h.right != null) addRemoveToIntervalSearchTree(h.right, currentX);
-        if (h.left != null) addRemoveToIntervalSearchTree(h.left, currentX);
+        addRemoveToIntervalSearchTree(h.right, currentX);
+        addRemoveToIntervalSearchTree(h.left, currentX);
     }
 
 
     // build intersects() for this tree and try to use it for range
     private void buildChildRectangle(Node parent, Node leftChild, Node rightChild) {
         if (parent.level % 2 != 0) {
-            // RectHV left = new RectHV(parent.minXInter, parent.minYInter, parent.xCoord, parent.maxYInter);
+            //RectHV left = new RectHV(parent.minXInter, parent.minYInter, parent.xCoord, parent.maxYInter);
 
             // if (parent.left != null) parent.left.nodeRect = left;
             if (leftChild != null && parent.left != null) {
-                // leftChild.nodeRect = new RectHV(parent.minXInter, parent.minYInter, parent.xCoord, parent.maxYInter);
+                //leftChild.nodeRect = new RectHV(parent.minXInter, parent.minYInter, parent.xCoord, parent.maxYInter);
+                leftChild.nodeRect = new RectHV(parent.nodeRect.xmin(), parent.nodeRect.ymin(), parent.nodeRect.xmax(),
+                        parent.yCoord);
 //                parent.left.minXInter = parent.minXInter;
 //                parent.left.minYInter = parent.minYInter;
 //                parent.left.maxXInter = parent.xCoord;
 //                parent.left.maxYInter = parent.maxYInter;
-                leftChild.minXInter = parent.minXInter;
-                leftChild.minYInter = parent.minYInter;
-                leftChild.maxXInter = parent.maxXInter;
-                leftChild.maxYInter = parent.yCoord;
+//                leftChild.minXInter = parent.minXInter;
+//                leftChild.minYInter = parent.minYInter;
+//                leftChild.maxXInter = parent.maxXInter;
+//                leftChild.maxYInter = parent.yCoord;
+                // assert rightChild.maxYInter <= 1.0 : parent.p;
+                //assert leftChild.maxXInter <= 1.0 : parent.p;
             }
 
             // if (parent.right != null) parent.right.nodeRect = right;
             if (rightChild != null && parent.right != null) {
-                // rightChild.nodeRect = new RectHV(parent.xCoord, parent.minYInter, parent.maxXInter, parent.maxYInter);
+                //rightChild.nodeRect = new RectHV(parent.xCoord, parent.minYInter, parent.maxXInter, parent.maxYInter);
+                rightChild.nodeRect = new RectHV(parent.nodeRect.xmin(), parent.yCoord, parent.nodeRect.xmax(),
+                        parent.nodeRect.ymax());
 //                parent.right.minXInter = parent.right.xCoord;
 //                parent.right.minYInter = parent.minYInter;
 //                parent.right.maxXInter = parent.maxXInter;
 //                parent.right.maxYInter = parent.maxYInter;
-                rightChild.minXInter = parent.minXInter;
-                rightChild.minYInter = parent.yCoord;
-                rightChild.maxXInter = parent.maxXInter;
-                rightChild.maxYInter = parent.maxYInter;
+//                rightChild.minXInter = parent.minXInter;
+//                rightChild.minYInter = parent.yCoord;
+//                rightChild.maxXInter = parent.maxXInter;
+//                rightChild.maxYInter = parent.maxYInter;
+//                assert rightChild.maxYInter <= 1.0 : parent.p;
+//                assert rightChild.maxXInter <= 1.0 : parent.p;
             }
         } else if (parent.level % 2 == 0) {
 
             // if (parent.left != null) parent.left.nodeRect = left;
             if (leftChild != null && parent.left != null) {
                 // leftChild.nodeRect = new RectHV(parent.minXInter, parent.minYInter, parent.maxXInter, parent.yCoord);
+                leftChild.nodeRect = new RectHV(parent.nodeRect.xmin(), parent.nodeRect.ymin(), parent.xCoord,
+                        parent.nodeRect.ymax());
 //                parent.left.minXInter = parent.minXInter;
 //                parent.left.minYInter = parent.minYInter;
 //                parent.left.maxXInter = parent.maxXInter;
 //                parent.left.maxYInter = parent.left.yCoord;
-                leftChild.minXInter = parent.minXInter;
-                leftChild.minYInter = parent.minYInter;
-                leftChild.maxXInter = parent.xCoord;
-                leftChild.maxYInter = parent.maxYInter;
+//                leftChild.minXInter = parent.minXInter;
+//                leftChild.minYInter = parent.minYInter;
+//                leftChild.maxXInter = parent.xCoord;
+//                leftChild.maxYInter = parent.maxYInter;
+//                assert leftChild.maxYInter <= 1.0 : parent.p;
+//                assert leftChild.maxXInter <= 1.0 : parent.p;
             }
 
             // if (parent.right != null) parent.right.nodeRect = right;
             if (rightChild != null && parent.right != null) {
-                // rightChild.nodeRect = new RectHV(parent.minXInter, parent.yCoord, parent.maxXInter, parent.maxYInter);
+                //rightChild.nodeRect = new RectHV(parent.minXInter, parent.yCoord, parent.maxXInter, parent.maxYInter);
+                rightChild.nodeRect = rightChild.nodeRect = new RectHV(parent.xCoord, parent.nodeRect.ymin(), parent.nodeRect.xmax(),
+                        parent.nodeRect.ymax());
 //                parent.right.minXInter = parent.minXInter;
 //                parent.right.minYInter = parent.right.yCoord;
 //                parent.right.maxXInter = parent.maxXInter;
 //                parent.right.maxYInter = parent.maxYInter;
-                rightChild.minXInter = parent.xCoord;
-                rightChild.minYInter = parent.minYInter;
-                rightChild.maxXInter = parent.maxXInter;
-                rightChild.maxYInter = parent.maxYInter;
+//                rightChild.minXInter = parent.xCoord;
+//                rightChild.minYInter = parent.minYInter;
+//                rightChild.maxXInter = parent.maxXInter;
+//                rightChild.maxYInter = parent.maxYInter;
+//                assert rightChild.maxYInter <= 1.0 : parent.p;
+//                assert rightChild.maxXInter <= 1.0 : parent.p;
             }
         }
     }
@@ -873,27 +966,191 @@ public class KdTree {
         }
     }
 
+    private void populateTree(KdTree kt, File newFile) {
+        try {
+            Scanner scanner = new Scanner(newFile);
+            while (scanner.hasNext()) {
+                double x = scanner.nextDouble();
+                double y = scanner.nextDouble();
+                Point2D p = new Point2D(x, y);
+                kt.insert(p);
+                // System.out.println(kt.rank(p));
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
+    // public static void main(String[] args) throws IOException {
     public static void main(String[] args) {
-        /* Test all the files to see if they load ok, and seem to produce the right rectangles and etc. */
-        //Point2D p = new Point2D(0.5, 0.5);
+       /*
+        kdtree.insert(new Point2D(0.7, 0.2));
+        kdtree.insert(new Point2D(0.5, 0.4));
+        kdtree.insert(new Point2D(0.2, 0.3));
+        kdtree.insert(new Point2D(0.4, 0.7));
+        kdtree.insert(new Point2D(0.9, 0.6));
+
+        kdtree.draw();*/
+        /*todo - test floor (largest key lees than ...) and ceiling(smallest key more than...Populate the
+           tree first, then run floor and ceiling for each node and nodes slightly less  and more and make
+           sure you get what you are supposed to get
+           Also create tests for failed tests of last feedback. The feedback does not seem to have a huge
+            issue with you using rect.contains() after making sure rectangles intersect, and you can make
+            it moe effecient by creating rectangles one step at a time inside range instead of all at once
+            so go with this for now ) */
+        File fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\distincts.txt");
         KdTree kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        RectHV r = new RectHV(0.6, 0.32, 0.97, 0.8);
+        System.out.println("For file distincts.txt we expect: [0.9,0.6], get:" + kdtree.range(r));
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\distinctpoints.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.082, 0.50, 0.084, 0.52);
+        System.out.println("For file distinctpoints.txt we expect: [0.083,0.51], get:" + kdtree.range(r));
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.371, 0.496, 0.373, 0.498);
+        System.out.println("For file distinctpoints.txt we expect: [0.372,0.497], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.563, 0.412, 0.565, 0.414);
+        System.out.println("For file distinctpoints.txt we expect: [0.564,0.413], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.225, 0.576, 0.227, 0.578);
+        System.out.println("For file distinctpoints.txt we expect: [0.226,0.577], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.143, 0.178, 0.145, 0.180);
+        System.out.println("For file distinctpoints.txt we expect: [0.144,0.179], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.31, 0.707, 0.33, 0.709);
+        System.out.println("For file distinctpoints.txt we expect: [0.32,0.708], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.861, 0.824, 0.863, 0.826);
+        System.out.println("For file distinctpoints.txt we expect: [0.862,0.825], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.784, 0.724, 0.786, 0.726);
+        System.out.println("For file distinctpoints.txt we expect: [0.785,0.725], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.498, 0.207, 0.500, 0.209);
+        System.out.println("For file distinctpoints.txt we expect: [(0.499,0.208)], get:" + kdtree.range(r));
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.5, 0.0, 1.0, 1.0);
+        // StdOut.println("Here is what r looks like: " + r);
+        System.out.println("For file distinctpoints.txt we expect: [(0.564, 0.413), (0.5, 0.5), (0.785, 0.725), " +
+                "(0.862, 0.825), (1.0, 0.5)], get:\n" + kdtree.range(r));
+
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\distinctpoints2.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.5, 0.0, 1.0, 1.0);
+        System.out.println("For file distinctpoints2.txt we expect: [(0.5, 0.5), (1.0, 0.5)], get:" + kdtree.range(r));
+
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.107, 0.54, 0.46, 0.884);
+        // StdOut.println("Here is what r looks like: " + r);
+        System.out.println("For file 3a.txt we expect: [0.4,0.7], get:" + kdtree.range(r));
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\input10.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.598, 0.035, 0.847, 0.367);
+        System.out.println("For file input10.txt we expect: empty , get:" + kdtree.range(r));
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\3b.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.125, 0.25, 0.5, 0.625);
+        // StdOut.println("Here is what r looks like: " + r);
+        System.out.println("For file 3b.txt we expect: [0.25, 0.5] , get:" + kdtree.range(r));
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\non-degenerate.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.3125, 0.5625, 0.875, 0.9375);
+        // StdOut.println("Here is what r looks like: " + r);
+        System.out.println("For file non-degenerate.txt we expect: [(0.5,0.8125), (0.5625, 0.6875)] , get:" + kdtree.range(r));
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\non-degenerate2.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.1875, 0.15625, 0.4375, 0.6875);
+        // StdOut.println("Here is what r looks like: " + r);
+        System.out.println("For file non-degenerate.txt we expect: [(0.21875, 0.0.375), (0.375,0.21875)] , get:" + kdtree.range(r));
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\3c.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        r = new RectHV(0.514, 0.066, 0.972, 0.953);
+        // StdOut.println("Here is what r looks like: " + r);
+        System.out.println("For file 3c.txt we expect: [(0.564,0.413), (0.785,0.725),(0.862, 0.0.825)] , and get:" +
+                kdtree.range(r));
+        fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\circle10000.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        Stopwatch timer = new Stopwatch();
+        r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627,
+                0.2066802978515626);
+        //StdOut.println("Here is what r looks like: " + r);
+        double time = timer.elapsedTime();
+        System.out.println("For file circle10000.txt we expect: [(0.50347900390626, 0.2066802978515626)] , and get:" +
+                kdtree.range(r) + " and it took: " + time + " milliseconds.");
+        // fileName = new File("C:\\Users\\kashk\\IdeaProjects\\Streams\\src\\main\\resources\\kdtests\\input1M.txt");
+        // kdtree = new KdTree();
+        //kdtree.populateTree(kdtree, fileName);
+        //r = new RectHV(0.761520, 0.842538, 0.761522, 0.842540);
+        //StdOut.println("Here is what r looks like: " + r);
+        // System.out.println("For file input1M.txt we expect: [(0.761521,0.842539)] , and get: "+ kdtree.range(r));
+
+//        System.out.println("High corner: " + kdtree.select(kdtree.rank(new Point2D(0.972, 0.953))));
+//        System.out.println("Low corner: " + kdtree.select(kdtree.rank(new Point2D(0.514, 0.066))).p);
+//        System.out.println(kdtree.select(kdtree.rank(new Point2D(0.972, 0.953)) -
+//                kdtree.rank(new Point2D(0.514, 0.066))).p);
+//        System.out.println("Here are the points between the two corners of the rectangle: ");
+//        for (int i = kdtree.rank(new Point2D(0.972, 0.953)); i >= kdtree.rank(new Point2D(0.514, 0.066)); i--) {
+//            if (kdtree.select(i) != null) System.out.println(kdtree.select(i).p);
+//        }
+
+
+        /*HashMap<Integer, Point2D> actualRange = new HashMap<>();
+        int i = 0;
+        for (Point2D p : kt.range(r)) {
+            actualRange.put(i++, p);
+        }
+        for (Point2D point : expectedPoints) {
+            if (point != null) {
+                try {
+                    assert (actualRange.containsValue(point) && i == actualRange.size()) : "Expected and actual points are not the same. ";
+                } catch (AssertionError assertionError) {
+                    StdOut.println("actual and expected range are not equal for rectangle " + r);
+                }
+            }
+        }
+        System.out.println("Expected Points are: ");
+        for (Point2D point2D : expectedPoints) {
+            StdOut.println(point2D);
+        }
+        StdOut.println("KdTree range returns:");
+        for (Point2D point2D : kt.range(r)) {
+            StdOut.println(point2D);
+        }
+        r = new RectHV(0.371, 0.496, 0.373, 0.498);
+        System.out.println("Expect: [0.372,0.497], get:" + kt.range(r));*/
+        // Point2D p = new Point2D(0.5, 0.5);
+        // KdTree kdtree = new KdTree();
         /* for (int i = 0; i < 20; i++) {
             kdtree.insert(p);
         }
         System.out.println(kdtree.size()); */
-        String filename = args[0];
-        In in = new In(filename);
+        //String filename = args[0];
+        //In in = new In(filename);
         // System.out.println("isEmpty() should be true. " + kdtree.isEmpty());
         // Stopwatch timer = new Stopwatch();
-        while (!in.isEmpty()) {
-            double x = in.readDouble();
-            double y = in.readDouble();
-            Point2D p = new Point2D(x, y);
-            kdtree.insert(p);
-            // kdtree.size();
-            // kdtree.isEmpty();
-        }
+        //while (!in.isEmpty()) {
+        //double x = in.readDouble();
+        //double y = in.readDouble();
+        //Point2D p = new Point2D(x, y);
+        //kt.insert(p);
+        // kdtree.size();
+        // kdtree.isEmpty();
+        //}
 //        for (Node n:kdtree.keys()) {
 //            System.out.println("The ranks for point "+n.p + "is: "+kdtree.rank(n.p));
 //        }
@@ -907,14 +1164,14 @@ public class KdTree {
         // kdtree.draw();
         // From Distinct Points file
         //RectHV r = new RectHV(0.082, 0.5, 0.084, 0.52);// passed
-        RectHV r = new RectHV(0.082,0.178,0.145,0.52);
+        // RectHV r = new RectHV(0.082,0.178,0.145,0.52);
         // RectHV r = new RectHV(0.498, 0.207, 0.500, 0.209); passed
-        // RectHV r = new RectHV(0.563, 0.412, 0.565, 0.414); passed
+        //RectHV r = new RectHV(0.563, 0.412, 0.565, 0.414); //passed
         // RectHV r = new RectHV(0.225, 0.576, 0.227, 0.578); passed
         // RectHV r = new RectHV(0.143, 0.178, 0.145, 0.18); passed
         // RectHV r = new RectHV(0.31, 0.707, 0.33, 0.709); passed
         // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363);  passed
-        // RectHV r = new RectHV(0.416, 0.361, 0.418, 0.363);
+        //RectHV r = new RectHV(0.371, 0.496, 0.373, 0.498);
         // RectHV r = new RectHV(0.862, 0.824, 0.864, 0.826);
         // from Circle4.txt
         // RectHV r = new RectHV(0.0, 0.49, 0.1, 0.51); 0.0,0.5 works
@@ -945,7 +1202,8 @@ public class KdTree {
         //RectHV r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627, 0.2066802978515627);
         // RectHV r = new RectHV(0.052656, 0.723348, 0.052658, 0.72335); from 10000.txt
         // RectHV r = new RectHV(0.0, 0.125, 1.0, 0.25);
-        System.out.println(" rectangle: " + r + " contains the following points: " + kdtree.range(r));
+        //System.out.println(" rectangle: " + r + " contains the following points: ");
+        //for (Point2D p : kdtree.range(r)) System.out.println(p);
         // System.out.println("Here is the size of the tree. " + kdtree.size());
         // System.out.println("Here is the nearest node to 0.81, 0.30: " + kdtree.nearest(new Point2D(0.81, 0.30)));
         // System.out.println("The nearest point should be 0.052657, 0.723349: " + kdtree.nearest(new Point2D(0.052657, 0.723340)));
