@@ -28,8 +28,6 @@ public class KdTree {
     public KdTree() {
     }
 
-
-
     private Node root;
     private Queue<Point2D> queue = new Queue<Point2D>();
     private Queue<Node> q = new Queue<>();
@@ -38,10 +36,6 @@ public class KdTree {
     private ArrayList<Point2D> intersectingNodes = new ArrayList<>();
     private boolean result = false;
     // private int level = 0;
-
-
-
-
 //    File myObject = new File("output.txt");
 //    FileWriter myWriter = new FileWriter(myObject);
 
