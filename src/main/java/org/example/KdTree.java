@@ -360,38 +360,93 @@ public class KdTree {
 
     private void nearest(Node h, Point2D pt) {
         if (h == null) return;
-
-        // System.out.println("Visited:  " + h.p);
+        // if (h.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearestNeig = h.p;
         buildChildRectangle(h, h.left, h.right);
+        if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) > nearestNeig.distanceSquaredTo(pt)) {
+            h = h.right;
+            buildChildRectangle(h, h.left, h.right);
+        }
+        if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) > nearestNeig.distanceSquaredTo(pt)) {
+            h = h.left;
+            buildChildRectangle(h, h.left, h.right);
+        }
+        System.out.println("Visited:  " + h.p);
+
         // go towards pt first, but check both sides -- check to see if the point is in left rectangle
         /* tests: 1) is h.left or h.right null ? 2) Does the node's rect contain the point? 3) Is the distance of the
          * node's point less than the current distance of nearestNeig? */
-        if (h.right == null && h.left != null) nearest(h.left, pt);
-        if (h.left == null && h.right != null) nearest(h.right, pt);
-        if (h.right != null && h.left != null && h.left.p.distanceSquaredTo(pt) < h.right.p.distanceSquaredTo(pt)) {
+        if (h.right == null && h.left != null) {
             if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                 if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                     nearestNeig = h.left.p;
                 }
-                nearest(h.left, pt);
             }
-            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
-                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
-                    nearestNeig = h.right.p;
-                }
-                nearest(h.right, pt);
-            }
-            //nearest2(h.right, pt);
-        } else if (h.right != null && h.left != null && h.right.p.distanceSquaredTo(pt) < h.left.p.distanceSquaredTo(pt)) {
-            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
-                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
-                    nearestNeig = h.right.p;
-                    nearest(h.right, pt);
-                }
-            }
-            nearest(h.left, pt);
+            if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearest(h.left, pt);
         }
-        if (h.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearestNeig = h.p;
+        if (h.left == null && h.right != null) {
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.right.p;
+                }
+            }
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearest(h.right, pt);
+        }
+        if (h.right != null && h.left != null && h.left.nodeRect.contains(pt)) {
+            if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.left.p;
+                }
+            }
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.right.p;
+                }
+            }
+            if ( h.right.nodeRect.contains(pt)) {
+                if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearest(h.right, pt);
+                if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearest(h.left, pt);
+            } else if ( h.left.nodeRect.contains(pt)) {
+                if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                    nearest(h.left, pt);
+                if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                    nearest(h.right, pt);
+            }
+        }
+        else if (h.right != null && h.left != null && h.right.nodeRect.contains(pt)) {
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.right.p;
+                }
+            }
+            if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig =h.left.p;
+                }
+            }
+            if ( h.right.nodeRect.contains(pt)) {
+                if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearest(h.right, pt);
+                if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearest(h.left, pt);
+            } else if ( h.left.nodeRect.contains(pt)) {
+                if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                    nearest(h.left, pt);
+                if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                    nearest(h.right, pt);
+            }
+        }
+
+        if (h.right != null && h.right.nodeRect.contains(pt)) {
+            if ( h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                nearest(h.right, pt);
+            if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                nearest(h.left, pt);
+        } else if (h.left != null && h.left.nodeRect.contains(pt)) {
+            if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                nearest(h.left, pt);
+            if (h.right!=null && h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                nearest(h.right, pt);
+        }
+
+
     }
 
     /*private Point2D nearest2(Point2D pt) {
@@ -604,9 +659,50 @@ public class KdTree {
         kdtree.populateTree(kdtree, fileName);
         point = new Point2D(0.385, 0.073);
         System.out.println("expecting (0.2, 0.3), and getting: " + kdtree.nearest(point));
-
-        // System.out.println("expecting (0.499, 0.208), and getting: " + kdtree.nearest2(point));
-        /* All these tests for range() passed
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\input10.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.759, 0.543);
+        System.out.println("expecting (0.785, 0.725), and getting: " + kdtree.nearest(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.662, 0.874);
+        System.out.println("expecting (0.4, 0.7), and getting: " + kdtree.nearest(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\input10.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.315, 0.09);
+        System.out.println("expecting (0.144, 0.179), and getting: " + kdtree.nearest(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3d.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.9375, 0.4375);
+        System.out.println("expecting (0.75, 0.5), and getting: " + kdtree.nearest(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.06, 0.88);
+        // System.out.println(" Here is the result of nearest version 2: expecting (0.9, 0.6), and visited nodes should be: (0.7, 0.2) (0.9, 0.6) (0.5, 0.4) (0.4, 0.7), (0.2, 0.3) getting: " + kdtree.nearest2(point));
+        System.out.println("expecting (0.4, 0.7), and getting: " + kdtree.nearest(point));
+        System.out.println(" visited nodes should be: (0.7, 0.2) (0.5, 0.4) (0.4, 0.7). ");
+        // System.out.println("expecting (0.9, 0.6), and getting: " + kdtree.nearest2(point));
+        /*System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\input200K.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.203125, 0.59375);
+        Point2D e = new Point2D(0.3125, 0.578125);
+        System.out.println("expecting (0.3125, 0.578125), and getting: " + kdtree.nearest(point));
+        System.out.println("Distance to actual value: " + point.distanceSquaredTo(kdtree.nearest(point)));
+        StdOut.println("Distance to actual value: " + point.distanceSquaredTo(kdtree.nearest(point)));
+        System.out.println("Distance to expected value: " + e.distanceSquaredTo(point));
+         All these tests for range() passed
         File fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\distincts.txt");
         KdTree kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
