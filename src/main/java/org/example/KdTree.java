@@ -1,21 +1,18 @@
 package org.example;
 
-
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.Stopwatch;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
-/* todo -- Build a KdTree with the Key, Value generics and Key being the point, and perhaps the value of
-    type node. The implement insert first and make sure it works.
-    todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
+/*
+     todo: Arrays of primitive types usually use 24 bytes of header information ( 16 bytes of a object overhead, 4 bytes
      for the length and 4 bytes for padding plus the memory needed to store the values. An array of objects uses 24 bytes
      of overhead plus 8N for each object; plus the object size
      todo: node memory: 8 bytes for each key and value, 8 * 4 = 32, 4 bytes for N, and 16 bytes of Object overhead,
@@ -35,9 +32,8 @@ public class KdTree {
     private MinPQ<Double> xCoordinates = new MinPQ<>();
     private ArrayList<Point2D> intersectingNodes = new ArrayList<>();
     private boolean result = false;
-    // private int level = 0;
-//    File myObject = new File("output.txt");
-//    FileWriter myWriter = new FileWriter(myObject);
+    private Point2D nearestNeig = new Point2D(0.0, 0.0);
+
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -47,13 +43,6 @@ public class KdTree {
         RectHV nodeRect;
         double xCoord;
         double yCoord;
-        double maximX = 0;
-        double maximY = 0;
-        double minXInter = 0.0;
-        double maxXInter = 1.0;
-        Double minYInter = 0.0;
-        Double maxYInter = 1.0;
-
 
         public Node(Point2D p, int n, RectHV rect) {
             this.p = p;
@@ -92,8 +81,6 @@ public class KdTree {
 
     private void draw(Node h) {
         buildChildRectangle(h, h.left, h.right);
-        // convert the rectangle to
-        // RectHV tempRect;
         // StringBuilder sb = new StringBuilder();
         if (h.level % 2 == 0) {
             StdDraw.setPenColor(StdDraw.BLACK);
@@ -130,13 +117,6 @@ public class KdTree {
         if (h.right != null) {
             draw(h.right);
         }
-    }
-
-    private void drawRectangle(Node h) {
-        StdDraw.line(h.minXInter, h.minYInter, h.maxXInter, h.minYInter);
-        StdDraw.line(h.minXInter, h.minYInter, h.minXInter, h.maxYInter);
-        StdDraw.line(h.minXInter, h.maxYInter, h.maxXInter, h.maxYInter);
-        StdDraw.line(h.maxXInter, h.minYInter, h.maxXInter, h.maxYInter);
     }
 
     public boolean isEmpty() {
@@ -219,12 +199,7 @@ public class KdTree {
     }
 
     public boolean contains(Point2D point) {
-        result = false;
-        if (point.equals(null)) throw new IllegalArgumentException("You have to pass a valid point object");
-        if (isEmpty()) return false;
-        if (get(point) == null) return false;
-        if (get(point).equals(point)) return true;
-        else return false;
+        return get(point) != null;
     }
 
     private boolean pointIsInsideRectangle(double px, double py, double minx, double miny, double maxx, double maxy) {
@@ -247,28 +222,6 @@ public class KdTree {
         Node t = ceiling(x.left, h);
         if (t != null) return t;
         else return x;
-    }
-
-    private boolean contains(Node h, Node n) {
-
-        if (h == null) {
-            return result;
-        }
-        int cmp = h.compareTo(n);
-        if (cmp > 0 && h.left != null && h.left.maximX < n.xCoord) {
-            h = h.left;
-            if (h.p.equals(n.p)) return result = true;
-            else contains(h, n);
-        } else if (cmp < 0 && h.right != null && h.right.maximX < n.xCoord) {
-
-            h = h.right;
-            if (h.p.equals(n.p)) return result = true;
-            else contains(h, n);
-            //}
-        }
-        if (h.p.equals(n.p)) result = true;
-        else if (h.left == null && h.right == null) return false;
-        return result;
     }
 
     private Node floor(Point2D p) {
@@ -300,13 +253,10 @@ public class KdTree {
     private Iterable<Point2D> range(Node x, RectHV r) {
         buildChildRectangle(x, x.left, x.right);
         Point2D currentNodePoint = x.p;
-        // System.out.println("visted node " + currentNodePoint);
         double currentXCoord = currentNodePoint.x();
         double currentYCoord = currentNodePoint.y();
-        if (r.intersects(x.nodeRect)) {
-            if (currentXCoord >= r.xmin() && currentXCoord <= r.xmax() && currentYCoord >=
-                    r.ymin() && currentYCoord <= r.ymax()) points.add(currentNodePoint);
-        }
+        if (currentXCoord >= r.xmin() && currentXCoord <= r.xmax() && currentYCoord >=
+                r.ymin() && currentYCoord <= r.ymax()) points.add(currentNodePoint);
         if (x.left != null && r.intersects(x.left.nodeRect)) range(x.left, r);
         if (x.right != null && r.intersects(x.right.nodeRect)) range(x.right, r);
         return points;
@@ -314,13 +264,11 @@ public class KdTree {
 
     private void buildChildRectangle(Node parent, Node leftChild, Node rightChild) {
         if (parent.level % 2 != 0) {
-
             if (leftChild != null && parent.left != null) {
                 leftChild.nodeRect = new RectHV(parent.nodeRect.xmin(), parent.nodeRect.ymin(), parent.nodeRect.xmax(),
                         parent.yCoord);
 
             }
-
             if (rightChild != null && parent.right != null) {
                 rightChild.nodeRect = new RectHV(parent.nodeRect.xmin(), parent.yCoord, parent.nodeRect.xmax(),
                         parent.nodeRect.ymax());
@@ -330,13 +278,10 @@ public class KdTree {
 
                 leftChild.nodeRect = new RectHV(parent.nodeRect.xmin(), parent.nodeRect.ymin(), parent.xCoord,
                         parent.nodeRect.ymax());
-//
             }
-
             if (rightChild != null && parent.right != null) {
                 rightChild.nodeRect = rightChild.nodeRect = new RectHV(parent.xCoord, parent.nodeRect.ymin(), parent.nodeRect.xmax(),
                         parent.nodeRect.ymax());
-//
             }
         }
     }
@@ -349,8 +294,6 @@ public class KdTree {
         n.xCoord = p.x();
         xCoordinates.insert(n.xCoord);
         n.yCoord = p.y();
-        n.maximX = n.xCoord;
-        n.maximY = n.yCoord;
         root = insert(root, n);
     }
 
@@ -361,13 +304,9 @@ public class KdTree {
         int cmp = h.compareTo(n);
         if (cmp < 0) {
             h.right = insert(h.right, n);
-            h.maximX = Math.max(h.right.maximX, h.maximX);
-            h.maximY = Math.max(h.right.maximY, h.maximY);
             h.right.level = h.level + 1;
         } else if (cmp > 0) {
             h.left = insert(h.left, n);
-            h.maximX = Math.max(h.left.maximX, h.maximX);
-            h.maximY = Math.max(h.left.maximY, h.maximY);
             h.left.level = h.level + 1;
         } else (h.p) = n.p;
         h.N = size(h.left) + size(h.right) + 1;
@@ -409,96 +348,90 @@ public class KdTree {
         print(x.right);
     }
 
-    public Point2D nearest(Point2D p) {
-        if (p == null) throw new IllegalArgumentException("Data passed to nearest() can not be null.");
-        if (root == null) throw new IllegalArgumentException("The tree is empty.");
-        if (contains(p)) return p;
-        Point2D nearestNeig = root.p;
-        // pointsVisited.add(nearestNeig);
-        // nodesVisited++;
-        // System.out.println("Tree size : " + root.N);
+    public Point2D nearest(Point2D pt) {
+        if (pt == null) throw new IllegalArgumentException("Data passed to nearest() can not be null.");
+        if (root == null) return null;
+        if (contains(pt)) return pt;
+        nearestNeig = root.p;
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
-        return nearest(root, p, nearestNeig);
+        nearest(root, pt);
+        return nearestNeig;
     }
 
-    private Point2D nearest(Node h, Point2D p, Point2D nearstP) {
-        RectHV rHl = null;
-        RectHV rHr = null;
-        h.xCoord = h.p.x();
-        h.yCoord = h.p.y();
-        if (h == null) return nearstP;
-        if (h.level == 0) { // if (h.parent == null) {
-            rHl = new RectHV(0.0, 0.0, h.xCoord, 1.0);
-            rHr = new RectHV(h.xCoord, 0.0, 1.0, 1.0);
-        } else if (h.level > 0) { // if (h.parent != null) {
-            if (h.level % 2 == 0) { // if (!h.orientation) {
-                rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.xCoord, h.nodeRect.ymax());
-                rHr = new RectHV(h.xCoord, h.nodeRect.ymin(), h.nodeRect.xmax(), h.nodeRect.ymax());
-            } else if (h.level % 2 != 0) { // } else if (h.orientation) {
-                rHl = new RectHV(h.nodeRect.xmin(), h.nodeRect.ymin(), h.nodeRect.xmax(), h.yCoord);
-                rHr = new RectHV(h.nodeRect.xmin(), h.yCoord, h.nodeRect.xmax(), h.nodeRect.ymax());
-            }
-        }
-        if (!rHl.contains(p) || !(rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
-            if (h.left != null) {
-                h.left.nodeRect = rHl;
-                // h.left.parent = h;
-            }
+    private void nearest(Node h, Point2D pt) {
+        if (h == null) return;
 
-            if (h.right != null && rHr.contains(p)) {
-                h.right.nodeRect = rHr;
-                h = h.right;
-                nearstP = nearest(h, p, nearstP);
+        // System.out.println("Visited:  " + h.p);
+        buildChildRectangle(h, h.left, h.right);
+        // go towards pt first, but check both sides -- check to see if the point is in left rectangle
+        /* tests: 1) is h.left or h.right null ? 2) Does the node's rect contain the point? 3) Is the distance of the
+         * node's point less than the current distance of nearestNeig? */
+        if (h.right == null && h.left != null) nearest(h.left, pt);
+        if (h.left == null && h.right != null) nearest(h.right, pt);
+        if (h.right != null && h.left != null && h.left.p.distanceSquaredTo(pt) < h.right.p.distanceSquaredTo(pt)) {
+            if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.left.p;
+                }
+                nearest(h.left, pt);
             }
-        } else if (!rHr.contains(p) && !(rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
-            h.right.nodeRect = rHr;
-            // h.right.parent = h;
-            if (h.left != null) {
-                h.left.nodeRect = rHl;
-                h = h.left;
-                nearstP = nearest(h, p, nearstP);
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.right.p;
+                }
+                nearest(h.right, pt);
             }
-        } else if (rHl.contains(p) && (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
-            // check rHl for points
-            if (rHl.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP)) {
-                if (h.left != null) {
-                    // nodesVisited++;
-                    // System.out.println("Tree size : " + h.N);
-                    if (h.left.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                        nearstP = h.left.p;
-                        // pointsVisited.add(nearstP);
-                    }
-                    // h.left.parent = h;
-                    if (h.right != null) {
-                        // h.right.parent = h;
-                        h.right.nodeRect = rHr;
-                    }
-                    h.left.nodeRect = rHl;
-                    nearstP = nearest(h.left, p, nearstP);
-                    // nearstP = nearest(h.right, p, nearstP);
+            //nearest2(h.right, pt);
+        } else if (h.right != null && h.left != null && h.right.p.distanceSquaredTo(pt) < h.left.p.distanceSquaredTo(pt)) {
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.right.p;
+                    nearest(h.right, pt);
                 }
             }
-        } else if (rHr.contains(p) && (rHr.distanceSquaredTo(p) < p.distanceSquaredTo(nearstP))) {
-            // check rHr
-
-            if (h.right != null) {
-                // nodesVisited++;
-                // System.out.println("Tree size : " + h.N);
-                if (h.right.p.distanceSquaredTo(p) < nearstP.distanceSquaredTo(p)) {
-                    nearstP = h.right.p;
-                    // pointsVisited.add(nearstP);
-                }
-                // h.right.parent = h;
-                // h.left.parent = h;
-                h.left.nodeRect = rHl;
-                h.right.nodeRect = rHr;
-                nearstP = nearest(h.right, p, nearstP);
-                // nearstP = nearest(h.left, p, nearstP);
-                // floor and ceiling might help
-            }
+            nearest(h.left, pt);
         }
-        return nearstP;
+        if (h.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) nearestNeig = h.p;
     }
+
+    /*private Point2D nearest2(Point2D pt) {
+        if (pt == null) throw new IllegalArgumentException("Data passed to nearest() can not be null.");
+        if (root == null) return null;
+        if (contains(pt)) return pt;
+        nearestNeig = root.p;
+        root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
+        nearest2(root, pt);
+        return nearestNeig;
+    }*/
+
+    /*private void nearest2(Node h, Point2D pt) {
+        if (h == null) return;
+        buildChildRectangle(h, h.left, h.right);
+        if (h.right == null && h.left != null) nearest(h.left, pt);
+        if (h.left == null && h.right != null) nearest(h.right, pt);
+        if (h.right != null && h.left != null && h.left.p.distanceSquaredTo(pt) < h.right.p.distanceSquaredTo(pt)) {
+            if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.left.p;
+                    nearest2(h.left, pt);
+                }
+            }
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.right.p;
+                    nearest2(h.right, pt);
+                }
+            }
+        } else if (h.right != null && h.left != null && h.right.p.distanceSquaredTo(pt) < h.left.p.distanceSquaredTo(pt)) {
+            if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    nearestNeig = h.right.p;
+                    nearest2(h.right, pt);
+                }
+            }
+            nearest2(h.left, pt);
+        }
+    }*/
 
     private int height(Node root) {
         if (root == null)
@@ -570,13 +503,116 @@ public class KdTree {
             System.out.println(e.getMessage());
         }
     }
+
     public static void main(String[] args) {
+        // empty file should result in null returned value from nearest()
+        File fileName = new File("src\\main\\resources\\input0.txt");
+        KdTree kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        Point2D point = new Point2D(0.5, 0.5);
+        assert kdtree.nearest(point) == null : "Empty file does not return null.";
+        // assert kdtree.nearest2(point) == null : "Empty file does not return null.";
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.9, 0.7);
+        System.out.println(" expecting (0.9, 0.6), getting: " + kdtree.nearest(point));
+        // System.out.println(" expecting (0.9, 0.6), getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.5, 0.5);
+        System.out.println(" expecting (0.5, 0.4), getting: " + kdtree.nearest(point));
+        // System.out.println(" expecting (0.5, 0.4), getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.1, 0.1);
+        System.out.println(" expecting (0.2, 0.3), getting: " + kdtree.nearest(point));
+        // System.out.println(" expecting (0.2, 0.3), getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.3, 0.8);
+        System.out.println(" expecting (0.4, 0.7), getting: " + kdtree.nearest(point));
+        // System.out.println(" expecting (0.4, 0.7), getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.5, 0.8);
+        System.out.println(" expecting (0.4, 0.7), getting: " + kdtree.nearest(point));
+        // System.out.println(" expecting (0.4, 0.7), getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.95, 0.5);
+        System.out.println(" expecting (0.9, 0.6), getting: " + kdtree.nearest(point));
+        // System.out.println(" expecting (0.9, 0.6), getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.158, 0.553);
+        System.out.println(" expecting (0.2, 0.3), getting: " + kdtree.nearest(point));
+        // System.out.println(" expecting (0.2, 0.3), getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.78, 0.44);
+        // System.out.println(" expecting (0.9, 0.6), and visited nodes should be: (0.7, 0.2) (0.9, 0.6) (0.5, 0.4) (0.4, 0.7), (0.2, 0.3) getting: " + kdtree.nearest(point));
+        // System.out.println(" Here is the result of nearest version 2: expecting (0.9, 0.6), and visited nodes should be: (0.7, 0.2) (0.9, 0.6) (0.5, 0.4) (0.4, 0.7), (0.2, 0.3) getting: " + kdtree.nearest2(point));
+        System.out.println("expecting (0.9, 0.6), and getting: " + kdtree.nearest(point));
+        // System.out.println("expecting (0.9, 0.6), and getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.707, 0.978);
+        System.out.println("expecting (0.4, 0.7), and getting: " + kdtree.nearest(point));
+        // System.out.println("expecting (0.4, 0.7), and getting: " + kdtree.nearest2(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\input10.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.362, 0.128);
+        System.out.println("expecting (0.499, 0.208), and getting: " + kdtree.nearest(point));
+        Point2D ExistingPoint = new Point2D(0.785, 0.725);
+        StdOut.println("Testing get(). Expecting null, and getting: " + kdtree.get(point));
+        StdOut.println("Testing get(). Expecting (0.785, 0.725), and getting: " + kdtree.get(ExistingPoint));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.396, 0.077);
+        System.out.println("expecting (0.2, 0.3), and getting: " + kdtree.nearest(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\input10.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.671, 0.077);
+        System.out.println("expecting (0.499, 0.208), and getting: " + kdtree.nearest(point));
+        System.out.println("*******************next test*****************************");
+        fileName = new File("src\\main\\resources\\3a.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.385, 0.073);
+        System.out.println("expecting (0.2, 0.3), and getting: " + kdtree.nearest(point));
+
+        // System.out.println("expecting (0.499, 0.208), and getting: " + kdtree.nearest2(point));
+        /* All these tests for range() passed
         File fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\distincts.txt");
         KdTree kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         kdtree.draw();
         RectHV r = new RectHV(0.6, 0.32, 0.97, 0.8);
-        //RectHV r = new RectHV(0.58, 0.68, 0.87, 0.79);
+        // RectHV r = new RectHV(0.58, 0.68, 0.87, 0.79);
         StdOut.println("Here is what r looks like: " + r);
         System.out.println("For file distincts.txt we expect: [0.9,0.6], get:" + kdtree.range(r));
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\distinctpoints.txt");
@@ -611,21 +647,19 @@ public class KdTree {
         System.out.println("For file distinctpoints.txt we expect: [(0.499,0.208)], get:" + kdtree.range(r));
         kdtree.populateTree(kdtree, fileName);
         r = new RectHV(0.5, 0.0, 1.0, 1.0);
-        // StdOut.println("Here is what r looks like: " + r);
+        StdOut.println("Here is what r looks like: " + r);
         System.out.println("For file distinctpoints.txt we expect: [(0.564, 0.413), (0.5, 0.5), (0.785, 0.725), " +
                 "(0.862, 0.825), (1.0, 0.5)], get:\n" + kdtree.range(r));
-
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\distinctpoints2.txt");
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         r = new RectHV(0.5, 0.0, 1.0, 1.0);
         System.out.println("For file distinctpoints2.txt we expect: [(0.5, 0.5), (1.0, 0.5)], get:" + kdtree.range(r));
-
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\3a.txt");
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         r = new RectHV(0.107, 0.54, 0.46, 0.884);
-        // StdOut.println("Here is what r looks like: " + r);
+        StdOut.println("Here is what r looks like: " + r);
         System.out.println("For file 3a.txt we expect: [0.4,0.7], get:" + kdtree.range(r));
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\input10.txt");
         kdtree = new KdTree();
@@ -636,25 +670,25 @@ public class KdTree {
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         r = new RectHV(0.125, 0.25, 0.5, 0.625);
-        // StdOut.println("Here is what r looks like: " + r);
+        StdOut.println("Here is what r looks like: " + r);
         System.out.println("For file 3b.txt we expect: [0.25, 0.5] , get:" + kdtree.range(r));
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\non-degenerate.txt");
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         r = new RectHV(0.3125, 0.5625, 0.875, 0.9375);
-        // StdOut.println("Here is what r looks like: " + r);
+        StdOut.println("Here is what r looks like: " + r);
         System.out.println("For file non-degenerate.txt we expect: [(0.5,0.8125), (0.5625, 0.6875)] , get:" + kdtree.range(r));
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\non-degenerate2.txt");
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         r = new RectHV(0.1875, 0.15625, 0.4375, 0.6875);
-        // StdOut.println("Here is what r looks like: " + r);
+        StdOut.println("Here is what r looks like: " + r);
         System.out.println("For file non-degenerate.txt we expect: [(0.21875, 0.0.375), (0.375,0.21875)] , get:" + kdtree.range(r));
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\3c.txt");
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         r = new RectHV(0.514, 0.066, 0.972, 0.953);
-        // StdOut.println("Here is what r looks like: " + r);
+        StdOut.println("Here is what r looks like: " + r);
         System.out.println("For file 3c.txt we expect: [(0.564,0.413), (0.785,0.725),(0.862, 0.0.825)] , and get:" +
                 kdtree.range(r));
         fileName = new File("C:\\Users\\kashk\\IdeaProjects\\KDTrees\\src\\main\\resources\\kdtests\\circle10000.txt");
@@ -663,10 +697,13 @@ public class KdTree {
         Stopwatch timer = new Stopwatch();
         r = new RectHV(0.50347900390625, 0.2066802978515625, 0.50347900390627,
                 0.2066802978515626);
-        //StdOut.println("Here is what r looks like: " + r);
+        StdOut.println("Here is what r looks like: " + r);
         double time = timer.elapsedTime();
         System.out.println("For file circle10000.txt we expect: [(0.50347900390626, 0.2066802978515626)] , and get:" +
-                kdtree.range(r) + " and it took: " + time + " milliseconds.");
+                kdtree.range(r) + " and it took: " + time + " milliseconds."); */
     }
 }
+
+
+
 

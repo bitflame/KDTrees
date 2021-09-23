@@ -198,66 +198,6 @@ public class PointSET {
         return time;
     }
 
-    private static double containsTime(int n) {
-        /* See how long it takes to push 100000 points */
-        PointSET pSet = new PointSET();
-        Stack<Point2D> s = new Stack<>();
-        for (int i = 0; i < 1000000; i++) {
-            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0), StdRandom.uniform(0.0, 1.0));
-            s.push(p);
-        }
-        // RectHV r = new RectHV(0.08, 0.3, 0.12, 0.5);
-        Stopwatch timer2 = new Stopwatch();
-        for (Point2D p : s) {
-            pSet.contains(p);
-        }
-        double time2 = timer2.elapsedTime();
-        double logOfPoints = Math.log(n);
-        StdOut.printf("Log of %d nodes is: %4f, and contains() takes %4f to push 100000 nodes into %d " +
-                "nodes.", n, logOfPoints, time2, n);
-        return time2;
-    }
-
-    private static double rangeTimes(int n) {
-        PointSET pSet = new PointSET();
-        // Stack<Point2D> s = new Stack<>();
-        for (int i = 1; i < n; i++) {
-            Point2D p = new Point2D(StdRandom.uniform(0.0, 1.0),
-                    StdRandom.uniform(0.0, 1.0));
-            pSet.insert(p);
-        }
-        /* Create a random size rectangle, and see how long range() takes */
-        double xmin = 0;
-        double xmax = 0;
-        double ymin = 0;
-        double ymax = 0;
-        double temp = 0;
-
-        xmin = StdRandom.uniform(0.0, 1.0);
-        xmax = StdRandom.uniform(0.0, 1.0);
-        if (xmax < xmin) {
-            temp = xmax;
-            xmax = xmin;
-            xmin = temp;
-        }
-        ymin = StdRandom.uniform(0.0, 1.0);
-        ymax = StdRandom.uniform(0.0, 1.0);
-        if (ymax < ymin) {
-            temp = ymax;
-            ymax = ymin;
-            ymin = temp;
-        }
-        RectHV r = new RectHV(xmin, ymin, xmax, ymax);
-        Stopwatch timer3 = new Stopwatch();
-        pSet.range(r);
-        double time3 = timer3.elapsedTime();
-        // double timePerSetSize = time3 / n;
-        double logOfPoints = Math.log(n);
-        StdOut.printf("Log of %d nodes is: %4f, and range() takes %4f for set size: %n",
-                n, logOfPoints, time3);
-        return time3;
-    }
-
     public static void main(String[] args) {
         String filename = args[0];
         In in = new In(filename);
