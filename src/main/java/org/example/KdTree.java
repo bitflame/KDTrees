@@ -279,7 +279,7 @@ public class KdTree {
                         parent.nodeRect.ymax());
             }
             if (rightChild != null && parent.right != null) {
-                rightChild.nodeRect = rightChild.nodeRect = new RectHV(parent.xCoord, parent.nodeRect.ymin(), parent.nodeRect.xmax(),
+                rightChild.nodeRect = new RectHV(parent.xCoord, parent.nodeRect.ymin(), parent.nodeRect.xmax(),
                         parent.nodeRect.ymax());
             }
         }
@@ -463,27 +463,33 @@ public class KdTree {
         buildChildRectangle(h, h.left, h.right);
         /* Go to the that contains the point first; but check both. If node.rectangle distance is more than
          * current distance, do not check that branch or its subtrees */
+        if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) > nearestNeig.distanceSquaredTo(pt))
+            h.left = null;
+        if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) > nearestNeig.distanceSquaredTo(pt))
+            h.right = null;
         if (h.left != null && h.left.nodeRect.contains(pt)) {
             // pt is on the left
-            if (h.left.nodeRect.distanceSquaredTo(pt) <= nearestNeig.distanceSquaredTo(pt)) {
-                checkForNearest(h.left, pt);
-            } else h.left = null;
-            if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) <= nearestNeig.distanceSquaredTo(pt)) {
-                checkForNearest(h.right, pt);
-            } else h.right = null;
-
-        } else if (h.right != null && h.right.nodeRect.contains(pt)) {
-            // pt is on the right
-            if (h.right.nodeRect.distanceSquaredTo(pt) <= nearestNeig.distanceSquaredTo(pt)) {
-                checkForNearest(h.right, pt);
-            } else h.right = null;
-            if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) <= nearestNeig.distanceSquaredTo(pt)) {
-                checkForNearest(h.left, pt);
-            }
-            h.left = null;
+            checkForNearest(h.left, pt);
+            if (h.right != null) checkForNearest(h.right, pt);
+            nearest2(h.left, pt);
+            nearest2(h.right, pt);
         }
-        nearest2(h.right, pt);
-        nearest2(h.left, pt);
+        if (h.right != null && h.right.nodeRect.contains(pt)) {
+            // pt is on the right
+            checkForNearest(h.right, pt);
+            if (h.left != null) checkForNearest(h.left, pt);
+            nearest2(h.right, pt);
+            nearest2(h.left, pt);
+        } else if (h.right!=null) {
+            checkForNearest(h.right, pt);
+            nearest2(h.right, pt);
+            nearest2(h.left, pt);
+        } else if (h.left!=null) {
+            checkForNearest(h.left, pt);
+            nearest2(h.right, pt);
+            nearest2(h.left, pt);
+        }
+        else return;
     }
 
     private void checkForNearest(Node h, Point2D pt) {
