@@ -493,6 +493,7 @@ public class KdTree {
     }
 
     private void checkForNearest(Node h, Point2D pt) {
+
         if (h.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
             nearestNeig = h.p;
         }
