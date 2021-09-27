@@ -359,57 +359,59 @@ public class KdTree {
 
     private void nearest(Node h, Point2D pt) {
         if (h == null) return;
-        buildChildRectangle(h, h.left, h.right);
-        /* Go to the that contains the point first; but check both. If node.rectangle distance is more than
-         * current distance, do not check that branch or its subtrees */
+        if (h.nodeRect.distanceSquaredTo(pt)<nearestNeig.distanceSquaredTo(pt)){
+            buildChildRectangle(h, h.left, h.right);
+            /* Go to the that contains the point first; but check both. If node.rectangle distance is more than
+             * current distance, do not check that branch or its subtrees */
 
-        if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
-            if (h.left.nodeRect.contains(pt)) {
-                checkForNearest(h.left, pt);
-                if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.right, pt);
-                nearest(h.left, pt);
-                nearest(h.right, pt);
-            } else if (h.right != null && h.right.nodeRect.contains(pt)) {
-                if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.right, pt);
-                if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+            if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.left.nodeRect.contains(pt)) {
                     checkForNearest(h.left, pt);
-                nearest(h.left, pt);
-                nearest(h.right, pt);
-            } else {
-                if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.right, pt);
-                if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.left, pt);
-                nearest(h.left, pt);
-                nearest(h.right, pt);
+                    if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.right, pt);
+                    nearest(h.left, pt);
+                    nearest(h.right, pt);
+                } else if (h.right != null && h.right.nodeRect.contains(pt)) {
+                    if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.right, pt);
+                    if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.left, pt);
+                    nearest(h.left, pt);
+                    nearest(h.right, pt);
+                } else {
+                    if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.right, pt);
+                    if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.left, pt);
+                    nearest(h.left, pt);
+                    nearest(h.right, pt);
+                }
             }
-        }
-        else if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
-            if (h.right.nodeRect.contains(pt)) {
-                checkForNearest(h.right, pt);
-                if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.left, pt);
-                nearest(h.right, pt);
-                nearest(h.left, pt);
-            } else if (h.left != null && h.left.nodeRect.contains(pt)) {
-                if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.left, pt);
-                if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+            else if (h.right != null && h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                if (h.right.nodeRect.contains(pt)) {
                     checkForNearest(h.right, pt);
-                nearest(h.right, pt);
-                nearest(h.left, pt);
-            }else {
-                if (h.left!=null && h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.left, pt);
-                if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
-                    checkForNearest(h.right, pt);
-                nearest(h.right, pt);
-                nearest(h.left, pt);
+                    if (h.left != null && h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.left, pt);
+                    nearest(h.right, pt);
+                    nearest(h.left, pt);
+                } else if (h.left != null && h.left.nodeRect.contains(pt)) {
+                    if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.left, pt);
+                    if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.right, pt);
+                    nearest(h.right, pt);
+                    nearest(h.left, pt);
+                }else {
+                    if (h.left!=null && h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.left, pt);
+                    if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                        checkForNearest(h.right, pt);
+                    nearest(h.right, pt);
+                    nearest(h.left, pt);
+                }
             }
+            return;
         }
-        return;
     }
 
     /*private Point2D nearest2(Point2D pt) {
