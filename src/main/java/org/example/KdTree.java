@@ -429,9 +429,9 @@ public class KdTree {
                     if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                         nearestNeig = h.right.p;
                         if (h.right.level % 2 == 1) {
-                            yLowBound = h.yCoord;
-                        } else if (h.right.level % 2 == 0) {
                             xLowBound = h.xCoord;
+                        } else if (h.right.level % 2 == 0) {
+                            yLowBound = h.yCoord;
                         }
                     }
                     if (h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
@@ -472,10 +472,10 @@ public class KdTree {
                     if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                         nearestNeig = h.right.p;
                         if (h.right.level % 2 == 1) {
-                            yLowBound = h.yCoord;
+                            xLowBound = h.xCoord;
                         }
                         if (h.right.level % 2 == 0) {
-                            xLowBound = h.xCoord;
+                            yLowBound = h.yCoord;
                         }
                     }
                     if (h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
