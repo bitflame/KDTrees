@@ -31,10 +31,8 @@ public class KdTree {
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
     private MinPQ<Double> xCoordinates = new MinPQ<>();
     private Point2D nearestNeig = new Point2D(0.0, 0.0);
-    private double xHighBound = 0.0;
-    private double yHighBound = 0.0;
-    private double xLowBound = 1.0;
-    private double yLowBound = 1.0;
+    private Node nearestNode = null;
+    private Node queryNode = null;
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -44,6 +42,7 @@ public class KdTree {
         RectHV nodeRect;
         double xCoord;
         double yCoord;
+        double maximX = 0;
 
         public Node(Point2D p, int n, RectHV rect) {
             this.p = p;
@@ -295,6 +294,7 @@ public class KdTree {
         n.xCoord = p.x();
         xCoordinates.insert(n.xCoord);
         n.yCoord = p.y();
+        n.maximX = n.xCoord;
         root = insert(root, n);
     }
 
@@ -305,9 +305,11 @@ public class KdTree {
         int cmp = h.compareTo(n);
         if (cmp < 0) {
             h.right = insert(h.right, n);
+            h.maximX = Math.max(h.right.maximX, h.maximX);
             h.right.level = h.level + 1;
         } else if (cmp > 0) {
             h.left = insert(h.left, n);
+            h.maximX = Math.max(h.left.maximX, h.maximX);
             h.left.level = h.level + 1;
         } else (h.p) = n.p;
         h.N = size(h.left) + size(h.right) + 1;
@@ -404,13 +406,10 @@ public class KdTree {
         if (contains(pt)) return pt;
         nearestNeig = root.p;
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
-        Node queryNode = new Node(pt, 1, null);
+        nearestNode = root;
+        queryNode = new Node(pt, 1, root.nodeRect);
         queryNode.xCoord = pt.x();
         queryNode.yCoord = pt.y();
-        xHighBound = 1.0;
-        yHighBound = 1.0;
-        xLowBound = 0.0;
-        yLowBound = 0.0;
         nearest2(root, queryNode, pt);
         return nearestNeig;
     }
@@ -419,75 +418,62 @@ public class KdTree {
         if (h == null) return;
         buildChildRectangle(h, h.left, h.right);
         if (h.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
-            //System.out.println("looking at " + h.p + " node. ");
+            System.out.println("looking at " + h.p + " node. ");
             int cmp = h.compareTo(qNode);
             if (cmp < 0) {
                 /* check the distance of right node first; but check both sides. if level is even set x limit, and
                  * if level is odd set y limit of branches you consider */
                 if (h.right != null) {
-                    System.out.println("looking at " + h.right.p + " node. ");
+                    //System.out.println("looking at " + h.right.p + " node. ");
                     if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                         nearestNeig = h.right.p;
-                        if (h.right.level % 2 == 1) {
-                            xLowBound = h.xCoord;
-                        } else if (h.right.level % 2 == 0) {
-                            yLowBound = h.yCoord;
-                        }
+                        qNode.nodeRect = h.right.nodeRect;
                     }
-                    if (h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
-                    if (h.left!=null && h.left.xCoord < xHighBound && h.left.yCoord < yHighBound) nearest2(h.left, qNode, pt);
+                    //if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                    nearest2(h.right, qNode, pt);
                 }
+
                 if (h.left != null) {
-                    System.out.println("looking at " + h.left.p + " node. ");
+                    //System.out.println("looking at " + h.left.p + " node. ");
                     if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                         nearestNeig = h.left.p;
-                        if (h.left.level % 2 == 1) {
-                            xHighBound = h.xCoord;
-                        }
-                        if (h.left.level % 2 == 0) {
-                            yHighBound = h.yCoord;
-                        }
                     }
-                    if (h.right!=null && h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
-                    if (h.left.xCoord < xHighBound && h.left.yCoord < yHighBound) nearest2(h.left, qNode, pt);
+                    //if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                    if (rectanglesOverlap(qNode, h.left))
+                        nearest2(h.left, qNode, pt);
                 }
 
             } else if (cmp > 0) {
                 if (h.left != null) {
-                    System.out.println("looking at " + h.left.p + " node. ");
+                    //System.out.println("looking at " + h.left.p + " node. ");
                     if (h.left.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                         nearestNeig = h.left.p;
-                        if (h.left.level % 2 == 1) {
-                            xHighBound = h.xCoord;
-                        }
-                        if (h.left.level % 2 == 0) {
-                            yHighBound = h.yCoord;
-                        }
+                        qNode.nodeRect = h.left.nodeRect;
                     }
-                    if (h.right!=null && h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
-                    if (h.left.xCoord < xHighBound && h.left.yCoord < yHighBound) nearest2(h.left, qNode, pt);
+                    //if (h.left.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt))
+                    nearest2(h.left, qNode, pt);
+
                 }
                 if (h.right != null) {
-                    System.out.println("looking at " + h.right.p + " node. ");
+                    //System.out.println("looking at " + h.right.p + " node. ");
                     if (h.right.p.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
                         nearestNeig = h.right.p;
-                        if (h.right.level % 2 == 1) {
-                            xLowBound = h.xCoord;
-                        }
-                        if (h.right.level % 2 == 0) {
-                            yLowBound = h.yCoord;
-                        }
                     }
-                    if (h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
-                    if (h.left!=null && h.left.xCoord < xHighBound && h.left.yCoord < yHighBound) nearest2(h.left, qNode, pt);
+                    //if (h.right.nodeRect.distanceSquaredTo(pt) < nearestNeig.distanceSquaredTo(pt)) {
+                    if (rectanglesOverlap(qNode, h.right)) nearest2(h.right, qNode, pt);
+
                 }
             }
-        } else {
-            if (h.right != null && h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
-            if (h.left != null && h.left.xCoord < xHighBound && h.left.yCoord < yHighBound) nearest2(h.left, qNode, pt);
         }
+        // if (h.right != null && h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest2(h.right, qNode, pt);
+        // if (h.left != null && h.left.xCoord < xHighBound && h.left.yCoord < yHighBound) nearest2(h.left, qNode, pt);
     }
 
+    private boolean rectanglesOverlap(Node n, Node m) {
+        if (n.level % 2 == 0 && m.level % 2 == 0) return n.nodeRect.xmin() < m.nodeRect.xmax();
+        else if (n.level % 2 == 1 && m.level % 2 == 1) return n.nodeRect.ymin() < m.nodeRect.ymax();
+        return false;
+    }
 
     private int height(Node root) {
         if (root == null)
@@ -748,7 +734,7 @@ public class KdTree {
         kdtree.populateTree(kdtree, fileName);
         point = new Point2D(0.315, 0.09);
         //System.out.println("Test #21. For file input10. We expect (0.144, 0.179), using nearest2() and Query Point ( , ) we get: " + kdtree.nearest(point));
-        System.out.println(" Test#21:  File 3a; We expect (0.144, 0.179), using nearest2() and Query Point (0.315, 0.09) " +
+        System.out.println(" Test#21:  File input10; We expect (0.144, 0.179), using nearest2() and Query Point (0.315, 0.09) " +
                 "we get: " + kdtree.nearest2(point));
         System.out.println("*******************next test*****************************");
         fileName = new File("src\\main\\resources\\input10.txt");
@@ -764,7 +750,7 @@ public class KdTree {
         point = new Point2D(0.25, 0.75);
         //System.out.println("Test 23. For point (0.9,0.7) file 3a. We expect (0.9, 0.6), and get: " + kdtree.nearest(point));
         System.out.println("Test 23. For point (0.25,0.75) file 3f. We expect (0.375, 0.625), and get: " + kdtree.nearest2(point));
-        System.out.println("For point (0.25,0.75) file 3a, Tree traversal should be: (0.0,0.5), (0.375,0.625), (0.875,0.875)," +
+        System.out.println("For point (0.25,0.75) file 3f, Tree traversal should be: (0.0,0.5), (0.375,0.625), (0.875,0.875)," +
                 "(0.625,1.0),(0.125,0.25)");
         System.out.println("*******************next test*****************************");
         fileName = new File("src\\main\\resources\\3g.txt");
