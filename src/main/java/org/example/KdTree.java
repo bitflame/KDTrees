@@ -31,6 +31,7 @@ public class KdTree {
     private Queue<Node> q = new Queue<>();
     private ArrayList<Point2D> points = new ArrayList<Point2D>();
     private MinPQ<Double> xCoordinates = new MinPQ<>();
+    private Point2D nearestPoint = new Point2D(1.0, 1.0);
 
     private static class Node implements Comparable<Node> {
         Point2D p; // key
@@ -402,83 +403,74 @@ public class KdTree {
         if (root == null) return null;
         if (contains(pt)) return pt;
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
-        System.out.println("looking at " + root.p + " node. ");
+        //System.out.println("looking at " + root.p + " node. ");
         Node queryNode = new Node(pt, 1, root.nodeRect);
         queryNode.xCoord = pt.x();
         queryNode.yCoord = pt.y();
-
+        nearestPoint = root.p;
         Node nearestNeigNode = root;
-        return nearest(root, queryNode, nearestNeigNode, pt).p;
+        return nearest(root, queryNode, pt);
     }
 
-    private Node nearest(Node h, Node qNode, Node nearestNeigNode, Point2D pt) {
-        if (h.nodeRect.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
+    private Point2D nearest(Node h, Node qNode, Point2D pt) {
+        if (h.nodeRect.distanceSquaredTo(pt) < nearestPoint.distanceSquaredTo(pt)) {
             buildChildRectangle(h, h.left, h.right);
             int cmp = h.compareTo(qNode);
             if (cmp < 0) {
                 if (h.right != null) {
-                    System.out.println("looking at " + h.right.p + " node. ");
-                    if (h.right.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
-                        nearestNeigNode = h.right;
+                    //System.out.println("looking at " + h.right.p + " node. ");
+                    if (h.right.p.distanceSquaredTo(pt) < nearestPoint.distanceSquaredTo(pt)) {
+                        //nearestNeigNode = h.right;
+                        nearestPoint = h.right.p;
                     }
-                    nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
+                    nearest(h.right, qNode, pt);
                 }
                 if (h.left != null) {
-                    System.out.println("looking at " + h.left.p + " node. ");
-                    if (h.left.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
-                        nearestNeigNode = h.left;
+                    //System.out.println("looking at " + h.left.p + " node. ");
+                    if (h.left.p.distanceSquaredTo(pt) < nearestPoint.distanceSquaredTo(pt)) {
+                        //nearestNeigNode = h.left;
+                        nearestPoint = h.left.p;
                     }
-
-                    if (nearestNeigNode.left==null && nearestNeigNode.right==null) return nearestNeigNode;
-
-                    if (rectanglesOverlap(nearestNeigNode, h.left))
-                        nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);
+                    //if (rectanglesOverlap(nearestNeigNode, h.left))
+                    if (h.left.nodeRect.distanceSquaredTo(pt) < nearestPoint.distanceSquaredTo(pt))
+                        nearest(h.left, qNode, pt);
                 }
-                /*if (h.right != null) nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
-                if (h.left != null && rectanglesOverlap(nearestNeigNode, h.left))
-                    nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);*/
             } else if (cmp > 0) {
                 if (h.left != null) {
-                    System.out.println("looking at " + h.left.p + " node. ");
-                    if (h.left.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
-                        nearestNeigNode = h.left;
+                    //System.out.println("looking at " + h.left.p + " node. ");
+                    if (h.left.p.distanceSquaredTo(pt) < nearestPoint.distanceSquaredTo(pt)) {
+                        //nearestNeigNode = h.left;
+                        nearestPoint = h.left.p;
                     }
-                    nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);
+                    nearest(h.left, qNode, pt);
                 }
-
-                if (h.right != null ) {
-                    System.out.println("looking at " + h.right.p + " node. ");
-                    if (h.right.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
-                        nearestNeigNode = h.right;
+                if (h.right != null) {
+                    //System.out.println("looking at " + h.right.p + " node. ");
+                    if (h.right.p.distanceSquaredTo(pt) < nearestPoint.distanceSquaredTo(pt)) {
+                        //nearestNeigNode = h.right;
+                        nearestPoint = h.right.p;
                     }
-                    if (nearestNeigNode.left==null && nearestNeigNode.right==null) return nearestNeigNode;
-                    if (rectanglesOverlap(nearestNeigNode, h.right))
-                        nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
+                    //if (rectanglesOverlap(nearestNeigNode, h.right))
+                    if (h.right.nodeRect.distanceSquaredTo(pt) < nearestPoint.distanceSquaredTo(pt))
+                        nearest(h.right, qNode, pt);
                 }
 //                if (h.left != null) nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);
 //                if (h.right != null && rectanglesOverlap(nearestNeigNode, h.right))
 //                    nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
             }
         }
-        return nearestNeigNode;
+        return nearestPoint;
         // if (h.right != null && h.right.xCoord > xLowBound && h.right.yCoord > yLowBound) nearest(h.right, qNode, pt);
         // if (h.left != null && h.left.xCoord < xHighBound && h.left.yCoord < yHighBound) nearest(h.left, qNode, pt);
     }
 
-    private boolean rectanglesOverlap(Node n, Node m) {
-        /* if (  (n.level % 2 == 1 && m.level % 2 == 1) && (Math.abs(n.level - m.level) != 0)) return n.nodeRect.xmin() < m.nodeRect.xmax();
-         if ((n.level % 2 == 0 && m.level % 2 == 0) && (Math.abs(n.level - m.level) != 0)) return n.nodeRect.ymin() < m.nodeRect.ymax();
-        if (Math.abs(n.level - m.level) != 0) return ((n.nodeRect.xmin() < m.nodeRect.xmax()) &&
-                (n.nodeRect.ymin() < m.nodeRect.ymax()));
-                other criteria you could add to this is:
-                - weather or not the node is root
-                - making sure that the nearestNode is the 2nd or third and not the first one
-                */
-
-        //if (n.level > 2 && m.level > 2) return ((n.nodeRect.xmin() < m.nodeRect.xmax()) && (n.nodeRect.ymin() < m.nodeRect.ymax()));
-        if ((n.level!=m.level) && ((n.nodeRect.xmin() == m.nodeRect.xmax()) || (n.nodeRect.ymin() == m.nodeRect.ymax()))
-                || ((m.nodeRect.xmin()==n.nodeRect.xmax()) || m.nodeRect.ymin()==m.nodeRect.ymax())) return false;
-        // else if (n.level % 2 == 1 && m.level % 2 == 1) return n.nodeRect.xmin() < m.nodeRect.xmax();
+    private boolean rectanglesOverlap(Node nearestNeigNode, Node m) {
+//        if (nearestNeigNode.nodeRect.xmin() >= m.nodeRect.xmax() || m.nodeRect.xmin() >= nearestNeigNode.nodeRect.xmin() ||
+//                nearestNeigNode.nodeRect.ymin() >= m.nodeRect.ymax() || m.nodeRect.ymax() >= nearestNeigNode.nodeRect.ymax())
+//            return false;
+        if (nearestNeigNode.level == m.level) return true;
+        else if (nearestNeigNode.nodeRect.xmin() >= m.nodeRect.xmax() || nearestNeigNode.nodeRect.ymin() >= m.nodeRect.ymax())
+            return false;
         else return true;
     }
 
