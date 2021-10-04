@@ -194,7 +194,8 @@ public class KdTree {
     }
 
     public boolean contains(Point2D point) {
-        if (point==null) throw new IllegalArgumentException("you should pass a valid point data to contains() method.");
+        if (point == null)
+            throw new IllegalArgumentException("you should pass a valid point data to contains() method.");
         return get(point) != null;
     }
 
@@ -401,7 +402,7 @@ public class KdTree {
         if (root == null) return null;
         if (contains(pt)) return pt;
         root.nodeRect = new RectHV(0.0, 0.0, 1.0, 1.0);
-        //System.out.println("looking at " + root.p + " node. ");
+        System.out.println("looking at " + root.p + " node. ");
         Node queryNode = new Node(pt, 1, root.nodeRect);
         queryNode.xCoord = pt.x();
         queryNode.yCoord = pt.y();
@@ -416,37 +417,47 @@ public class KdTree {
             int cmp = h.compareTo(qNode);
             if (cmp < 0) {
                 if (h.right != null) {
-                    //System.out.println("looking at " + h.right.p + " node. ");
+                    System.out.println("looking at " + h.right.p + " node. ");
                     if (h.right.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
                         nearestNeigNode = h.right;
                     }
                     nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
                 }
-                if (h.left != null && rectanglesOverlap(nearestNeigNode, h.left)) {
-                    //System.out.println("looking at " + h.left.p + " node. ");
+                if (h.left != null) {
+                    System.out.println("looking at " + h.left.p + " node. ");
                     if (h.left.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
                         nearestNeigNode = h.left;
                     }
+
+                    if (nearestNeigNode.left==null && nearestNeigNode.right==null) return nearestNeigNode;
+
                     if (rectanglesOverlap(nearestNeigNode, h.left))
                         nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);
                 }
+                /*if (h.right != null) nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
+                if (h.left != null && rectanglesOverlap(nearestNeigNode, h.left))
+                    nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);*/
             } else if (cmp > 0) {
                 if (h.left != null) {
-                    //System.out.println("looking at " + h.left.p + " node. ");
+                    System.out.println("looking at " + h.left.p + " node. ");
                     if (h.left.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
                         nearestNeigNode = h.left;
                     }
                     nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);
                 }
 
-                if (h.right != null) {
-                    //System.out.println("looking at " + h.right.p + " node. ");
+                if (h.right != null ) {
+                    System.out.println("looking at " + h.right.p + " node. ");
                     if (h.right.p.distanceSquaredTo(pt) < nearestNeigNode.p.distanceSquaredTo(pt)) {
                         nearestNeigNode = h.right;
                     }
+                    if (nearestNeigNode.left==null && nearestNeigNode.right==null) return nearestNeigNode;
                     if (rectanglesOverlap(nearestNeigNode, h.right))
                         nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
                 }
+//                if (h.left != null) nearestNeigNode = nearest(h.left, qNode, nearestNeigNode, pt);
+//                if (h.right != null && rectanglesOverlap(nearestNeigNode, h.right))
+//                    nearestNeigNode = nearest(h.right, qNode, nearestNeigNode, pt);
             }
         }
         return nearestNeigNode;
@@ -455,11 +466,19 @@ public class KdTree {
     }
 
     private boolean rectanglesOverlap(Node n, Node m) {
-        // if (  (n.level % 2 == 1 && m.level % 2 == 1) && (Math.abs(n.level - m.level) != 0)) return n.nodeRect.xmin() < m.nodeRect.xmax();
-        // if ((n.level % 2 == 0 && m.level % 2 == 0) && (Math.abs(n.level - m.level) != 0)) return n.nodeRect.ymin() < m.nodeRect.ymax();
+        /* if (  (n.level % 2 == 1 && m.level % 2 == 1) && (Math.abs(n.level - m.level) != 0)) return n.nodeRect.xmin() < m.nodeRect.xmax();
+         if ((n.level % 2 == 0 && m.level % 2 == 0) && (Math.abs(n.level - m.level) != 0)) return n.nodeRect.ymin() < m.nodeRect.ymax();
         if (Math.abs(n.level - m.level) != 0) return ((n.nodeRect.xmin() < m.nodeRect.xmax()) &&
                 (n.nodeRect.ymin() < m.nodeRect.ymax()));
-            // else if (n.level % 2 == 1 && m.level % 2 == 1) return n.nodeRect.xmin() < m.nodeRect.xmax();
+                other criteria you could add to this is:
+                - weather or not the node is root
+                - making sure that the nearestNode is the 2nd or third and not the first one
+                */
+
+        //if (n.level > 2 && m.level > 2) return ((n.nodeRect.xmin() < m.nodeRect.xmax()) && (n.nodeRect.ymin() < m.nodeRect.ymax()));
+        if ((n.level!=m.level) && ((n.nodeRect.xmin() == m.nodeRect.xmax()) || (n.nodeRect.ymin() == m.nodeRect.ymax()))
+                || ((m.nodeRect.xmin()==n.nodeRect.xmax()) || m.nodeRect.ymin()==m.nodeRect.ymax())) return false;
+        // else if (n.level % 2 == 1 && m.level % 2 == 1) return n.nodeRect.xmin() < m.nodeRect.xmax();
         else return true;
     }
 
@@ -548,7 +567,6 @@ public class KdTree {
         kdtree.populateTree(kdtree, fileName);
         // point = new Point2D(0.9, 0.7);
         point = new Point2D(0.82, 0.38);
-
         //System.out.println("Test 1. For point (0.9,0.7) file 3a. We expect (0.9, 0.6), and get: " + kdtree.nearest(point));
         // System.out.println(" Test#1: File 3a; expecting (0.9, 0.6), getting: " + kdtree.nearest(point));
         System.out.println("For point (0.82,0.38) file 3a, Tree traversal should be: (0.7,0.2),(0.9,0.6),(0.5,0.4), (0.2,0.3),(0.4,0.7)");
@@ -619,8 +637,8 @@ public class KdTree {
         assert kdtree.nearest(point).equals(new Point2D(0.9, 0.6)) : "Test 8 failed.";
         // System.out.println(" expecting (0.9, 0.6), and visited nodes should be: (0.7, 0.2) (0.9, 0.6) (0.5, 0.4) (0.4, 0.7), (0.2, 0.3) getting:  " + kdtree.nearest(point));
         // System.out.println(" File 3a; Here is the result of nearest version 2: expecting (0.9, 0.6), and visited nodes should be: " + (0.7, 0.2) (0.9, 0.6) (0.5, 0.4) (0.4, 0.7), (0.2, 0.3) getting: ");
-//        System.out.println(" File 3a; Here is the result of nearest(): expecting (0.9, 0.6), and visited nodes should be: " +
-//                "(0.7, 0.2) (0.9, 0.6) (0.5, 0.4) (0.4, 0.7), (0.2, 0.3) getting: ");
+        System.out.println(" File 3a; Here is the result of nearest(): expecting (0.9, 0.6), and visited nodes should be: " +
+                "(0.7, 0.2) (0.9, 0.6) (0.5, 0.4) (0.4, 0.7), (0.2, 0.3) getting: ");
         //System.out.println("Test #8. For file 3a. expecting (0.9, 0.6), and getting: " + kdtree.nearest(point));
 //        System.out.println(" Test#8:  File 3a; We expect (0.9, 0.6), using nearest() and Query Point (0.78, 0.44) we get: "
 //                + kdtree.nearest(point));
@@ -663,11 +681,10 @@ public class KdTree {
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         point = new Point2D(0.73, 0.62);
-
-        System.out.println("Test #12.1: For file 3c. We expect (0.785, 0.725), using nearest() and Query Point " +
-                "( 0.73, 0.62 ) we get: " + kdtree.nearest(point));
+//        System.out.println("Test #12.1: For file 3c. We expect (0.785, 0.725), using nearest() and Query Point " +
+//                "( 0.73, 0.62 ) we get: " + kdtree.nearest(point));
         System.out.println(" The visited nodes should be: (0.372, 0.497) (0.564, 0.413) (0.862, 0.825) (0.785, 0.725). ");
-        // assert kdtree.nearest(point).equals(new Point2D(0.785, 0.725)) : "Test 12.1 failed.";
+        assert kdtree.nearest(point).equals(new Point2D(0.785, 0.725)) : "Test 12.1 failed.";
         System.out.println("******************* Test 13 *****************************");
         fileName = new File("src\\main\\resources\\3d.txt");
         kdtree = new KdTree();
@@ -708,7 +725,7 @@ public class KdTree {
         kdtree.populateTree(kdtree, fileName);
         point = new Point2D(0.875, 0.25);
         assert kdtree.nearest(point).equals(new Point2D(0.75, 0.625)) : "Test 17 failed.";
-//        System.out.println("Test #17. The squence of points should be: (0.375, 0.875), (0.75, 0.625), (0.5, 1.0).");
+        System.out.println("Test #17. The squence of points should be: (0.375, 0.875), (0.75, 0.625), (0.5, 1.0).");
 //        System.out.println("Test #17. For file: 3e. We expect (0.75, 0.625), using nearest() and Query Point ( 0.875, 0.25 ) we get: "
 //                + kdtree.nearest(point));
         System.out.println("******************* Test 18 *****************************");
@@ -720,7 +737,7 @@ public class KdTree {
         assert kdtree.nearest(point).equals(new Point2D(0.862, 0.825)) : "Test 18 failed.";
         //System.out.println("Test #18. For file input10.txt, and Point: 0.362, 0.128. We expect (0.499, 0.208), and get:" +
         //      " " + kdtree.nearest(point));
-        // System.out.println("The order of nodes visited should be: (0.372, 0.497), (0.564, 0.413), (0.862, 0.862), (0.785,0.725)");
+        System.out.println("The order of nodes visited should be: (0.372, 0.497), (0.564, 0.413), (0.862, 0.862), (0.785,0.725)");
         // System.out.println("Test #18. For file input10.txt, and Point: 0.98, 0.96. We expect (0.862, 0.825), and get:" + kdtree.nearest(point));
         // System.out.println(" Test#18:  File input10. We expect (0.862, 0.825), using nearest() and Query Point ( 0.98, 0.96) we get: " + kdtree.nearest(point));
         // Point2D ExistingPoint = new Point2D(0.785, 0.725);
@@ -786,9 +803,9 @@ public class KdTree {
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         point = new Point2D(0.279, 0.302);
-        assert kdtree.nearest(point).equals(new Point2D(0.417, 0.362)) : "Test 25 failed.";
-//        System.out.println("Test#25. For point (0.279, 0.302) file:input10.txt We expect (0.417, 0.362), using nearest() " +
-//                "and Query Point ( 0.279, 0.302) we get: " + kdtree.nearest(point));
+        // assert kdtree.nearest(point).equals(new Point2D(0.417, 0.362)) : "Test 25 failed.";
+        System.out.println("Test#25. For point (0.279, 0.302) file:input10.txt We expect (0.417, 0.362), using nearest() " +
+                "and Query Point ( 0.279, 0.302) we get: " + kdtree.nearest(point));
         System.out.println("******************* Test 26 *****************************");
         fileName = new File("src\\main\\resources\\input20.txt");
         kdtree = new KdTree();
@@ -848,10 +865,18 @@ public class KdTree {
         kdtree = new KdTree();
         kdtree.populateTree(kdtree, fileName);
         point = new Point2D(0.84375, 0.78125);
-        System.out.println("Test #31.  For point (0.84375, 0.78125) file 3h. We expect: (0.78125, 1.0). We get: " +
-                kdtree.nearest(point));
+        assert kdtree.nearest(point).equals(new Point2D(0.78125, 1.0)) : "Test 31 failed.";
+//        System.out.println("Test #31.  For point (0.84375, 0.78125) file 3h. We expect: (0.78125, 1.0). We get: " +
+//                kdtree.nearest(point));
         System.out.println("The sequence of points should be: (0.40625, 0.53125) (0.53125, 0.343750) (0.625, 0.65625)" +
                 "(0.78125, 1.0) (0.96875, 0.4375) (0.4375, 0.8125) (0.5, 0.71875) (0.5625, 0.9375)");
+        System.out.println("******************* Test 32 *****************************");
+        fileName = new File("src\\main\\resources\\input20.txt");
+        kdtree = new KdTree();
+        kdtree.populateTree(kdtree, fileName);
+        point = new Point2D(0.490234375, 0.568359375);
+        System.out.println(" Test#31: File circle100; expecting (0.40625, 0.5), getting: " + kdtree.nearest(point));
+        // assert kdtree.nearest(point).equals(new Point2D(0.980147, 0.639496)) : "Test 32 failed.";
         // System.out.println(" Test#1: File 3a; expecting (0.9, 0.6), getting: " + kdtree.nearest(point));
         // System.out.println(" Test#18:  File 3a;  expecting (0.9, 0.6), and getting: " + kdtree.nearest(point));
         // System.out.println(" Test#18:  File 3a;  expecting (0.4, 0.7), and getting: " + kdtree.nearest(point));

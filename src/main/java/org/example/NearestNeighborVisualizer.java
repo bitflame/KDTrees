@@ -16,6 +16,7 @@ package org.example;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdOut;
 
 public class NearestNeighborVisualizer {
 
@@ -55,7 +56,8 @@ public class NearestNeighborVisualizer {
             // todo activate the line below later otherwise this will not test anything
             brute.nearest(query).draw();
             StdDraw.setPenRadius(0.02);
-
+            if (brute.nearest(query) != kdtree.nearest(query)) StdOut.println("For the Query point: " + query + " the nearest " +
+                    "neighbor should be: " + brute.nearest(query) + " but kdtree result is: " + kdtree.nearest(query));
             // draw in blue the nearest neighbor (using kd-tree algorithm)
             StdDraw.setPenColor(StdDraw.BLUE);
             kdtree.nearest(query).draw();
